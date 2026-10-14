@@ -23,6 +23,9 @@ class HomeView(TemplateView):
         ctx['categories'] = Category.objects.all()
         if self.request.user.is_authenticated:
             ctx['recommendations'] = recommend_for_user(self.request.user, limit=6)
+        else:
+            from apps.recommendation.engine import _fallback_bestsellers
+            ctx['recommendations'] = _fallback_bestsellers(limit=6)
         return ctx
 
 
