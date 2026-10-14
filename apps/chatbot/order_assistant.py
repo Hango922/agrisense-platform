@@ -11,6 +11,7 @@ import re
 from decimal import Decimal
 from apps.products.models import Product
 from apps.cart_orders.services import create_direct_order
+from apps.cart_orders.vietqr import get_vietqr_url, get_vietqr_info
 from apps.chatbot.fallback import find_matching_products, format_currency, remove_accents
 
 
@@ -113,6 +114,34 @@ def extract_address_and_name(text, phone=None):
     return extracted_name, extracted_addr
 
 
+def format_order_success_message(order, product, qty, extra_note=None):
+    """Định dạng câu trả lời hoàn tất đặt hàng kèm thông tin chuyển khoản VietQR Napas 247."""
+    subtotal = product.price * qty
+    ship_txt = "Miễn phí vận chuyển" if order.shipping_fee == 0 else f"{format_currency(order.shipping_fee)}"
+    qr_url = get_vietqr_url(order)
+    qr_info = get_vietqr_info(order)
+
+    note_line = f"\n• Ghi chú: {extra_note}" if extra_note else ""
+
+    return (
+        f"🎉 **ĐẶT HÀNG THÀNH CÔNG QUA CHATBOT AI!**\n\n"
+        f"• Mã đơn hàng: **{order.order_code}**\n"
+        f"• Sản phẩm: **{qty} {product.unit} {product.name}** ({format_currency(subtotal)})\n"
+        f"• Phí giao hàng: **{ship_txt}** (Miễn phí từ 500.000 đ)\n"
+        f"• Tổng thanh toán: **{format_currency(order.final_amount)}**\n"
+        f"• Người nhận: **{order.full_name}** - {order.phone}\n"
+        f"• Địa chỉ: {order.address}{note_line}\n\n"
+        f"💳 **Thanh toán chuyển khoản VietQR (Napas 247):**\n"
+        f"![Mã VietQR thanh toán {order.order_code}]({qr_url})\n"
+        f"• Ngân hàng: **{qr_info['bank_name']}** ({qr_info['bank_id']})\n"
+        f"• Số tài khoản: **{qr_info['account_no']}** ({qr_info['account_name']})\n"
+        f"• Số tiền: **{format_currency(order.final_amount)}**\n"
+        f"• Nội dung CK: **{qr_info['memo']}**\n\n"
+        f"👉 [Bấm vào đây để xem chi tiết đơn hàng & quét mã QR](/orders/{order.order_code}/)\n\n"
+        f"Cảm ơn bạn đã tin chọn nông sản sạch tại AgriSense! Đơn hàng sẽ được nhân viên chuẩn bị và giao sớm nhất."
+    )
+
+
 def handle_order_conversation(message, user=None, session_dict=None):
     """
     Hàm điều phối xử lý ý định đặt hàng trong Chatbot:
@@ -159,19 +188,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
                         note="Đặt hàng tự động qua Chatbot AI (Xác nhận địa chỉ mặc định)"
                     )
                     session_dict.pop('chatbot_order_draft', None)
-                    subtotal = product.price * qty
-                    ship_txt = "Miễn phí vận chuyển" if order.shipping_fee == 0 else f"{format_currency(order.shipping_fee)}"
-                    return True, (
-                        f"🎉 **ĐẶT HÀNG THÀNH CÔNG QUA CHATBOT AI!**\n\n"
-                        f"• Mã đơn hàng: **{order.order_code}**\n"
-                        f"• Sản phẩm: **{qty} {product.unit} {product.name}** ({format_currency(subtotal)})\n"
-                        f"• Phí giao hàng: **{ship_txt}**\n"
-                        f"• Tổng thanh toán (COD): **{format_currency(order.final_amount)}**\n"
-                        f"• Người nhận: **{order.full_name}** - {order.phone}\n"
-                        f"• Địa chỉ: {order.address}\n\n"
-                        f"👉 [Bấm vào đây để xem chi tiết đơn hàng](/orders/{order.order_code}/)\n\n"
-                        f"Cảm ơn bạn đã tin chọn nông sản sạch tại AgriSense! Đơn hàng của bạn sẽ sớm được nhân viên liên hệ và giao tới tận tay bạn."
-                    )
+                    return True, format_order_success_message(order, product, qty)
                 except Exception as e:
                     return True, f"⚠️ Rất tiếc, có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
 
@@ -199,19 +216,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
                         note="Đặt hàng tự động qua Chatbot AI (Địa chỉ chỉ định)"
                     )
                     session_dict.pop('chatbot_order_draft', None)
-                    subtotal = product.price * qty
-                    ship_txt = "Miễn phí vận chuyển" if order.shipping_fee == 0 else f"{format_currency(order.shipping_fee)}"
-                    return True, (
-                        f"🎉 **ĐẶT HÀNG THÀNH CÔNG QUA CHATBOT AI!**\n\n"
-                        f"• Mã đơn hàng: **{order.order_code}**\n"
-                        f"• Sản phẩm: **{qty} {product.unit} {product.name}** ({format_currency(subtotal)})\n"
-                        f"• Phí giao hàng: **{ship_txt}**\n"
-                        f"• Tổng thanh toán (COD): **{format_currency(order.final_amount)}**\n"
-                        f"• Người nhận: **{order.full_name}** - {order.phone}\n"
-                        f"• Địa chỉ: {order.address}\n\n"
-                        f"👉 [Bấm vào đây để xem chi tiết đơn hàng](/orders/{order.order_code}/)\n\n"
-                        f"Đơn hàng của bạn đang ở trạng thái 'Chờ xác nhận'. AgriSense sẽ chuẩn bị nông sản tươi ngon nhất giao cho bạn."
-                    )
+                    return True, format_order_success_message(order, product, qty)
                 except Exception as e:
                     return True, f"⚠️ Có lỗi khi tạo đơn: {str(e)}. Bạn vui lòng thử lại!"
 
@@ -239,19 +244,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
                         note="Đặt hàng tự động qua Chatbot AI"
                     )
                     session_dict.pop('chatbot_order_draft', None)
-                    subtotal = product.price * qty
-                    ship_txt = "Miễn phí vận chuyển" if order.shipping_fee == 0 else f"{format_currency(order.shipping_fee)}"
-                    return True, (
-                        f"🎉 **ĐẶT HÀNG THÀNH CÔNG QUA CHATBOT AI!**\n\n"
-                        f"• Mã đơn hàng: **{order.order_code}**\n"
-                        f"• Sản phẩm: **{qty} {product.unit} {product.name}** ({format_currency(subtotal)})\n"
-                        f"• Phí giao hàng: **{ship_txt}**\n"
-                        f"• Tổng thanh toán (COD): **{format_currency(order.final_amount)}**\n"
-                        f"• Người nhận: **{order.full_name}** - {order.phone}\n"
-                        f"• Địa chỉ: {order.address}\n\n"
-                        f"👉 [Bấm vào đây để xem chi tiết đơn hàng](/orders/{order.order_code}/)\n\n"
-                        f"Đơn hàng đã được lưu trên hệ thống AgriSense. Bạn hãy để ý điện thoại để nhận hàng nhé!"
-                    )
+                    return True, format_order_success_message(order, product, qty)
                 except Exception as e:
                     return True, f"⚠️ Có lỗi khi tạo đơn: {str(e)}. Bạn vui lòng thử lại!"
             elif not phone:
@@ -319,18 +312,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
                 address_data=address_data,
                 note="Đặt hàng tự động qua Chatbot AI (Trực tiếp)"
             )
-            ship_txt = "Miễn phí vận chuyển" if order.shipping_fee == 0 else f"{format_currency(order.shipping_fee)}"
-            return True, (
-                f"🎉 **ĐẶT HÀNG THÀNH CÔNG QUA CHATBOT AI!**\n\n"
-                f"• Mã đơn hàng: **{order.order_code}**\n"
-                f"• Sản phẩm: **{qty} {product.unit} {product.name}** ({format_currency(subtotal)})\n"
-                f"• Phí giao hàng: **{ship_txt}** (Miễn phí từ 500.000 đ)\n"
-                f"• Tổng thanh toán (COD): **{format_currency(order.final_amount)}**\n"
-                f"• Người nhận: **{order.full_name}** - {order.phone}\n"
-                f"• Địa chỉ: {order.address}\n\n"
-                f"👉 [Bấm vào đây để xem chi tiết đơn hàng](/orders/{order.order_code}/)\n\n"
-                f"Cảm ơn bạn! Đơn hàng của bạn đang được xử lý và sẽ được giao sớm nhất."
-            )
+            return True, format_order_success_message(order, product, qty)
         except Exception as e:
             return True, f"⚠️ Có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
 

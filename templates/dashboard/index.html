@@ -5,6 +5,21 @@
 {% block header_title %}Tổng Quan Hoạt Động Kinh Doanh & AI (30 Ngày Qua){% endblock %}
 
 {% block dashboard_content %}
+<!-- Action Toolbar -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted small mb-0">Hệ thống phân tích kinh doanh, dự báo nhu cầu và phân nhóm khách hàng bằng AI.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'dashboard:export_orders_excel' %}" class="btn btn-success shadow-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i> Xuất Báo Cáo Excel (.xlsx)
+        </a>
+        <a href="{% url 'dashboard:orders' %}" class="btn btn-outline-primary shadow-sm">
+            <i class="bi bi-receipt me-1"></i> Danh Sách Đơn Hàng
+        </a>
+    </div>
+</div>
+
 <!-- KPI Summary Cards -->
 <div class="row g-3 mb-4">
     <div class="col-xl-3 col-md-6">
@@ -61,16 +76,66 @@
     </div>
 </div>
 
+<!-- Interactive Charts Section (Chart.js) -->
 <div class="row g-4 mb-4">
-    <!-- Top 10 Bestselling Products -->
+    <!-- Revenue Trend 30 Days (Line Chart) -->
     <div class="col-lg-8">
         <div class="card shadow-sm p-4 bg-white h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-graph-up text-success me-2"></i> Xu Hướng Doanh Thu 30 Ngày Gần Nhất
+                    </h5>
+                    <small class="text-muted">Biểu đồ đường biểu diễn biến động doanh số theo từng ngày (đơn vị: VNĐ)</small>
+                </div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                    <i class="bi bi-calendar-check me-1"></i> 30 ngày qua
+                </span>
+            </div>
+            <div style="position: relative; height: 320px; width: 100%;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Customer Segmentation (Doughnut Chart) -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-pie-chart text-primary me-2"></i> Phân Nhóm AI
+                    </h5>
+                    <small class="text-muted">Tỉ lệ phân loại khách hàng tự động</small>
+                </div>
+                <a href="{% url 'dashboard:customers' %}" class="btn btn-sm btn-outline-primary">Chi tiết →</a>
+            </div>
+            <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="segmentChart"></canvas>
+            </div>
+            <div class="text-center mt-3 small text-muted">
+                Phân tích định kỳ qua thuật toán RFM & mô hình KMeans
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Top Products Bar Chart & Tables -->
+<div class="row g-4 mb-4">
+    <!-- Top Bestselling Products Chart & Table -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-trophy text-warning me-2"></i> Top Nông Sản Bán Chạy Nhất (30 Ngày)
+                    <i class="bi bi-bar-chart-line text-warning me-2"></i> Top Nông Sản Bán Chạy (30 Ngày)
                 </h5>
                 <a href="{% url 'dashboard:products' %}" class="btn btn-sm btn-outline-success">Xem kho hàng →</a>
             </div>
+            <!-- Bar Chart -->
+            <div style="position: relative; height: 220px; width: 100%;" class="mb-4">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+            <!-- Table list -->
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -104,16 +169,16 @@
         </div>
     </div>
 
-    <!-- Customer Segments AI Breakdown -->
-    <div class="col-lg-4">
+    <!-- Customer Segments AI Breakdown List -->
+    <div class="col-lg-5">
         <div class="card shadow-sm p-4 bg-white h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-pie-chart text-primary me-2"></i> Phân Nhóm Khách Hàng (AI)
+                    <i class="bi bi-diagram-3 text-info me-2"></i> Chi Tiết Phân Nhóm Khách Hàng
                 </h5>
-                <a href="{% url 'dashboard:customers' %}" class="btn btn-sm btn-outline-primary">Chi tiết →</a>
+                <a href="{% url 'dashboard:behavior' %}" class="btn btn-sm btn-outline-info">Nhật ký AI →</a>
             </div>
-            <p class="text-muted small mb-3">Phân loại hành vi tự động bằng RFM rules chạy hàng ngày.</p>
+            <p class="text-muted small mb-3">Danh sách số lượng tài khoản theo từng nhóm hành vi tiêu dùng.</p>
             <ul class="list-group list-group-flush">
                 {% for seg in segments %}
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
@@ -131,7 +196,7 @@
                             {% endif %}
                             <span class="small text-muted">{{ seg.segment }}</span>
                         </div>
-                        <span class="badge bg-dark rounded-pill fs-6 px-3">{{ seg.count }}</span>
+                        <span class="badge bg-dark rounded-pill fs-6 px-3">{{ seg.count }} khách</span>
                     </li>
                 {% empty %}
                     <li class="list-group-item text-muted text-center py-4">Chưa có khách hàng đăng ký.</li>
@@ -140,4 +205,167 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js 4.4 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Biểu đồ Đường Doanh Thu 30 Ngày
+    const revLabels = {{ chart_revenue_labels|safe }};
+    const revData = {{ chart_revenue_data|safe }};
+    const revCtx = document.getElementById('revenueChart');
+
+    if (revCtx) {
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: revLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revData,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#059669',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 3.5,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.parsed.y || 0;
+                                return 'Doanh thu: ' + val.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { maxRotation: 45, minRotation: 0, font: { size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(226, 232, 240, 0.7)' },
+                        ticks: {
+                            callback: function(val) {
+                                if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M đ';
+                                if (val >= 1000) return (val / 1000).toFixed(0) + 'k đ';
+                                return val + ' đ';
+                            },
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Biểu đồ Tròn Phân Nhóm Khách Hàng AI
+    const segLabels = {{ chart_segment_labels|safe }};
+    const segData = {{ chart_segment_data|safe }};
+    const segCtx = document.getElementById('segmentChart');
+
+    if (segCtx) {
+        new Chart(segCtx, {
+            type: 'doughnut',
+            data: {
+                labels: segLabels,
+                datasets: [{
+                    data: segData,
+                    backgroundColor: [
+                        '#f59e0b', // Khách mới (vàng cam)
+                        '#3b82f6', // Quan tâm (xanh dương)
+                        '#10b981', // Thường xuyên (xanh lá)
+                        '#ef4444', // Nguy cơ rời bỏ (đỏ)
+                        '#64748b'  // Khác (xám)
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 12, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const current = context.parsed || 0;
+                                const pct = total > 0 ? ((current / total) * 100).toFixed(1) : 0;
+                                return ` ${context.label}: ${current} (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    // 3. Biểu đồ Cột Top 5 Nông Sản Bán Chạy
+    const topLabels = {{ chart_top_labels|safe }};
+    const topData = {{ chart_top_data|safe }};
+    const topCtx = document.getElementById('topProductsChart');
+
+    if (topCtx) {
+        new Chart(topCtx, {
+            type: 'bar',
+            data: {
+                labels: topLabels,
+                datasets: [{
+                    label: 'Số lượng bán',
+                    data: topData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderColor: '#10b981',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Đã bán: ' + context.parsed.y + ' sản phẩm';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, font: { size: 11 } },
+                        grid: { color: 'rgba(226, 232, 240, 0.7)' }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

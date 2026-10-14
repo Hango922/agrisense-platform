@@ -56,6 +56,8 @@ class ChatbotOrderingTests(TestCase):
         data = resp.json()
         self.assertIn('ĐẶT HÀNG THÀNH CÔNG', data['reply'])
         self.assertIn('ORD', data['reply'])
+        self.assertIn('VietQR', data['reply'])
+        self.assertIn('img.vietqr.io', data['reply'])
 
         # Kiểm tra tồn kho đã bị giảm 2kg
         self.product.refresh_from_db()

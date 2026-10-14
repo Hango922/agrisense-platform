@@ -134,13 +134,16 @@ class OrderHistoryView(LoginRequiredMixin, TemplateView):
 
 class OrderDetailView(LoginRequiredMixin, TemplateView):
     """
-    Xem chi tiết tiến trình vận chuyển và thông tin đơn hàng.
+    Xem chi tiết tiến trình vận chuyển và thông tin đơn hàng kèm mã VietQR thanh toán.
     """
     template_name = 'cart_orders/order_detail.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['order'] = get_object_or_404(Order, order_code=kwargs['order_code'], user=self.request.user)
+        order = get_object_or_404(Order, order_code=kwargs['order_code'], user=self.request.user)
+        ctx['order'] = order
+        from .vietqr import get_vietqr_info
+        ctx['vietqr'] = get_vietqr_info(order)
         return ctx
 
 

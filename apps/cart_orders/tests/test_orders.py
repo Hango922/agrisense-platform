@@ -60,3 +60,30 @@ class OrderTests(TestCase):
         order.save()
         with self.assertRaises(ValueError):
             cancel_order(order)
+
+    def test_vietqr_generation(self):
+        from apps.cart_orders.vietqr import get_vietqr_url, get_vietqr_info
+        order = create_order_from_cart(self.user, self.cart, {
+            'full_name': 'Test', 'phone': '0900', 'address': 'HN',
+        })
+        url = get_vietqr_url(order)
+        self.assertIn('https://img.vietqr.io/image/', url)
+        self.assertIn(str(int(order.final_amount)), url)
+        self.assertIn(order.order_code, url)
+
+        info = get_vietqr_info(order)
+        self.assertEqual(info['transfer_content'], order.order_code)
+        self.assertEqual(info['memo'], order.order_code)
+        self.assertEqual(info['amount'], int(order.final_amount))
+        self.assertIn('MB', info['bank_id'])
+
+    def test_order_detail_view_includes_vietqr(self):
+        order = create_order_from_cart(self.user, self.cart, {
+            'full_name': 'Test', 'phone': '0900', 'address': 'HN',
+        })
+        self.client.force_login(self.user)
+        response = self.client.get(f'/orders/{order.order_code}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('vietqr', response.context)
+        self.assertIn('qr_image_url', response.context['vietqr'])
+        self.assertContains(response, 'Thanh Toán Nhanh VietQR')

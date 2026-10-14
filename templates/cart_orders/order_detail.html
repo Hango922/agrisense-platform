@@ -102,6 +102,41 @@
                 {% endif %}
             </ul>
         </div>
+        <!-- Thanh toán chuyển khoản nhanh qua VietQR -->
+        {% if order.status != 'cancelled' %}
+        <div class="card border-0 shadow-sm p-3 mb-4 border-top border-success border-4">
+            <h5 class="fw-bold mb-2 text-success">
+                <i class="bi bi-qr-code-scan me-2"></i> Thanh Toán Nhanh VietQR
+            </h5>
+            <p class="text-muted small mb-3">Quét mã bằng ứng dụng Ngân hàng (MB, VCB, Techcombank,...) để tự điền số tiền và nội dung chuyển khoản.</p>
+            <div class="text-center mb-3">
+                <img src="{{ vietqr.qr_image_url }}" alt="Mã VietQR Thanh Toán" class="img-fluid rounded border shadow-sm" style="max-height: 260px;">
+            </div>
+            <div class="bg-light p-3 rounded small">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Ngân hàng:</span>
+                    <strong>{{ vietqr.bank_name }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Số tài khoản:</span>
+                    <strong class="text-primary font-monospace">{{ vietqr.account_no }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Chủ tài khoản:</span>
+                    <strong>{{ vietqr.account_name }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Số tiền:</span>
+                    <strong class="text-danger fs-6">{{ vietqr.amount|floatformat:0 }} đ</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Nội dung CK:</span>
+                    <strong class="text-success font-monospace">{{ vietqr.transfer_content }}</strong>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <a href="{% url 'cart_orders:order_history' %}" class="btn btn-outline-secondary w-100">← Quay lại danh sách đơn hàng</a>
     </div>
 </div>

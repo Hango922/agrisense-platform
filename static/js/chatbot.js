@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let escaped = escapeHtml(text);
         // Format markdown bold
         escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Format markdown image ![alt](url)
+        escaped = escaped.replace(/!\[(.*?)\]\(([^\)]+)\)/g, '<div class="text-center my-2"><img src="$2" alt="$1" class="img-fluid rounded border shadow-sm" style="max-width: 180px; background: #fff;" /><div class="small text-muted mt-1">$1</div></div>');
         // Format markdown link [title](url)
         escaped = escaped.replace(/\[(.*?)\]\(((?:\/|[a-zA-Z0-9#_.-]+)[^\)]*)\)/g, '<a href="$2" class="fw-bold text-success text-decoration-underline">$1</a>');
         // Format newlines

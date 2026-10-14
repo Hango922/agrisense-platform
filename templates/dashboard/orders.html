@@ -7,9 +7,14 @@
 {% block dashboard_content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <p class="text-muted small mb-0">Hiển thị <strong>{{ orders|length }}</strong> đơn hàng mới nhất</p>
-    <a href="/admin/cart_orders/order/" class="btn btn-outline-secondary btn-sm" target="_blank">
-        <i class="bi bi-box-arrow-up-right me-1"></i> Quản lý nâng cao
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'dashboard:export_orders_excel' %}" class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel Báo Cáo
+        </a>
+        <a href="/admin/cart_orders/order/" class="btn btn-outline-secondary btn-sm" target="_blank">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Quản lý nâng cao
+        </a>
+    </div>
 </div>
 
 <div class="card shadow-sm bg-white">

@@ -11,6 +11,7 @@ urlpatterns = [
     path('', views.DashboardHomeView.as_view(), name='home'),
     path('products/', views.DashboardProductsView.as_view(), name='products'),
     path('orders/', views.DashboardOrdersView.as_view(), name='orders'),
+    path('orders/export-excel/', views.ExportOrdersExcelView.as_view(), name='export_orders_excel'),
     path('customers/', views.DashboardCustomersView.as_view(), name='customers'),
     path('behavior/', views.DashboardBehaviorView.as_view(), name='behavior'),
     path('traceability/', views.DashboardTraceabilityView.as_view(), name='traceability'),

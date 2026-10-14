@@ -66,3 +66,62 @@ class Phase5ComprehensiveTests(TestCase):
         for url in subpages:
             res = self.client.get(url)
             self.assertEqual(res.status_code, 200, f"Page {url} returned {res.status_code}")
+
+    def test_admin_dashboard_chartjs_data(self):
+        """Kiểm tra context chứa đầy đủ dữ liệu JSON cho 3 biểu đồ Chart.js và HTML chứa canvas."""
+        import json
+        self.client.force_login(self.admin_user)
+        response = self.client.get('/dashboard/')
+        self.assertEqual(response.status_code, 200)
+        ctx = response.context
+
+        # Kiểm tra 3 bộ dữ liệu biểu đồ
+        self.assertIn('chart_revenue_labels', ctx)
+        self.assertIn('chart_revenue_data', ctx)
+        self.assertIn('chart_segment_labels', ctx)
+        self.assertIn('chart_top_labels', ctx)
+
+        rev_labels = json.loads(ctx['chart_revenue_labels'])
+        rev_data = json.loads(ctx['chart_revenue_data'])
+        self.assertEqual(len(rev_labels), 30)
+        self.assertEqual(len(rev_data), 30)
+
+        # Kiểm tra thẻ canvas và CDN trong template HTML
+        self.assertContains(response, '<canvas id="revenueChart"></canvas>')
+        self.assertContains(response, '<canvas id="segmentChart"></canvas>')
+        self.assertContains(response, '<canvas id="topProductsChart"></canvas>')
+        self.assertContains(response, 'chart.js')
+
+    def test_export_orders_excel_permission(self):
+        """Người dùng thường không được phép tải file Excel báo cáo đơn hàng."""
+        self.client.force_login(self.normal_user)
+        response = self.client.get('/dashboard/orders/export-excel/')
+        self.assertIn(response.status_code, [302, 403])
+
+    def test_export_orders_excel_success(self):
+        """Quản trị viên xuất file Excel báo cáo đơn hàng định dạng chuẩn .xlsx thành công."""
+        import io
+        import openpyxl
+        self.client.force_login(self.admin_user)
+        response = self.client.get('/dashboard/orders/export-excel/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        self.assertIn('.xlsx', response['Content-Disposition'])
+
+        # Đọc và xác thực cấu trúc workbook Excel
+        wb = openpyxl.load_workbook(io.BytesIO(response.content))
+        ws = wb.active
+        self.assertEqual(ws.title, "Báo Cáo Đơn Hàng")
+
+        # Kiểm tra dòng Header
+        headers = [cell.value for cell in ws[1]]
+        self.assertIn("Mã đơn hàng", headers)
+        self.assertIn("Tổng thanh toán (đ)", headers)
+        self.assertIn("Trạng thái", headers)
+
+        # Kiểm tra dữ liệu đơn hàng mẫu có trong file
+        order_codes = [ws.cell(row=r, column=2).value for r in range(2, ws.max_row + 1)]
+        self.assertIn(self.order.order_code, order_codes)
