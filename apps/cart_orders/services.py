@@ -84,3 +84,57 @@ def cancel_order(order):
     order.status = 'cancelled'
     order.save(update_fields=['status'])
     return order
+
+
+@transaction.atomic
+def create_direct_order(user, items_data, address_data, note="Đặt hàng qua Chatbot AI"):
+    """
+    Tạo đơn hàng trực tiếp (ví dụ qua Chatbot AI) mà không cần qua giỏ hàng:
+    items_data: list of dicts [{'product': Product instance, 'quantity': int}]
+    address_data: {'full_name': str, 'phone': str, 'address': str}
+    """
+    if not items_data:
+        raise ValueError("Danh sách sản phẩm trống")
+
+    for item in items_data:
+        prod = item['product']
+        qty = item['quantity']
+        if qty <= 0:
+            raise ValueError(f"Số lượng sản phẩm '{prod.name}' không hợp lệ")
+        if qty > prod.stock:
+            raise ValueError(f"Sản phẩm '{prod.name}' chỉ còn {prod.stock} {prod.unit}")
+
+    total = sum(item['product'].price * item['quantity'] for item in items_data)
+    shipping_fee = calculate_shipping_fee(total)
+    final = total + shipping_fee
+
+    order = Order.objects.create(
+        user=user,
+        order_code='ORD' + get_random_string(8, '0123456789'),
+        full_name=address_data['full_name'],
+        phone=address_data['phone'],
+        address=address_data['address'],
+        total_amount=total,
+        shipping_fee=shipping_fee,
+        final_amount=final,
+        note=note,
+        status='pending',
+        payment_method='cod',
+    )
+
+    for item in items_data:
+        prod = item['product']
+        qty = item['quantity']
+        subtotal = prod.price * qty
+        OrderItem.objects.create(
+            order=order,
+            product=prod,
+            product_name=prod.name,
+            price=prod.price,
+            quantity=qty,
+            subtotal=subtotal,
+        )
+        prod.stock -= qty
+        prod.save(update_fields=['stock'])
+
+    return order

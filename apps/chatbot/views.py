@@ -44,10 +44,22 @@ class ChatbotAPIView(View):
             )
 
         # Lưu tin nhắn người dùng
-        ChatMessage.objects.create(session=session, role='user', content=message)
+        user_tokens = max(1, len(message) // 4)
+        ChatMessage.objects.create(session=session, role='user', content=message, tokens_used=user_tokens)
 
-        # Gọi xử lý AI thông minh / Fallback
-        text, is_fallback, elapsed = call_ai(message)
+        # 1. Kiểm tra xử lý ý định LÊN ĐƠN HÀNG TRỰC TIẾP qua Chatbot AI
+        from .order_assistant import handle_order_conversation
+        order_handled, order_reply = handle_order_conversation(message, user=user, session_dict=request.session)
+
+        if order_handled:
+            request.session.modified = True
+            text = order_reply
+            is_fallback = False
+            elapsed = 50
+            tokens_used = user_tokens + max(1, len(text) // 4)
+        else:
+            # 2. Gọi xử lý AI thông minh (Gemini/Groq) / Fallback rule-based
+            text, is_fallback, elapsed, tokens_used = call_ai(message, user=user)
 
         # Lưu tin nhắn phản hồi của trợ lý
         ChatMessage.objects.create(
@@ -55,6 +67,7 @@ class ChatbotAPIView(View):
             role='assistant',
             content=text,
             is_fallback=is_fallback,
+            tokens_used=tokens_used,
             response_time_ms=elapsed,
         )
 
@@ -62,6 +75,7 @@ class ChatbotAPIView(View):
             'reply': text,
             'is_fallback': is_fallback,
             'response_time_ms': elapsed,
+            'tokens_used': tokens_used,
         })
 
 
@@ -75,3 +89,48 @@ class ChatHistoryView(LoginRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['sessions'] = ChatSession.objects.filter(user=self.request.user).prefetch_related('messages')
         return ctx
+
+
+class ChatSessionMessagesAPIView(View):
+    """
+    API lấy toàn bộ lịch sử tin nhắn của phiên chat hiện tại (hỗ trợ cả user đăng nhập lẫn khách vãng lai).
+    """
+    def get(self, request):
+        user = request.user if request.user.is_authenticated else None
+        session = None
+        if user:
+            session = ChatSession.objects.filter(user=user).order_by('-updated_at').first()
+        elif request.session.session_key:
+            session = ChatSession.objects.filter(session_key=request.session.session_key, user=None).order_by('-updated_at').first()
+
+        if not session:
+            return JsonResponse({'messages': []})
+
+        msgs = session.messages.order_by('created_at')
+        data = [{
+            'id': m.id,
+            'role': m.role,
+            'content': m.content,
+            'is_fallback': m.is_fallback,
+            'created_at': m.created_at.strftime('%H:%M'),
+        } for m in msgs]
+
+        return JsonResponse({'messages': data})
+
+
+class ChatSessionClearAPIView(View):
+    """
+    API xóa lịch sử chat của phiên hiện tại để bắt đầu cuộc trò chuyện mới.
+    """
+    def post(self, request):
+        user = request.user if request.user.is_authenticated else None
+        if user:
+            ChatSession.objects.filter(user=user).delete()
+        elif request.session.session_key:
+            ChatSession.objects.filter(session_key=request.session.session_key, user=None).delete()
+
+        # Xóa cả dữ liệu đơn hàng nháp dở dang nếu có
+        request.session.pop('chatbot_order_draft', None)
+        request.session.modified = True
+
+        return JsonResponse({'success': True})

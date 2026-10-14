@@ -91,6 +91,7 @@ main {
     word-break: break-word;
     font-size: 14px;
     line-height: 1.4;
+    white-space: pre-wrap;
 }
 
 .chat-msg.user {
@@ -103,6 +104,19 @@ main {
     background: white;
     border: 1px solid #dee2e6;
     margin-right: auto;
+}
+
+.chat-msg.bot.typing {
+    background: #e9ecef;
+    color: #495057;
+    font-style: italic;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
 }
 
 .chatbot-input-group {

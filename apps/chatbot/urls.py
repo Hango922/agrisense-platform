@@ -9,5 +9,7 @@ app_name = 'chatbot'
 
 urlpatterns = [
     path('send/', views.ChatbotAPIView.as_view(), name='send'),
+    path('messages/', views.ChatSessionMessagesAPIView.as_view(), name='messages'),
+    path('clear/', views.ChatSessionClearAPIView.as_view(), name='clear'),
     path('history/', views.ChatHistoryView.as_view(), name='history'),
 ]
