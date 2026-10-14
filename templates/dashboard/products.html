@@ -1,0 +1,73 @@
+<!-- File: templates/dashboard/products.html -->
+{% extends "dashboard/base.html" %}
+
+{% block title %}Quản Lý Nông Sản - AgriSense Dashboard{% endblock %}
+{% block header_title %}Quản Lý Danh Sách Nông Sản & Kho Hàng{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">Tổng cộng: <strong>{{ products|length }}</strong> mặt hàng nông sản</p>
+    <a href="/admin/products/product/add/" class="btn btn-success" target="_blank">
+        <i class="bi bi-plus-circle me-1"></i> Thêm Nông Sản Mới
+    </a>
+</div>
+
+<div class="card shadow-sm bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Nhà cung cấp / Vùng trồng</th>
+                    <th>Giá bán</th>
+                    <th>Tồn kho</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prod in products %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if prod.image %}
+                                    <img src="{{ prod.image.url }}" class="rounded me-2 border" style="width: 44px; height: 44px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light rounded me-2 text-center fs-4" style="width: 44px; height: 44px; line-height: 44px;">🥬</div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ prod.name }}</h6>
+                                    <small class="text-muted">{{ prod.origin|default:"Việt Nam" }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ prod.category.name }}</span></td>
+                        <td>{{ prod.supplier.name }}</td>
+                        <td class="fw-bold text-danger">{{ prod.price|floatformat:0 }} đ <small class="text-muted fw-normal">/ {{ prod.unit }}</small></td>
+                        <td>
+                            <span class="badge {% if prod.stock < 10 %}bg-danger{% else %}bg-success{% endif %}">
+                                {{ prod.stock }} {{ prod.unit }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if prod.is_active %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Đang bán</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border">Tạm dừng</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="/admin/products/product/{{ prod.id }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">Chưa có nông sản nào trong kho.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

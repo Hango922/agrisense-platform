@@ -1,0 +1,63 @@
+<!-- File: templates/accounts/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}Hồ sơ người dùng - Nông Sản Sạch{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body text-center p-4">
+                <div class="display-4 text-success mb-2">👤</div>
+                <h4 class="fw-bold mb-1">{{ user.username }}</h4>
+                <p class="text-muted mb-2">{{ user.email }}</p>
+                <div class="mb-3">
+                    <span class="badge bg-success px-3 py-2">
+                        Nhóm: {{ user.get_segment_display }}
+                    </span>
+                </div>
+                <ul class="list-group list-group-flush text-start small">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Số điện thoại:</span>
+                        <strong>{{ user.phone|default:"Chưa cập nhật" }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Ngày tham gia:</span>
+                        <strong>{{ user.date_joined|date:"d/m/Y" }}</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-success">Sổ Địa Chỉ Giao Hàng</h5>
+            </div>
+            <div class="card-body">
+                {% if addresses %}
+                    <div class="list-group">
+                        {% for addr in addresses %}
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ addr.full_name }} ({{ addr.phone }})</h6>
+                                    <p class="mb-1 text-muted small">{{ addr.address }}</p>
+                                </div>
+                                {% if addr.is_default %}
+                                    <span class="badge bg-primary">Mặc định</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">Bạn chưa lưu địa chỉ nào. Địa chỉ sẽ được lưu tự động khi bạn đặt hàng.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'cart_orders:order_history' %}" class="btn btn-outline-success">Xem đơn hàng của tôi</a>
+            <a href="{% url 'home' %}" class="btn btn-success">Tiếp tục mua sắm</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

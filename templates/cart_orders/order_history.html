@@ -1,0 +1,62 @@
+<!-- File: templates/cart_orders/order_history.html -->
+{% extends "base.html" %}
+
+{% block title %}Lịch sử đơn hàng - Nông Sản Sạch{% endblock %}
+
+{% block content %}
+<h3 class="fw-bold mb-4 text-success">📜 Lịch Sử Đơn Hàng Của Bạn</h3>
+
+{% if orders %}
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Người nhận</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ord in orders %}
+                        <tr>
+                            <td><strong class="text-success">{{ ord.order_code }}</strong></td>
+                            <td>{{ ord.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>{{ ord.full_name }} ({{ ord.phone }})</td>
+                            <td class="fw-bold text-danger">{{ ord.final_amount|floatformat:0 }} đ</td>
+                            <td>
+                                {% if ord.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                {% elif ord.status == 'confirmed' %}
+                                    <span class="badge bg-info text-dark">Đã xác nhận</span>
+                                {% elif ord.status == 'shipping' %}
+                                    <span class="badge bg-primary">Đang giao</span>
+                                {% elif ord.status == 'delivered' %}
+                                    <span class="badge bg-success">Đã giao</span>
+                                {% elif ord.status == 'cancelled' %}
+                                    <span class="badge bg-secondary">Đã hủy</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'cart_orders:order_detail' order_code=ord.order_code %}" class="btn btn-sm btn-outline-success">Xem chi tiết</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm text-center py-5">
+        <div class="display-3 text-muted mb-3">📄</div>
+        <h4>Bạn chưa có đơn hàng nào</h4>
+        <p class="text-muted">Các đơn hàng bạn đã đặt sẽ được lưu trữ và theo dõi tại đây.</p>
+        <div>
+            <a href="{% url 'products:list' %}" class="btn btn-success px-4 py-2">Bắt đầu mua sắm</a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

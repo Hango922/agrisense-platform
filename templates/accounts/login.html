@@ -1,0 +1,36 @@
+<!-- File: templates/accounts/login.html -->
+{% extends "base.html" %}
+
+{% block title %}Đăng nhập - Nông Sản Sạch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center text-success fw-bold mb-4">Đăng Nhập</h3>
+                <form method="post" action="{% url 'accounts:login' %}">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger py-2">
+                            Tên đăng nhập hoặc mật khẩu không chính xác.
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input type="text" name="username" class="form-control" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Đăng nhập</button>
+                </form>
+                <div class="text-center mt-3">
+                    <p class="text-muted small">Chưa có tài khoản? <a href="{% url 'accounts:register' %}" class="text-success fw-bold">Đăng ký ngay</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

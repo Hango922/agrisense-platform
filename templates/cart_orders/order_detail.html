@@ -1,0 +1,108 @@
+<!-- File: templates/cart_orders/order_detail.html -->
+{% extends "base.html" %}
+
+{% block title %}Chi tiết đơn hàng {{ order.order_code }} - Nông Sản Sạch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1 text-success">Đơn Hàng #{{ order.order_code }}</h3>
+        <p class="text-muted small mb-0">Thời gian đặt: {{ order.created_at|date:"d/m/Y H:i:s" }}</p>
+    </div>
+    <div>
+        {% if order.status == 'pending' %}
+            <span class="badge bg-warning text-dark fs-6 px-3 py-2">Chờ xác nhận</span>
+        {% elif order.status == 'confirmed' %}
+            <span class="badge bg-info text-dark fs-6 px-3 py-2">Đã xác nhận</span>
+        {% elif order.status == 'shipping' %}
+            <span class="badge bg-primary fs-6 px-3 py-2">Đang giao hàng</span>
+        {% elif order.status == 'delivered' %}
+            <span class="badge bg-success fs-6 px-3 py-2">Giao thành công</span>
+        {% elif order.status == 'cancelled' %}
+            <span class="badge bg-secondary fs-6 px-3 py-2">Đã hủy</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Danh sách sản phẩm -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Chi Tiết Sản Phẩm Đặt Mua</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Đơn giá</th>
+                            <th>Số lượng</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <h6 class="mb-0">{{ item.product_name }}</h6>
+                                    <small class="text-muted">{{ item.product.unit }}</small>
+                                </td>
+                                <td>{{ item.price|floatformat:0 }} đ</td>
+                                <td>{{ item.quantity }}</td>
+                                <td class="text-end fw-bold text-success">{{ item.subtotal|floatformat:0 }} đ</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end">Tiền hàng:</td>
+                            <td class="text-end fw-bold">{{ order.total_amount|floatformat:0 }} đ</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end">Phí vận chuyển:</td>
+                            <td class="text-end fw-bold">{{ order.shipping_fee|floatformat:0 }} đ</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end fs-5 fw-bold text-dark">Tổng thanh toán (COD):</td>
+                            <td class="text-end fs-5 fw-bold text-danger">{{ order.final_amount|floatformat:0 }} đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        {% if order.status == 'pending' %}
+            <div class="card border-0 shadow-sm p-3 bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-1 text-danger">Bạn muốn hủy đơn hàng này?</h6>
+                        <small class="text-muted">Chỉ có thể hủy đơn khi đơn hàng đang ở trạng thái 'Chờ xác nhận'.</small>
+                    </div>
+                    <form action="{% url 'cart_orders:cancel_order' order_code=order.order_code %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">Hủy Đơn Hàng</button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Thông tin giao nhận -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-3 mb-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Thông Tin Giao Hàng</h5>
+            <ul class="list-unstyled mb-0">
+                <li class="mb-2"><strong>Người nhận:</strong> {{ order.full_name }}</li>
+                <li class="mb-2"><strong>Điện thoại:</strong> {{ order.phone }}</li>
+                <li class="mb-2"><strong>Địa chỉ:</strong> {{ order.address }}</li>
+                <li class="mb-2"><strong>Phương thức:</strong> {{ order.get_payment_method_display }}</li>
+                {% if order.note %}
+                    <li class="mb-2"><strong>Ghi chú:</strong> <span class="fst-italic text-muted">{{ order.note }}</span></li>
+                {% endif %}
+            </ul>
+        </div>
+        <a href="{% url 'cart_orders:order_history' %}" class="btn btn-outline-secondary w-100">← Quay lại danh sách đơn hàng</a>
+    </div>
+</div>
+{% endblock %}

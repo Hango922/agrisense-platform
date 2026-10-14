@@ -1,0 +1,73 @@
+<!-- File: templates/traceability/public_trace.html -->
+{% extends "base.html" %}
+
+{% block title %}Truy xuất nguồn gốc - Lô {{ batch.batch_code }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <div class="text-center pb-3 border-bottom mb-4">
+                <span class="badge bg-success fs-6 px-3 py-2 mb-2">Xác Thực Nguồn Gốc Minh Bạch</span>
+                <h2 class="fw-bold text-success mb-1">{{ batch.product.name }}</h2>
+                <p class="text-muted">Mã định danh lô hàng: <strong class="text-dark">{{ batch.batch_code }}</strong></p>
+                {% if batch.qr_code %}
+                    <div class="my-3">
+                        <img src="{{ batch.qr_code.url }}" alt="QR Code" class="img-thumbnail" style="width: 140px; height: 140px;">
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                        <h6 class="fw-bold text-success mb-2">🌱 Vùng Trồng & Nông Trại</h6>
+                        <p class="mb-1"><strong>Nông trại:</strong> {{ batch.product.supplier.name }}</p>
+                        <p class="mb-1"><strong>Vị trí:</strong> {{ batch.planting_location }}</p>
+                        <p class="mb-0"><strong>Chứng nhận:</strong> <span class="badge bg-success">{{ batch.certification|default:"VietGAP" }}</span></p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                        <h6 class="fw-bold text-success mb-2">📅 Mốc Thời Gian Thu Hoạch</h6>
+                        <p class="mb-1"><strong>Ngày thu hoạch:</strong> {{ batch.harvest_date|date:"d/m/Y" }}</p>
+                        <p class="mb-1"><strong>Ngày đóng gói:</strong> {{ batch.packaging_date|date:"d/m/Y" }}</p>
+                        <p class="mb-0"><strong>Hạn sử dụng:</strong> {{ batch.expiry_date|date:"d/m/Y"|default:"Theo nhiệt độ bảo quản" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if batch.notes %}
+                <div class="mb-4">
+                    <h5 class="fw-bold text-success">Nhật Ký Canh Tác & Chăm Sóc</h5>
+                    <div class="p-3 bg-light rounded">
+                        <p class="mb-0 text-muted">{{ batch.notes }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if history %}
+                <div class="mb-4">
+                    <h5 class="fw-bold text-success">Lịch Sử Kiểm Định & Vận Chuyển</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for record in history %}
+                            <li class="list-group-item px-0">
+                                <div class="d-flex justify-content-between">
+                                    <strong>{{ record.field_changed }}</strong>
+                                    <small class="text-muted">{{ record.changed_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <p class="mb-0 small text-muted">{{ record.new_value }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="text-center pt-3 border-top">
+                <a href="{% url 'products:detail' slug=batch.product.slug %}" class="btn btn-success px-4 me-2">Đặt mua sản phẩm này</a>
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary px-4">Về trang chủ</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

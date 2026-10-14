@@ -1,0 +1,88 @@
+<!-- File: templates/dashboard/behavior.html -->
+{% extends "dashboard/base.html" %}
+
+{% block title %}Nhật Ký Hành Vi AI - AgriSense Dashboard{% endblock %}
+{% block header_title %}Phân Tích Hành Vi Người Dùng & Dữ Liệu Học Máy (30 Ngày){% endblock %}
+
+{% block dashboard_content %}
+<!-- Event Type Breakdown Cards -->
+<div class="row g-3 mb-4">
+    {% for stat in event_counts %}
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card p-3 bg-white shadow-sm border text-center">
+                <span class="badge bg-light text-success border mb-1 small text-uppercase">{{ stat.event_type }}</span>
+                <h3 class="fw-bold text-dark mb-0">{{ stat.count }}</h3>
+                <span class="text-muted small">tương tác</span>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-light border text-center text-muted">Chưa có sự kiện nào trong 30 ngày qua.</div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- 50 Most Recent Events Table -->
+<div class="card shadow-sm bg-white">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark">50 Tương Tác Gần Nhất Được Hệ Thống Ghi Nhận</h5>
+        <span class="text-muted small">Thời gian thực</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Thời Gian</th>
+                    <th>Người Dùng / Session</th>
+                    <th>Loại Sự Kiện</th>
+                    <th>Nông Sản Liên Quan</th>
+                    <th>Từ Khóa Tìm Kiếm</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ev in recent_events %}
+                    <tr>
+                        <td class="small text-muted">{{ ev.created_at|date:"d/m/Y H:i:s" }}</td>
+                        <td>
+                            {% if ev.user %}
+                                <strong>{{ ev.user.username }}</strong>
+                            {% else %}
+                                <span class="text-muted small">Khách ({{ ev.session_key|slice:":10" }})</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ev.event_type == 'view' %}
+                                <span class="badge bg-info-subtle text-info border">Xem sản phẩm</span>
+                            {% elif ev.event_type == 'search' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border">Tìm kiếm</span>
+                            {% elif ev.event_type == 'add_to_cart' %}
+                                <span class="badge bg-primary-subtle text-primary border">Thêm giỏ</span>
+                            {% elif ev.event_type == 'purchase' %}
+                                <span class="badge bg-success-subtle text-success border">Mua hàng</span>
+                            {% elif ev.event_type == 'review' %}
+                                <span class="badge bg-danger-subtle text-danger border">Đánh giá</span>
+                            {% elif ev.event_type == 'chat' %}
+                                <span class="badge bg-secondary-subtle text-secondary border">Chat AI</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">{{ ev.event_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ev.product %}
+                                <strong>{{ ev.product.name }}</strong>
+                            {% elif ev.category %}
+                                <span class="text-muted">[Danh mục] {{ ev.category.name }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ev.keyword|default:"-" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Chưa ghi nhận sự kiện nào.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

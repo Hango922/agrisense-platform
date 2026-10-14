@@ -1,0 +1,153 @@
+<!-- File: templates/products/detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Nông Sản Sạch{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products:list' %}">Sản phẩm</a></li>
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <!-- Hình ảnh sản phẩm -->
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm p-2 text-center bg-white">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}" style="max-height: 380px; object-fit: contain;">
+            {% else %}
+                <div class="py-5 text-muted display-1">🥬</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Thông tin chi tiết & Đặt mua -->
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm p-4 bg-white h-100">
+            <span class="badge bg-success align-self-start mb-2">{{ product.category.name }}</span>
+            <h2 class="fw-bold mb-2">{{ product.name }}</h2>
+            <div class="mb-3">
+                <span class="text-warning fs-5">★ {{ avg_rating|floatformat:1 }}</span>
+                <span class="text-muted small ms-2">({{ product.reviews.count }} lượt đánh giá)</span>
+            </div>
+            <div class="mb-3">
+                <span class="text-danger display-6 fw-bold">{{ product.price|floatformat:0 }} đ</span>
+                <span class="text-muted fs-5">/ {{ product.unit }}</span>
+            </div>
+
+            <ul class="list-unstyled text-muted small mb-4">
+                <li><strong>Nhà cung cấp / Trang trại:</strong> {{ product.supplier.name }} ({{ product.supplier.certification|default:"Chuẩn sạch" }})</li>
+                <li><strong>Xuất xứ:</strong> {{ product.origin|default:"Việt Nam" }}</li>
+                <li><strong>Mùa vụ:</strong> {{ product.season|default:"Quanh năm" }}</li>
+                <li><strong>Tình trạng:</strong> <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">{% if product.stock > 0 %}Còn hàng ({{ product.stock }} {{ product.unit }}){% else %}Hết hàng{% endif %}</span></li>
+            </ul>
+
+            {% if product.stock > 0 %}
+                <form action="{% url 'cart_orders:add' product_id=product.id %}" method="post" class="mb-4">
+                    {% csrf_token %}
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 120px;">
+                            <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ product.stock }}">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg px-4 fw-bold">
+                            🛒 Thêm vào giỏ hàng
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="alert alert-warning py-2 mb-4">Sản phẩm tạm thời hết hàng. Vui lòng quay lại sau!</div>
+            {% endif %}
+
+            <hr>
+            <div class="mb-3">
+                <h5 class="fw-bold text-success">Mô tả sản phẩm</h5>
+                <p class="text-muted">{{ product.description|default:"Sản phẩm nông sản tươi sạch, thu hoạch đúng quy trình đảm bảo an toàn vệ sinh thực phẩm." }}</p>
+            </div>
+            {% if product.usage %}
+                <div class="mb-3">
+                    <h6 class="fw-bold text-success">Hướng dẫn sử dụng & Chế biến</h6>
+                    <p class="text-muted small">{{ product.usage }}</p>
+                </div>
+            {% endif %}
+            {% if product.storage %}
+                <div class="mb-3">
+                    <h6 class="fw-bold text-success">Bảo quản</h6>
+                    <p class="text-muted small">{{ product.storage }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Đánh giá và nhận xét -->
+<div class="row mt-5">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <h4 class="fw-bold mb-3">Đánh giá từ khách hàng</h4>
+
+            {% if user.is_authenticated %}
+                <form action="{% url 'products:add_review' slug=product.slug %}" method="post" class="mb-4 p-3 bg-light rounded">
+                    {% csrf_token %}
+                    <h6 class="fw-bold">Gửi đánh giá của bạn</h6>
+                    <div class="mb-2">
+                        <label class="form-label small">Đánh giá sao:</label>
+                        <select name="rating" class="form-select form-select-sm" style="width: 150px;">
+                            <option value="5">⭐⭐⭐⭐⭐ (5 sao)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 sao)</option>
+                            <option value="3">⭐⭐⭐ (3 sao)</option>
+                            <option value="2">⭐⭐ (2 sao)</option>
+                            <option value="1">⭐ (1 sao)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <textarea name="comment" class="form-control" rows="2" placeholder="Chia sẻ cảm nhận về chất lượng nông sản..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm">Gửi nhận xét</button>
+                </form>
+            {% else %}
+                <p class="text-muted small"><a href="{% url 'accounts:login' %}">Đăng nhập</a> để viết đánh giá cho sản phẩm này.</p>
+            {% endif %}
+
+            <div class="reviews-list">
+                {% for rev in reviews %}
+                    <div class="border-bottom py-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ rev.user.username }}</strong>
+                            <span class="text-warning">★ {{ rev.rating }}</span>
+                        </div>
+                        <p class="text-muted small mb-1">{{ rev.comment }}</p>
+                        <span class="text-muted" style="font-size: 11px;">{{ rev.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sản phẩm liên quan -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 bg-white">
+            <h5 class="fw-bold mb-3">Nông sản cùng loại</h5>
+            {% for rel in related_products %}
+                <div class="d-flex align-items-center mb-3">
+                    {% if rel.image %}
+                        <img src="{{ rel.image.url }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded me-3 text-center py-2" style="width: 60px; height: 60px;">🥬</div>
+                    {% endif %}
+                    <div>
+                        <h6 class="mb-0"><a href="{% url 'products:detail' slug=rel.slug %}" class="text-decoration-none text-dark">{{ rel.name }}</a></h6>
+                        <span class="text-danger fw-bold small">{{ rel.price|floatformat:0 }} đ</span>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted small">Không có sản phẩm cùng danh mục.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

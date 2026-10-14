@@ -1,0 +1,143 @@
+<!-- File: templates/dashboard/index.html -->
+{% extends "dashboard/base.html" %}
+
+{% block title %}Tổng Quan Quản Trị - AgriSense Dashboard{% endblock %}
+{% block header_title %}Tổng Quan Hoạt Động Kinh Doanh & AI (30 Ngày Qua){% endblock %}
+
+{% block dashboard_content %}
+<!-- KPI Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card p-3 bg-white shadow-sm border-start border-success border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Doanh Thu (30 Ngày)</span>
+                    <h3 class="fw-bold text-success mb-0 mt-1">{{ total_revenue|floatformat:0 }} đ</h3>
+                </div>
+                <div class="fs-1 text-success opacity-75">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card p-3 bg-white shadow-sm border-start border-primary border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Đơn Hàng (30 Ngày)</span>
+                    <h3 class="fw-bold text-primary mb-0 mt-1">{{ total_orders }}</h3>
+                </div>
+                <div class="fs-1 text-primary opacity-75">
+                    <i class="bi bi-cart-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card p-3 bg-white shadow-sm border-start border-info border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Tổng Khách Hàng</span>
+                    <h3 class="fw-bold text-info mb-0 mt-1">{{ total_customers }}</h3>
+                </div>
+                <div class="fs-1 text-info opacity-75">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card p-3 bg-white shadow-sm border-start border-warning border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Sản Phẩm Đang Bán</span>
+                    <h3 class="fw-bold text-warning mb-0 mt-1">{{ total_products }}</h3>
+                </div>
+                <div class="fs-1 text-warning opacity-75">
+                    <i class="bi bi-flower2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Top 10 Bestselling Products -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-trophy text-warning me-2"></i> Top Nông Sản Bán Chạy Nhất (30 Ngày)
+                </h5>
+                <a href="{% url 'dashboard:products' %}" class="btn btn-sm btn-outline-success">Xem kho hàng →</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Tên Nông Sản</th>
+                            <th class="text-end">Số Lượng Đã Bán</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_products %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if forloop.counter <= 3 %}bg-warning text-dark{% else %}bg-secondary{% endif %} rounded-circle">
+                                        {{ forloop.counter }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ item.product_name }}</strong></td>
+                                <td class="text-end fw-bold text-success fs-6">{{ item.total }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">
+                                    Chưa có đơn hàng phát sinh trong 30 ngày qua.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Segments AI Breakdown -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-pie-chart text-primary me-2"></i> Phân Nhóm Khách Hàng (AI)
+                </h5>
+                <a href="{% url 'dashboard:customers' %}" class="btn btn-sm btn-outline-primary">Chi tiết →</a>
+            </div>
+            <p class="text-muted small mb-3">Phân loại hành vi tự động bằng RFM rules chạy hàng ngày.</p>
+            <ul class="list-group list-group-flush">
+                {% for seg in segments %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
+                        <div>
+                            {% if seg.segment == 'new' %}
+                                <span class="badge bg-warning text-dark me-2">Khách mới</span>
+                            {% elif seg.segment == 'interested' %}
+                                <span class="badge bg-primary me-2">Quan tâm</span>
+                            {% elif seg.segment == 'loyal' %}
+                                <span class="badge bg-success me-2">Thường xuyên</span>
+                            {% elif seg.segment == 'at_risk' %}
+                                <span class="badge bg-danger me-2">Nguy cơ rời bỏ</span>
+                            {% else %}
+                                <span class="badge bg-secondary me-2">Bình thường</span>
+                            {% endif %}
+                            <span class="small text-muted">{{ seg.segment }}</span>
+                        </div>
+                        <span class="badge bg-dark rounded-pill fs-6 px-3">{{ seg.count }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted text-center py-4">Chưa có khách hàng đăng ký.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

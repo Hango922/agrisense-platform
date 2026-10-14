@@ -1,0 +1,92 @@
+<!-- File: templates/base.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Nông Sản Sạch{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">🌾 Nông Sản Sạch</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'products:list' %}">Sản phẩm</a></li>
+                </ul>
+                <form class="d-flex me-3" action="{% url 'products:search' %}" method="get">
+                    <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Tìm kiếm nông sản..." value="{{ request.GET.q|default:'' }}">
+                    <button class="btn btn-outline-light btn-sm" type="submit">Tìm</button>
+                </form>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'cart_orders:cart' %}">
+                            🛒 Giỏ hàng <span class="badge bg-warning text-dark">{{ cart_count|default:"0" }}</span>
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">{{ user.username }}</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Hồ sơ cá nhân</a></li>
+                                <li><a class="dropdown-item" href="{% url 'cart_orders:order_history' %}">Lịch sử đơn hàng</a></li>
+                                {% if user.is_staff or user.is_superuser %}
+                                    <li><a class="dropdown-item text-primary fw-bold" href="{% url 'dashboard:home' %}">Dashboard Quản trị</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Đăng nhập</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register' %}">Đăng ký</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">© 2026 Nông Sản Sạch — Nguyễn Hồng Hoàng</p>
+    </footer>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget" class="chatbot-widget">
+        <button id="chatbot-toggle" class="chatbot-toggle">💬</button>
+        <div class="chatbot-panel shadow" id="chatbot-panel" style="display: none;">
+            <div class="chatbot-header">🌾 Trợ lý Nông Sản AI</div>
+            <div id="chatbot-messages" class="chatbot-messages">
+                <div class="chat-msg bot-msg">Xin chào! Tôi có thể giúp bạn tìm nông sản sạch hoặc giải đáp thắc mắc gì?</div>
+            </div>
+            <div class="chatbot-input-group">
+                <input type="text" id="chatbot-input" placeholder="Hỏi về nông sản...">
+                <button id="chatbot-send">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/chatbot.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

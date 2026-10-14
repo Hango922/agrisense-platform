@@ -1,0 +1,114 @@
+<!-- File: templates/home.html -->
+{% extends "base.html" %}
+
+{% block title %}Trang chủ - Nông Sản Sạch & AI{% endblock %}
+
+{% block content %}
+<!-- Banner Hero -->
+<div class="p-4 p-md-5 mb-4 bg-white rounded-3 shadow-sm border">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold text-success mb-3">🌾 Nông Sản Sạch Tươi Ngon Mỗi Ngày</h1>
+            <p class="lead text-muted mb-4">
+                Kết nối trực tiếp từ nông trại đạt chuẩn VietGAP/GlobalGAP tới bàn ăn gia đình bạn.
+                Tích hợp AI tư vấn 24/7 và truy xuất nguồn gốc bằng mã QR minh bạch.
+            </p>
+            <div class="d-flex gap-2">
+                <a href="{% url 'products:list' %}" class="btn btn-success btn-lg px-4">Khám phá sản phẩm</a>
+                <a href="#featured" class="btn btn-outline-secondary btn-lg px-4">Sản phẩm nổi bật</a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center d-none d-lg-block">
+            <div class="display-1 text-success">🥦🍎🥕</div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Recommendations nếu có -->
+{% if recommendations %}
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold text-success mb-0">✨ Gợi ý dành riêng cho bạn (AI)</h3>
+        <span class="badge bg-success">Cá nhân hóa theo hành vi</span>
+    </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
+        {% for rec in recommendations %}
+            {% with prod=rec.product|default:rec %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">
+                    {% if prod.image %}
+                        <img src="{{ prod.image.url }}" class="card-img-top" alt="{{ prod.name }}" style="height: 140px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light text-center py-4 text-muted" style="height: 140px;">🥬</div>
+                    {% endif %}
+                    <div class="card-body p-2 d-flex flex-column">
+                        {% if rec.reason %}
+                            <span class="badge bg-light text-success border mb-1 small text-truncate" style="font-size: 10px;" title="{{ rec.reason }}">{{ rec.reason }}</span>
+                        {% endif %}
+                        <h6 class="card-title mb-1 text-truncate">
+                            <a href="{% url 'products:detail' slug=prod.slug %}" class="text-decoration-none text-dark">{{ prod.name }}</a>
+                        </h6>
+                        <p class="text-danger fw-bold mb-2">{{ prod.price|floatformat:0 }} đ <small class="text-muted fw-normal">/ {{ prod.unit }}</small></p>
+                        <a href="{% url 'products:detail' slug=prod.slug %}" class="btn btn-sm btn-outline-success mt-auto">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Sản phẩm mới nhất & Nổi bật -->
+<div id="featured" class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold mb-0">🌱 Sản phẩm nông sản mới nhất</h3>
+        <a href="{% url 'products:list' %}" class="text-success text-decoration-none fw-bold">Xem tất cả →</a>
+    </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+        {% for prod in featured_products %}
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0">
+                    {% if prod.image %}
+                        <img src="{{ prod.image.url }}" class="card-img-top" alt="{{ prod.name }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light text-center py-5 text-muted" style="height: 180px;"><span class="fs-1">🥬</span></div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <span class="badge bg-light text-success border align-self-start mb-2">{{ prod.category.name }}</span>
+                        <h5 class="card-title mb-1">
+                            <a href="{% url 'products:detail' slug=prod.slug %}" class="text-decoration-none text-dark">{{ prod.name }}</a>
+                        </h5>
+                        <p class="text-muted small mb-2">Xuất xứ: {{ prod.origin|default:"Việt Nam" }}</p>
+                        <div class="mt-auto pt-2 d-flex justify-content-between align-items-center">
+                            <span class="text-danger fs-5 fw-bold">{{ prod.price|floatformat:0 }} đ <small class="text-muted fs-6 fw-normal">/ {{ prod.unit }}</small></span>
+                            <a href="{% url 'products:detail' slug=prod.slug %}" class="btn btn-success btn-sm">Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">Chưa có sản phẩm nào. Dữ liệu mẫu sẽ được thêm vào hệ thống.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Danh mục nổi bật -->
+<div class="mb-5">
+    <h3 class="fw-bold mb-3">🌿 Danh mục nông sản</h3>
+    <div class="row g-3">
+        {% for cat in categories %}
+            <div class="col-md-3">
+                <a href="{% url 'products:list' %}?category={{ cat.slug }}" class="text-decoration-none">
+                    <div class="card p-3 border-0 shadow-sm text-center bg-white">
+                        <h5 class="fw-bold text-success mb-1">{{ cat.name }}</h5>
+                        <p class="text-muted small mb-0">{{ cat.description|default:"Nông sản sạch, an toàn" }}</p>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

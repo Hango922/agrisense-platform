@@ -1,0 +1,61 @@
+<!-- File: templates/dashboard/traceability.html -->
+{% extends "dashboard/base.html" %}
+
+{% block title %}Lô Hàng & Mã QR - AgriSense Dashboard{% endblock %}
+{% block header_title %}Quản Lý Lô Hàng Nông Sản & Mã QR Truy Xuất Nguồn Gốc{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">Tổng cộng: <strong>{{ batches|length }}</strong> lô hàng nông sản</p>
+    <a href="/admin/traceability/productbatch/add/" class="btn btn-success" target="_blank">
+        <i class="bi bi-plus-circle me-1"></i> Thêm Lô Hàng Mới
+    </a>
+</div>
+
+<div class="card shadow-sm bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã Lô Hàng</th>
+                    <th>Nông Sản</th>
+                    <th>Vùng Trồng / Trang Trại</th>
+                    <th>Ngày Thu Hoạch</th>
+                    <th>Hạn Sử Dụng</th>
+                    <th>Chứng Nhận</th>
+                    <th>Ảnh Mã QR</th>
+                    <th class="text-end">Trang Công Khai</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in batches %}
+                    <tr>
+                        <td><strong class="text-success">{{ b.batch_code }}</strong></td>
+                        <td><strong>{{ b.product.name }}</strong></td>
+                        <td>{{ b.planting_location }}</td>
+                        <td>{{ b.harvest_date|date:"d/m/Y" }}</td>
+                        <td>{{ b.expiry_date|date:"d/m/Y"|default:"-" }}</td>
+                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">{{ b.certification|default:"VietGAP" }}</span></td>
+                        <td>
+                            {% if b.qr_code %}
+                                <a href="{{ b.qr_code.url }}" target="_blank">
+                                    <img src="{{ b.qr_code.url }}" alt="QR" class="img-thumbnail" style="width: 48px; height: 48px;">
+                                </a>
+                            {% else %}
+                                <span class="text-muted small">Chưa có QR</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'traceability:public_trace' batch_code=b.batch_code %}" class="btn btn-sm btn-outline-success" target="_blank">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Xem QR Trace
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="8" class="text-center py-4 text-muted">Chưa có lô hàng nào trong hệ thống.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

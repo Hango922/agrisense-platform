@@ -1,0 +1,70 @@
+<!-- File: templates/dashboard/customers.html -->
+{% extends "dashboard/base.html" %}
+
+{% block title %}Khách Hàng & Phân Nhóm AI - AgriSense Dashboard{% endblock %}
+{% block header_title %}Quản Lý Khách Hàng & Phân Nhóm Hành Vi AI{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">Tổng số: <strong>{{ customers|length }}</strong> khách hàng đăng ký</p>
+    <a href="/admin/accounts/user/" class="btn btn-outline-secondary btn-sm" target="_blank">
+        <i class="bi bi-box-arrow-up-right me-1"></i> Quản lý nâng cao
+    </a>
+</div>
+
+<div class="card shadow-sm bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tài Khoản</th>
+                    <th>Email</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Phân Nhóm Hành Vi (AI)</th>
+                    <th>Thời Gian Cập Nhật Nhóm</th>
+                    <th>Ngày Đăng Ký</th>
+                    <th class="text-end">Hồ Sơ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cust in customers %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success-subtle text-success rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                                    {{ cust.username|slice:":1"|upper }}
+                                </div>
+                                <strong>{{ cust.username }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ cust.email|default:"Chưa có" }}</td>
+                        <td>{{ cust.phone|default:"Chưa có" }}</td>
+                        <td>
+                            {% if cust.segment == 'new' %}
+                                <span class="badge bg-warning text-dark">Khách mới</span>
+                            {% elif cust.segment == 'interested' %}
+                                <span class="badge bg-primary">Quan tâm</span>
+                            {% elif cust.segment == 'loyal' %}
+                                <span class="badge bg-success">Thường xuyên</span>
+                            {% elif cust.segment == 'at_risk' %}
+                                <span class="badge bg-danger">Nguy cơ rời bỏ</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Bình thường</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ cust.segment_updated_at|date:"d/m/Y H:i"|default:"Chưa chạy phân nhóm" }}</td>
+                        <td class="small text-muted">{{ cust.date_joined|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end">
+                            <a href="/admin/accounts/user/{{ cust.id }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="bi bi-eye"></i> Xem
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">Chưa có khách hàng đăng ký nào.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

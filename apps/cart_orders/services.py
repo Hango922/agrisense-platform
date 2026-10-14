@@ -1,0 +1,86 @@
+# File: apps/cart_orders/services.py
+"""
+Các dịch vụ xử lý nghiệp vụ giỏ hàng, đặt hàng COD và tính phí vận chuyển.
+"""
+from django.db import transaction
+from django.utils.crypto import get_random_string
+from .models import Order, OrderItem
+
+# Cấu hình phí ship: 30.000đ, miễn phí từ 500.000đ
+SHIPPING_FEE = 30000
+FREE_SHIPPING_THRESHOLD = 500000
+
+
+def calculate_shipping_fee(total):
+    """
+    Tính phí vận chuyển: Miễn phí nếu đơn hàng >= 500.000đ, ngược lại 30.000đ.
+    """
+    return 0 if total >= FREE_SHIPPING_THRESHOLD else SHIPPING_FEE
+
+
+@transaction.atomic
+def create_order_from_cart(user, cart, address_data, note=""):
+    """
+    Tạo đơn hàng COD từ giỏ hàng trong một transaction an toàn:
+    - Kiểm tra giỏ hàng không rỗng.
+    - Kiểm tra tồn kho từng mặt hàng.
+    - Tính toán tổng tiền, phí vận chuyển và giảm trừ tồn kho sản phẩm.
+    - Xóa các mặt hàng trong giỏ sau khi đặt thành công.
+    """
+    if not cart.items.exists():
+        raise ValueError("Giỏ hàng trống")
+
+    for item in cart.items.select_related('product'):
+        if item.quantity > item.product.stock:
+            raise ValueError(f"Sản phẩm '{item.product.name}' chỉ còn {item.product.stock} {item.product.unit}")
+
+    total = sum(item.subtotal() for item in cart.items.all())
+    shipping_fee = calculate_shipping_fee(total)
+    final = total + shipping_fee
+
+    order = Order.objects.create(
+        user=user,
+        order_code='ORD' + get_random_string(8, '0123456789'),
+        full_name=address_data['full_name'],
+        phone=address_data['phone'],
+        address=address_data['address'],
+        total_amount=total,
+        shipping_fee=shipping_fee,
+        final_amount=final,
+        note=note,
+        status='pending',
+        payment_method='cod',
+    )
+
+    for item in cart.items.select_related('product'):
+        OrderItem.objects.create(
+            order=order,
+            product=item.product,
+            product_name=item.product.name,
+            price=item.product.price,
+            quantity=item.quantity,
+            subtotal=item.subtotal(),
+        )
+        item.product.stock -= item.quantity
+        item.product.save(update_fields=['stock'])
+
+    cart.items.all().delete()
+    return order
+
+
+@transaction.atomic
+def cancel_order(order):
+    """
+    Hủy đơn hàng: Chỉ cho phép khi đơn ở trạng thái 'pending' (Chờ xác nhận).
+    Tự động hoàn lại số lượng tồn kho cho các sản phẩm.
+    """
+    if order.status not in ('pending',):
+        raise ValueError("Chỉ có thể hủy đơn ở trạng thái 'Chờ xác nhận'")
+
+    for item in order.items.select_related('product'):
+        item.product.stock += item.quantity
+        item.product.save(update_fields=['stock'])
+
+    order.status = 'cancelled'
+    order.save(update_fields=['status'])
+    return order

@@ -1,0 +1,512 @@
+KẾ HOẠCH THỰC HIỆN BÀI TẬP LỚN
+Thông tin chung
+Tên đề tài/dự án: Xây dựng website bán nông sản tích hợp AI nhận diện hành vi khách hàng, Chatbot tư vấn và QR truy xuất nguồn gốc
+Lớp học phần: N09 - Mã sinh viên: 20234070 - Mã nhóm: 2
+Họ và tên sinh viên: Nguyễn Hồng Hoàng
+Hình thức thực hiện: Cá nhân
+Thời gian thực hiện: Từ 14/10/2026 đến 07/12/2026 (8 tuần)
+I. TỔNG QUAN DỰ ÁN (PROJECT OVERVIEW)
+1. Lý do thực hiện dự án
+Ý tưởng xuất phát từ: Nhu cầu thực tế của người tiêu dùng Việt Nam ngày càng quan tâm đến nguồn gốc, chất lượng và độ an toàn của nông sản. Các sàn thương mại điện tử lớn còn thiếu tính năng truy xuất nguồn gốc minh bạch và cá nhân hóa trải nghiệm mua sắm; trong khi cửa hàng nông sản nhỏ lẻ chưa có kênh bán hàng trực tuyến bài bản.
+Bài toán thực tế được giải quyết:
+Kết nối người nông dân/hợp tác xã với người tiêu dùng cuối qua nền tảng trực tuyến.
+Giúp người mua tra cứu nguồn gốc sản phẩm bằng QR nhanh chóng, minh bạch.
+Cá nhân hóa trải nghiệm thông qua nhận diện hành vi để gợi ý sản phẩm phù hợp.
+Chatbot AI hỗ trợ tư vấn 24/7 về công dụng, bảo quản, giá cả và tình trạng đơn hàng.
+Đối tượng khách hàng mục tiêu / người hưởng lợi:
+Người tiêu dùng: Mua nông sản sạch, muốn biết rõ nguồn gốc.
+Hộ nông dân / HTX / cửa hàng nông sản nhỏ: Có kênh bán hàng online và công cụ quản lý.
+Bản thân sinh viên: Vận dụng kiến thức Django, MySQL, AI/ML, Bootstrap để xây dựng sản phẩm hoàn chỉnh, phục vụ báo cáo và bảo vệ trước hội đồng.
+2. Mục tiêu dự án (theo tiêu chí SMART)
+S (Specific – Cụ thể): Xây dựng hoàn chỉnh một website bán nông sản chạy trên localhost, bao gồm: bán hàng, quản trị, nhận diện hành vi khách hàng, gợi ý sản phẩm cá nhân hóa, Chatbot AI tư vấn và QR truy xuất nguồn gốc.
+M (Measurable – Đo lường được):
+Website có tối thiểu 12 bảng dữ liệu MySQL theo nhóm nghiệp vụ.
+Có tối thiểu 25 chức năng chia theo 4 nhóm: khách hàng, quản trị, AI/gợi ý, QR truy xuất.
+100% luồng nghiệp vụ chính đều có Unit Test (đăng ký, đặt hàng, COD, phân nhóm khách hàng, gợi ý, sinh QR, chatbot).
+Tối thiểu 30 sản phẩm mẫu, 20 khách hàng mẫu, 50 đơn hàng mẫu, 10 lô hàng có QR để demo phân nhóm hành vi.
+Tối thiểu 10 câu hỏi test Chatbot đạt độ chính xác ≥ 80%.
+Báo cáo dài 40–80 trang (không bao gồm bìa, mục lục, phụ lục), có đầy đủ sơ đồ, hình ảnh minh chứng.
+A (Achievable – Khả thi):
+Kiến thức Django, MySQL, HTML/CSS/JS đã được học trên lớp.
+Các thư viện AI (Pandas, Scikit-learn) đều miễn phí, tài liệu phong phú.
+Có thể dùng API AI trực tuyến miễn phí (Gemini Flash / Groq) cho Chatbot.
+Khối lượng phù hợp với 1 sinh viên trong 8 tuần (~25–30 giờ/tuần).
+R (Relevant – Thực tế):
+Giúp đạt chuẩn đầu ra môn học: phân tích thiết kế hệ thống, lập trình web Django, CSDL quan hệ, tích hợp AI, kiểm thử phần mềm.
+Sản phẩm có thể phát triển tiếp thành đồ án tốt nghiệp.
+T (Time-bound – Thời hạn):
+Bắt đầu: Tuần 14/10/2026.
+Kết thúc & nộp báo cáo: Tuần 07/12/2026 (tổng cộng 8 tuần).
+3. Phạm vi dự án
+Trong phạm vi:
+Website bán nông sản chạy trên localhost (Django Development Server).
+4 nhóm chức năng chính: bán hàng, quản trị, AI/gợi ý, QR truy xuất.
+Tích hợp API AI trực tuyến cho Chatbot.
+Dữ liệu mẫu đủ để demo phân nhóm hành vi.
+Ngoài phạm vi:
+Thanh toán online thật (chỉ dùng COD để demo).
+Triển khai production (chỉ chạy localhost).
+Phân tích chuyên sâu (chỉ làm sau khi các chức năng chính ổn định).
+Mobile app (chỉ làm web responsive).
+II. KẾ HOẠCH TRIỂN KHAI (WBS)
+STT
+Giai đoạn & Công việc cụ thể
+Thời gian bắt đầu
+Thời gian kết thúc
+Kết quả đầu ra (Deliverables)
+Trạng thái
+1
+GIAI ĐOẠN 1: KHỞI ĐỘNG (Tuần 1)
+1.1
+Chốt đề tài, xác định phạm vi, mục tiêu dự án
+14/10/2026
+15/10/2026
+Bản mô tả phạm vi
+Chưa làm
+1.2
+Khảo sát 5 website bán nông sản, phân tích ưu/nhược
+16/10/2026
+17/10/2026
+Báo cáo khảo sát
+Chưa làm
+1.3
+Lập kế hoạch thực hiện dự án (bản này)
+18/10/2026
+19/10/2026
+File kế hoạch
+Chưa làm
+1.4
+Cài đặt môi trường: Python 3.14.3, MySQL 26.7.0, Django >=5.1, PyMySQL, VS Code, Git
+19/10/2026
+20/10/2026
+Môi trường dev chạy được
+Chưa làm
+2
+GIAI ĐOẠN 2: PHÂN TÍCH & THIẾT KẾ (Tuần 2)
+2.1
+Thiết kế Use Case, Activity Diagram, Class Diagram, Sequence Diagram, ERD
+21/10/2026
+24/10/2026
+File sơ đồ (drawio/PlantUML)
+Chưa làm
+2.2
+Thiết kế 12 bảng MySQL và viết migration Django
+25/10/2026
+27/10/2026
+File migration
+Chưa làm
+2.3
+Thiết kế wireframe giao diện khách hàng & admin
+27/10/2026
+28/10/2026
+File Figma/wireframe
+Chưa làm
+3
+GIAI ĐOẠN 3: LẬP TRÌNH CHỨC NĂNG CỐT LỖI (Tuần 3-5)
+3.1
+App accounts: đăng ký/đăng nhập/đăng xuất/quên mật khẩu, phân quyền
+29/10/2026
+02/11/2026
+Module accounts
+Chưa làm
+3.2
+App products: danh mục, sản phẩm, nhà cung cấp, tìm kiếm/lọc
+03/11/2026
+07/11/2026
+Module products
+Chưa làm
+3.3
+App cart_orders: giỏ hàng, đặt hàng, mã giảm giá, COD, trạng thái đơn
+08/11/2026
+14/11/2026
+Module cart_orders
+Chưa làm
+3.4
+Xây dựng trang quản trị riêng (dashboard) cho admin
+15/11/2026
+19/11/2026
+Trang dashboard
+Chưa làm
+4
+GIAI ĐOẠN 4: CHỨC NĂNG AI, GỢI Ý & QR (Tuần 6-7)
+4.1
+Ghi nhận hành vi (user_events) + phân nhóm khách hàng
+20/11/2026
+23/11/2026
+Module behavior
+Chưa làm
+4.2
+Thuật toán gợi ý sản phẩm (Content-based + fallback khách mới)
+24/11/2026
+27/11/2026
+Module recommendation
+Chưa làm
+4.3
+Tích hợp Chatbot AI (prompt hệ thống + ngữ cảnh + fallback)
+28/11/2026
+01/12/2026
+Module chatbot
+Chưa làm
+4.4
+Sinh mã QR + trang truy xuất công khai cho lô hàng
+02/12/2026
+03/12/2026
+Module traceability
+Chưa làm
+5
+GIAI ĐOẠN 5: HOÀN THIỆN & KIỂM THỬ (Tuần 8)
+5.1
+Viết Unit Test cho các luồng chính
+04/12/2026
+05/12/2026
+Bộ test (tests/)
+Chưa làm
+5.2
+Tạo dữ liệu mẫu (seed_data), tài khoản demo
+05/12/2026
+05/12/2026
+Lệnh seed + DB mẫu
+Chưa làm
+5.3
+Viết README hướng dẫn cài đặt, chạy localhost, kiểm thử
+06/12/2026
+06/12/2026
+File README.md
+Chưa làm
+5.4
+Hoàn thiện báo cáo Word/PDF (40-80 trang), đóng gói mã nguồn (.zip)
+06/12/2026
+07/12/2026
+Báo cáo + Source code
+Chưa làm
+6
+GIAI ĐOẠN 6: NGHIỆM THU (Theo lịch GV)
+6.1
+Chuẩn bị slide thuyết trình + video demo + Kịch bản vấn đáp (Q&A)
+07/12/2026
+07/12/2026
+Slide + video + Q&A
+Chưa làm
+6.2
+Báo cáo trước Giảng viên
+Theo lịch GV
+Theo lịch GV
+Điểm số
+Chưa làm
+III. CÁC MỐC KIỂM TRA TIẾN ĐỘ QUAN TRỌNG (MILESTONES)
+Mốc
+Tuần
+Nội dung
+Sản phẩm cần đạt
+Mốc 1
+Tuần 1 (14/10 – 20/10/2026)
+Giảng viên duyệt tên đề tài và bản kế hoạch
+Bản kế hoạch này + mô tả phạm vi
+Mốc 2
+Tuần 4 (03/11 – 09/11/2026)
+Kiểm tra tiến độ phân thô (đạt ≥ 50% khối lượng)
+Module accounts + products chạy được
+Mốc 3
+Tuần 6 (17/11 – 23/11/2026)
+Kiểm tra tiến độ giai đoạn chính
+Giỏ hàng, đặt hàng, dashboard admin hoàn chỉnh
+Mốc 4
+Tuần 8 (01/12 – 07/12/2026)
+Hạn chốt nộp toàn bộ sản phẩm và báo cáo cuối cùng
+Website hoàn chỉnh + báo cáo + source code
+IV. QUẢN LÝ RỦI RO (RISK MANAGEMENT)
+Tình huống rủi ro có thể xảy ra
+Mức độ ảnh hưởng
+Giải pháp phòng ngừa / Xử lý
+Ôm đồm quá nhiều tính năng, không kịp deadline (rủi ro cao nhất khi làm cá nhân)
+Cao
+Ưu tiên hoàn thành 3 nhóm cốt lõi trước (bán hàng – quản trị – CSDL). AI, gợi ý, chatbot, QR làm sau. Nếu quá tải, cắt bớt "phân tích chuyên sâu".
+Máy tính hỏng, mất dữ liệu bài làm
+Cao
+Lưu code lên GitHub (private repo) + backup định kỳ lên Google Drive. Commit ít nhất 2 lần/tuần.
+Xung đột phiên bản Python 3.14.3 / MySQL 26.7.0 (là các phiên bản rất mới, chưa có wheel cho một số thư viện)
+Cao
+Dùng PyMySQL thay vì mysqlclient (pure Python, không cần C++ compiler). Nếu Django < 5.1 không tương thích, nâng cấp lên Django >= 5.1. Ghi chú rõ trong báo cáo.
+API AI bị lỗi, hết quota, hoặc phát sinh phí
+Vừa
+Chọn API có free tier (Gemini Flash, Groq). Xây dựng fallback rule-based: nếu API lỗi thì trả lời theo kịch bản có sẵn trong CSDL.
+Dữ liệu hành vi quá ít để phân nhóm khách hàng
+Vừa
+Tạo lệnh seed_data sinh sẵn 20+ khách hàng với hành vi đa dạng để demo.
+Không đủ thời gian viết báo cáo 40-80 trang
+Vừa
+Viết báo cáo song song với quá trình làm (mỗi tuần ghi lại kết quả). Không để đến tuần cuối mới viết.
+Mất kết nối Internet khi demo
+Thấp
+Chuẩn bị sẵn video demo dự phòng. Chatbot có fallback rule-based hoạt động offline.
+V. TỰ ĐÁNH GIÁ TIẾN ĐỘ (SELF-REVIEW)
+Vì làm cá nhân, mục này thay thế cho "đánh giá đóng góp nhóm". Sinh viên tự đánh giá tiến độ theo tuần để kịp thời điều chỉnh.
+Tuần
+Kế hoạch
+Thực tế
+Tỷ lệ hoàn thành
+Ghi chú
+1 (14–20/10)
+Khởi động + setup môi trường (Python 3.14.3, MySQL 26.7.0, Django >=5.1)
+2 (21–28/10)
+Thiết kế CSDL (12 bảng) + wireframe + 5 sơ đồ (Use Case, Activity, Class, Sequence, ERD)
+3 (29/10–02/11)
+App accounts
+4 (03–09/11)
+App products
+5 (10–16/11)
+App cart_orders
+6 (17–23/11)
+Dashboard admin
+7 (24–30/11)
+Hành vi + gợi ý + Chatbot + QR
+8 (01–07/12)
+Kiểm thử + báo cáo + nộp
+VI. THANG TỰ ĐÁNH GIÁ CUỐI DỰ ÁN
+Mức
+Tỷ lệ hoàn thành
+Mô tả
+A (90% – 100%)
+Xuất sắc
+Hoàn thành 100% chức năng cốt lõi + ≥ 80% chức năng nâng cao đúng hạn, code sạch, có test đầy đủ, báo cáo chi tiết, demo mượt.
+B (70% – 89%)
+Tốt
+Hoàn thành 100% chức năng cốt lõi + 50–79% chức năng nâng cao, có test cơ bản, báo cáo đầy đủ.
+C (50% – 69%)
+Cơ bản
+Hoàn thành chức năng cốt lõi (bán hàng + quản trị + CSDL), chức năng AI/QR sơ khai hoặc chưa có test.
+D (< 50%)
+Chưa đạt
+Thiếu nhiều chức năng cốt lõi, không có test, báo cáo sơ sài.
+VII. QUY ĐỊNH ĐẦU RA BÀN GIAO (DELIVERABLES)
+Sinh viên cần nộp đầy đủ:
+Mã nguồn đầy đủ (GitHub cá nhân + file .zip).
+File requirements.txt đầy đủ thư viện.
+File .env.example (không chứa API key thật).
+Migration và lệnh seed_data tạo dữ liệu mẫu.
+Tài khoản demo:
+Khách hàng: demo_customer / Demo@123
+Quản trị viên: demo_admin / Admin@123
+File README.md hướng dẫn cài đặt, cấu hình, chạy localhost, chạy test.
+Bộ Unit Test (tests/) cho các luồng chính.
+Báo cáo dự án (Word/PDF, 40–80 trang): phân tích, thiết kế, kết quả, đánh giá, hướng phát triển.
+Slide thuyết trình (PowerPoint/Canva) + video demo.
+Nhật ký dự án (NHAT_KY_DU_AN.md) ghi tiến độ theo tuần.
+Phiếu đánh giá mức độ hoàn thành (theo mẫu của giảng viên).
+Kịch bản vấn đáp (Q&A) chuẩn bị cho phần bảo vệ.
+VIII. YÊU CẦU KỸ THUẬT CHI TIẾT
+1. Môi trường và cấu hình (CẬP NHẬT THEO MÁY THỰC TẾ)
+Hạng mục
+Yêu cầu
+Hệ điều hành
+Windows 11 Pro
+IDE
+Visual Studio Code
+Python
+3.14.3 (64-bit) — C:\Python314\python.exe
+MySQL Server
+Community Server 26.7.0 (Win64) — Service MySQL267, port 3306, X Protocol 33060
+Django
+>= 5.1 (hỗ trợ Python 3.14)
+Driver MySQL
+PyMySQL 1.1.1 (thay mysqlclient — không cần C++ compiler)
+Môi trường chạy
+Django Development Server
+Địa chỉ website
+http://127.0.0.1:8000/
+Trang quản trị
+http://127.0.0.1:8000/admin/
+Trang dashboard riêng
+http://127.0.0.1:8000/dashboard/
+Giao diện
+HTML5, CSS3, JavaScript, Bootstrap 5.3, responsive
+Thư viện AI
+Pandas >= 2.2.3, Scikit-learn >= 1.5.2
+Thư viện khác
+qrcode[pil] 7.4.2, Pillow 11.0.0, python-dotenv 1.0.1
+API AI
+Gemini Flash hoặc Groq (có free tier)
+Quản lý cấu hình
+.env và .env.example
+Cài đặt thư viện
+requirements.txt
+Kiểm thử
+Unit Test + kiểm thử trên trình duyệt local
+Lưu ý đặc biệt: Python 3.14.3 và MySQL 26.7.0 là các phiên bản rất mới. Cần dùng PyMySQL thay vì mysqlclient để tránh lỗi compile. Thêm pymysql.install_as_MySQLdb() vào nongsan_project/__init__.py.
+2. Kiến trúc hệ thống
+Mô hình: Django MVT (Model - View - Template), tách ứng dụng theo nghiệp vụ.
+ORM: Django ORM, sử dụng migration để quản lý thay đổi CSDL.
+Xác thực: Django Authentication, phân quyền khách hàng, nhân viên và quản trị viên.
+Bảo mật: CSRF, kiểm tra dữ liệu đầu vào, phân quyền truy cập, bảo vệ mật khẩu.
+Hiệu năng: Phân trang, tối ưu truy vấn, đánh chỉ mục các cột cần thiết.
+3. Cấu trúc thư mục dự án (Django)
+text
+nongsan_project/
+├── manage.py
+├── requirements.txt
+├── .env / .env.example / .gitignore
+├── README.md / NHAT_KY_DU_AN.md
+├── nongsan_project/            # Cấu hình Django
+│   ├── __init__.py             # ⚠️ có pymysql.install_as_MySQLdb()
+│   ├── settings.py / urls.py / wsgi.py / asgi.py
+├── apps/
+│   ├── accounts/               # User, Address
+│   ├── products/               # Category, Supplier, Product, Review
+│   ├── cart_orders/            # Cart, CartItem, Order, OrderItem
+│   ├── behavior/               # UserEvent, UserSegment, RecommendationLog
+│   ├── recommendation/         # Engine gợi ý
+│   ├── chatbot/                # ChatSession, ChatMessage, prompts, fallback
+│   ├── traceability/           # ProductBatch, TraceabilityRecord, QR
+│   └── dashboard/              # Trang quản trị riêng
+├── templates/                  # HTML templates
+├── static/                     # CSS, JS, Images
+└── media/                      # Upload files (products/, qr_codes/)
+4. Thiết kế CSDL (12 bảng)
+Nhóm dữ liệu
+Các bảng
+Tài khoản
+accounts_user, accounts_useraddress
+Sản phẩm
+products_category, products_supplier, products_product, products_productreview
+Giỏ hàng
+cart_orders_cart, cart_orders_cartitem
+Đơn hàng
+cart_orders_order, cart_orders_orderitem
+Hành vi
+behavior_userevent, behavior_usersegment, behavior_recommendationlog
+Chatbot AI
+chatbot_chatsession, chatbot_chatmessage
+Truy xuất
+traceability_productbatch, traceability_traceabilityrecord
+5. Các sơ đồ cần vẽ (theo Rubric)
+STT
+Loại sơ đồ
+Mục đích
+1
+Use Case Diagram
+Mô tả tương tác Guest, Customer, Admin, AI System với hệ thống
+2
+Activity Diagram
+Luồng đặt hàng và luồng AI gợi ý
+3
+Class Diagram
+Cấu trúc lớp, mối quan hệ giữa các model
+4
+Sequence Diagram
+Luồng Chatbot (User → View → AI API → Fallback)
+5
+ERD
+Quan hệ giữa 12 bảng CSDL
+6
+Wireframe
+Trang chủ, Chi tiết sản phẩm, Giỏ hàng/Thanh toán, Dashboard Admin
+6. Quy tắc nghiệp vụ bán hàng
+Không cho đặt số lượng vượt tồn kho.
+Tính tổng tiền, giảm giá và phí giao hàng nhất quán.
+Phí ship: 30.000đ cố định, miễn phí từ 500.000đ.
+Kiểm tra lại tồn kho khi xác nhận đơn.
+Trạng thái đơn hàng: pending → confirmed → shipping → delivered / cancelled.
+Điều kiện hủy đơn: Chỉ hủy khi đơn ở trạng thái pending.
+Thanh toán COD để chạy demo không cần cổng thanh toán thật.
+7. Quy tắc nhận diện hành vi
+Sự kiện ghi nhận: view (xem), search (tìm kiếm), add_to_cart (thêm giỏ), purchase (mua), review (đánh giá), chat (chat AI).
+Trọng số: view +1, search +2, add_to_cart +3, purchase +5, review +4.
+Phân nhóm khách hàng:
+new: chưa có đơn hàng VÀ đăng ký ≤ 7 ngày
+interested: chưa có đơn hàng NHƯNG có ≥ 5 user_events
+loyal: có ≥ 3 đơn hàng trong 30 ngày gần nhất
+at_risk: có ≥ 1 đơn hàng NHƯNG đơn cuối > 30 ngày
+normal: còn lại
+Cập nhật: Chạy command python manage.py update_segments hàng ngày.
+8. Bảo mật và quyền riêng tư
+Phân quyền khách hàng, nhân viên và quản trị viên.
+Không để khách hàng xem dữ liệu đơn hàng của người khác.
+Không lưu mật khẩu dạng văn bản thuần hoặc đưa API key vào mã nguồn.
+Cho phép khách hàng xem và yêu cầu xóa dữ liệu hành vi theo chính sách.
+Dùng @login_required cho views cần auth.
+Dùng transaction.atomic cho các thao tác phức tạp (đặt hàng, hủy đơn).
+9. Phương án dự phòng cho AI
+API AI: Gemini Flash hoặc Groq (có free tier).
+Cấu hình: Qua biến môi trường .env, có giới hạn thời gian chờ (10s) và xử lý lỗi.
+Fallback rule-based: Khi API lỗi, trả lời theo keyword matching:
+giá|bao nhiêu → hỏi giá
+nguồn gốc|xuất xứ → hướng dẫn quét QR
+bảo quản|hạn sử dụng → hướng dẫn bảo quản
+đơn hàng|giao chưa → hướng dẫn tra cứu
+Không match → câu trả lời mặc định
+Prompt hệ thống: Xác định vai trò chuyên gia tư vấn nông sản, phạm vi kiến thức, không bịa thông tin.
+Đánh giá chất lượng: Bộ 10 câu hỏi test, đo độ chính xác ≥ 80%, thời gian phản hồi.
+10. Tiêu chí nghiệm thu
+Khách hàng đăng ký, đăng nhập và đặt hàng thành công.
+Giỏ hàng và số lượng tồn kho được cập nhật chính xác.
+Hệ thống ghi nhận được hành vi xem, tìm kiếm và mua hàng.
+Hệ thống phân loại được khách hàng từ dữ liệu thử nghiệm.
+Gợi ý sản phẩm thay đổi theo hành vi của khách hàng.
+Chatbot tư vấn được sản phẩm và xử lý câu hỏi ngoài phạm vi.
+QR mở đúng trang truy xuất nguồn gốc.
+Quản trị viên quản lý được sản phẩm, đơn hàng và lô hàng.
+Có thống kê doanh thu, sản phẩm bán chạy và hành vi khách hàng.
+Có kiểm thử cho các trường hợp lỗi (hết hàng, dữ liệu không hợp lệ, truy cập trái quyền, API AI không khả dụng).
+11. Dữ liệu mẫu và khả năng demo
+Lệnh python manage.py seed_data tạo sẵn:
+30+ sản phẩm mẫu (rau củ, trái cây, gạo, đặc sản vùng miền, hữu cơ).
+20+ khách hàng mẫu với hành vi đa dạng (5 new, 5 interested, 5 loyal, 5 at_risk).
+50+ đơn hàng mẫu ở các trạng thái khác nhau.
+10+ lô hàng mẫu có QR truy xuất.
+Tài khoản demo: demo_customer / Demo@123, demo_admin / Admin@123.
+Không sử dụng dữ liệu cá nhân thật.
+12. Phân quyền quản trị viên
+Nhóm chức năng
+Yêu cầu
+Quản lý sản phẩm
+Thêm, sửa, xóa, ảnh, giá, đơn vị tính, số lượng tồn
+Quản lý danh mục
+Phân loại nông sản, mùa vụ và đặc sản
+Quản lý đơn hàng
+Xác nhận, xử lý, giao hàng, hủy đơn
+Quản lý khách hàng
+Hồ sơ, lịch sử mua và hành vi
+Quản lý nhà cung cấp
+Thông tin trang trại, vùng trồng, chứng nhận
+Quản lý truy xuất
+Lô hàng, QR, thông tin nguồn gốc
+Quản lý AI
+Cấu hình prompt, theo dõi lỗi, lịch sử hội thoại
+Thống kê kinh doanh
+Doanh thu, đơn hàng, sản phẩm bán chạy
+Phân tích hành vi
+Tỷ lệ chuyển đổi, nhóm khách hàng, hiệu quả gợi ý
+13. Kiểm thử
+Unit Test: 5 luồng chính — đăng ký, đặt hàng, tính tiền, phân nhóm hành vi, sinh QR.
+Test Chatbot: Bộ 10 câu hỏi, đo độ chính xác ≥ 80%.
+Test hiệu năng: Trang danh sách có phân trang, load < 2 giây.
+Test bảo mật: Truy cập trái quyền, CSRF, XSS.
+Test lỗi: Hết hàng, dữ liệu không hợp lệ, API AI không khả dụng.
+14. Sao lưu và khôi phục
+Hướng dẫn sao lưu CSDL bằng mysqldump.
+Hướng dẫn khôi phục từ file backup.
+Commit code lên GitHub ít nhất 2 lần/tuần.
+IX. KẾ HOẠCH CHUẨN BỊ VẤN ĐÁP (Q&A)
+1. Câu hỏi về mô hình hệ thống
+Trình bày mối liên hệ giữa Use Case → Activity → Class → Sequence.
+Giải thích luồng dữ liệu từ khi User click → Ghi log → AI xử lý → Trả kết quả.
+2. Câu hỏi về công nghệ, framework, thuật toán
+Tại sao chọn Django? (Nhanh, bảo mật, ORM mạnh, MVT rõ ràng).
+Tại sao chọn PyMySQL thay vì mysqlclient? (Pure Python, không cần C++ compiler, tương thích Python 3.14.3).
+Tại sao chọn Content-based Filtering? (Phù hợp với dữ liệu ít, dễ giải thích lý do gợi ý).
+Tại sao dùng API AI thay vì model local? (Tiết kiệm tài nguyên máy, dễ triển khai).
+3. Câu hỏi về luồng xử lý, cấu trúc lớp, mô hình dữ liệu
+Giải thích cơ chế Fallback của Chatbot: Khi API lỗi, hệ thống chuyển sang trả lời theo keyword matching.
+Giải thích cơ chế Ghi nhận hành vi: Middleware bắt sự kiện view, add_to_cart, purchase.
+Giải thích cơ chế QR: Mỗi lô hàng có batch_code, sinh URL http://127.0.0.1:8000/trace/{batch_code}/.
+Giải thích cơ chế Transaction: Dùng @transaction.atomic cho đặt hàng để đảm bảo tính toàn vẹn dữ liệu.
+4. Câu hỏi về hạn chế và hướng phát triển
+Hạn chế: Chưa có thanh toán online (chỉ COD), AI chưa học sâu (chỉ Content-based), chưa tối ưu đa luồng.
+Hướng phát triển: Tích hợp VNPay/Momo, nâng cấp lên Collaborative Filtering, thêm gợi ý real-time, triển khai lên cloud (AWS/Render).
+X. LƯU Ý CUỐI CÙNG
+Về phiên bản môi trường: Dùng đúng Python 3.14.3 + MySQL 26.7.0 + Django >= 5.1 + PyMySQL 1.1.1 theo cấu hình máy thực tế. Thêm pymysql.install_as_MySQLdb() vào nongsan_project/__init__.py.
+Về báo cáo: Đảm bảo báo cáo dài 40–80 trang (không tính bìa, mục lục, phụ lục). Tập trung vào phần 2.2 (Thiết kế hệ thống) và phần 3 (Vấn đáp) vì đây là phần chiếm nhiều điểm nhất trong Rubric.
+Về tiến độ: Ưu tiên hoàn thành 3 nhóm cốt lõi trước (bán hàng – quản trị – CSDL). AI, gợi ý, chatbot, QR làm sau. Nếu quá tải, cắt bớt "phân tích chuyên sâu".
+Về backup: Commit code lên GitHub ít nhất 2 lần/tuần. Backup định kỳ lên Google Drive.
+Về tài liệu tham khảo: Ghi đầy đủ nguồn tham khảo (Django docs, Scikit-learn docs, tài liệu API AI, các bài báo về nông sản sạch).
+Về xử lý lỗi tương thích: Nếu gặp lỗi khi cài đặt thư viện (Pillow, pandas, scikit-learn) do Python 3.14 quá mới, dùng pip install --pre <tên_thư_viện> hoặc cài thêm Python 3.12 song song.

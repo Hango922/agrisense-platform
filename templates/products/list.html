@@ -1,0 +1,97 @@
+<!-- File: templates/products/list.html -->
+{% extends "base.html" %}
+
+{% block title %}Danh sách nông sản - Nông Sản Sạch{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Bộ lọc bên trái -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-success">Bộ Lọc Sản Phẩm</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'products:list' %}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Danh mục</label>
+                        <select name="category" class="form-select">
+                            <option value="">-- Tất cả danh mục --</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.slug }}" {% if current_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Khoảng giá (VNĐ)</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text small">Từ</span>
+                            <input type="number" name="min_price" class="form-control" placeholder="0" value="{{ request.GET.min_price|default:'' }}">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text small">Đến</span>
+                            <input type="number" name="max_price" class="form-control" placeholder="1.000.000" value="{{ request.GET.max_price|default:'' }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Áp dụng lọc</button>
+                    <a href="{% url 'products:list' %}" class="btn btn-outline-secondary w-100 mt-2">Xóa bộ lọc</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách sản phẩm -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold mb-0">Nông sản sạch hiện có</h4>
+            <span class="text-muted small">Hiển thị {{ products|length }} sản phẩm</span>
+        </div>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+            {% for prod in products %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0">
+                        {% if prod.image %}
+                            <img src="{{ prod.image.url }}" class="card-img-top" alt="{{ prod.name }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light text-center py-5 text-muted" style="height: 180px;"><span class="fs-1">🥬</span></div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <span class="badge bg-light text-success border align-self-start mb-2">{{ prod.category.name }}</span>
+                            <h5 class="card-title mb-1">
+                                <a href="{% url 'products:detail' slug=prod.slug %}" class="text-decoration-none text-dark">{{ prod.name }}</a>
+                            </h5>
+                            <p class="text-muted small mb-2">Xuất xứ: {{ prod.origin|default:"Việt Nam" }}</p>
+                            <p class="text-muted small mb-3">Tồn kho: <strong class="{% if prod.stock < 10 %}text-danger{% else %}text-success{% endif %}">{{ prod.stock }} {{ prod.unit }}</strong></p>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="text-danger fs-5 fw-bold">{{ prod.price|floatformat:0 }} đ <small class="text-muted fs-6 fw-normal">/ {{ prod.unit }}</small></span>
+                                <a href="{% url 'products:detail' slug=prod.slug %}" class="btn btn-success btn-sm">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted fs-5">Không tìm thấy sản phẩm nào phù hợp với bộ lọc.</p>
+                    <a href="{% url 'products:list' %}" class="btn btn-outline-success">Xem tất cả sản phẩm</a>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Phân trang -->
+        {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Trước</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Sau</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
