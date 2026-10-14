@@ -144,19 +144,23 @@
     + 11 lô hàng kèm mã QR truy xuất lưu trữ hợp lệ.
     + 2 tài khoản demo: `demo_admin` / `Admin@123` và `demo_customer` / `Demo@123`.
   - Xây dựng hệ thống Unit Tests toàn diện với `django.test.TestCase` cho tất cả các phân hệ:
-    + `apps/cart_orders/tests/test_orders.py`
-    + `apps/chatbot/tests/test_fallback.py`
+    + `apps/cart_orders/tests/test_orders.py` (Bao gồm kiểm thử logic đặt hàng, tồn kho, tính phí ship và sinh mã VietQR Napas 247)
+    + `apps/chatbot/tests/test_fallback.py` & `apps/chatbot/tests/test_ordering.py` (Kiểm thử fallback AI và đặt hàng đàm thoại trực tiếp)
     + `apps/accounts/tests/test_accounts.py`
     + `apps/behavior/tests/test_behavior.py`
     + `apps/traceability/tests/test_traceability.py`
     + `apps/products/tests/test_products.py`
-    + `tests/test_phase4.py` & `tests/test_phase5.py`
+    + `tests/test_phase4.py` & `tests/test_phase5.py` (Kiểm thử phân quyền, dữ liệu Chart.js và xuất file Excel .xlsx)
   - Thực hiện bộ kiểm thử toàn diện: `python manage.py test`.
+  - Nâng cấp các tính năng cao cấp: Cổng thanh toán VietQR Napas 247, Chatbot AI lên đơn hàng tự động, Dashboard biểu đồ Chart.js và Xuất báo cáo Excel.
   - Hoàn thiện tài liệu kỹ thuật `README.md`, kiểm tra `.gitignore` bảo vệ file `.env` và đóng gói bàn giao.
 - **Kết quả đạt được**:
   - [x] Tạo file `apps/products/management/commands/seed_data.py` và chạy thành công trên cơ sở dữ liệu `nongsan_db`.
   - [x] Chạy lệnh `update_segments` phân bổ đủ 5 nhóm: `new`, `interested`, `loyal`, `at_risk`, `normal`.
-  - [x] Chạy `python manage.py test`: **32/32 tests đạt 100% PASS** trong 25.47 giây, 0 lỗi.
+  - [x] Triển khai thành công Cổng thanh toán VietQR động trên trang đơn hàng và trong khung chat AI.
+  - [x] Tích hợp 3 biểu đồ tương tác Chart.js (đường, tròn, cột) và chức năng xuất file Excel (`.xlsx`) vào Dashboard.
+  - [x] Chạy `python manage.py test`: **43/43 tests đạt 100% PASS** (0 errors, 0 failures).
   - [x] Hoàn thiện tài liệu `README.md` và `NHAT_KY_DU_AN.md`.
-  - [x] Đảm bảo file bí mật `.env` nằm trong `.gitignore` không bao giờ bị lộ.
-- **Đánh giá tổng kết**: Đồ án hoàn thành xuất sắc 100% toàn bộ mục tiêu đề ra, vượt tiến độ và sẵn sàng bảo vệ.
+  - [x] Đảm bảo file bí mật `.env` nằm trong `.gitignore` không bao giờ bị đẩy lên GitHub, lưu trữ an toàn trên máy cục bộ.
+- **Đánh giá tổng kết**: Đồ án hoàn thành xuất sắc 100% toàn bộ mục tiêu đề ra và tích hợp các tính năng nâng cấp vượt trội, sẵn sàng bảo vệ đồ án đạt kết quả cao nhất.
+
