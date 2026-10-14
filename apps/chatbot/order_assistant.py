@@ -81,11 +81,14 @@ def extract_address_and_name(text, phone=None):
     """
     cleaned = text
     if phone:
-        cleaned = cleaned.replace(phone, '')
+        # Xóa số điện thoại và cụm từ khóa đứng trước số điện thoại
+        cleaned = re.sub(rf'(?:sđt|sdt|đt|dt|số đt|số điện thoại|so dien thoai|tel|phone)?\s*[:\s]*{phone}', '', cleaned, flags=re.IGNORECASE)
 
     # Tìm tên người nhận nếu có
     name_match = re.search(r'(?:tên|người nhận|anh|chị|em|bác|cô)\s*[:\s]+([^\n,]+)', cleaned, re.IGNORECASE)
     extracted_name = name_match.group(1).strip() if name_match else None
+    if extracted_name:
+        cleaned = cleaned.replace(name_match.group(0), '')
 
     # Tìm địa chỉ nếu có
     addr_match = re.search(r'(?:địa chỉ|ở|tại|giao đến|giao về|giao tại|dc|đc)\s*[:\s]+([^\n]+)', cleaned, re.IGNORECASE)
@@ -101,6 +104,11 @@ def extract_address_and_name(text, phone=None):
             extracted_addr = re.sub(junk_pattern, '', cleaned.strip(), flags=re.IGNORECASE)
         else:
             extracted_addr = None
+
+    if extracted_addr:
+        # Xóa từ rác cuối câu như ", sđt", ", sdt", dấu phẩy, chấm thừa
+        extracted_addr = re.sub(r'[,.\s]*(?:sđt|sdt|đt|dt|số đt|số điện thoại|phone|tel)?\s*$', '', extracted_addr, flags=re.IGNORECASE)
+        extracted_addr = extracted_addr.strip(',. ')
 
     return extracted_name, extracted_addr
 
