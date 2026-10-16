@@ -13,13 +13,44 @@
                 Kết nối trực tiếp từ nông trại đạt chuẩn VietGAP/GlobalGAP tới bàn ăn gia đình bạn.
                 Tích hợp AI tư vấn 24/7 và truy xuất nguồn gốc bằng mã QR minh bạch.
             </p>
-            <div class="d-flex gap-2">
-                <a href="{% url 'products:list' %}" class="btn btn-success btn-lg px-4">Khám phá sản phẩm</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'products:list' %}" class="btn btn-success btn-lg px-4 shadow-sm">Khám phá sản phẩm</a>
+                <a href="{% url 'traceability:trace_index' %}" class="btn btn-outline-success btn-lg px-4">
+                    <i class="bi bi-qr-code-scan me-1"></i>Tra cứu nguồn gốc
+                </a>
                 <a href="#featured" class="btn btn-outline-secondary btn-lg px-4">Sản phẩm nổi bật</a>
             </div>
         </div>
         <div class="col-lg-4 text-center d-none d-lg-block">
-            <div class="display-1 text-success">🥦🍎🥕</div>
+            <div class="p-4 rounded-4 bg-success bg-opacity-10 border border-success border-opacity-25 shadow-sm text-start">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 20px;">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-success mb-0" style="font-size: 14px;">100% Nông Sản Chuẩn Sạch</div>
+                        <small class="text-muted" style="font-size: 12px;">VietGAP, GlobalGAP & Hữu cơ</small>
+                    </div>
+                </div>
+                <a href="{% url 'traceability:trace_index' %}" class="d-flex align-items-center gap-3 mb-3 text-decoration-none p-2 rounded-3 bg-white border shadow-sm">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; font-size: 20px;">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-primary mb-0" style="font-size: 14px;">Minh Bạch Mã QR Số →</div>
+                        <small class="text-muted" style="font-size: 12px;">Bấm để xem Hộ Chiếu Nông Sản</small>
+                    </div>
+                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 20px;">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark mb-0" style="font-size: 14px;">Trợ Lý AI & VietQR</div>
+                        <small class="text-muted" style="font-size: 12px;">Lên đơn thông minh & thanh toán 24/7</small>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

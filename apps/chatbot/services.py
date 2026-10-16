@@ -16,7 +16,7 @@ def build_product_context():
     """
     try:
         from apps.products.models import Product
-        products = list(Product.objects.filter(is_active=True).select_related('supplier', 'category')[:25])
+        products = list(Product.objects.filter(is_active=True).select_related('supplier', 'category')[:60])
         lines = []
         for p in products:
             sup = p.supplier.name if p.supplier else "Nông trại Việt"
@@ -50,10 +50,12 @@ def call_ai(user_message, product_context="", user=None):
 
             # Danh sách các mô hình Gemini được ưu tiên thử nghiệm tuần tự (fallback theo độ khả dụng)
             model_candidates = [
+                'gemini-flash-lite-latest',
                 'gemini-3.1-flash-lite',
                 'gemini-3.1-flash-lite-preview',
-                'gemini-3.8-flash',
-                'gemini-flash-latest'
+                'gemini-3.5-flash-lite',
+                'gemini-flash-latest',
+                'gemini-3.8-flash'
             ]
             text = None
             tokens_used = 0

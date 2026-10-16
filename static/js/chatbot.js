@@ -101,6 +101,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const closeBtn = document.getElementById('chatbot-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            widget.classList.remove('active');
+        });
+    }
+
+    // Xử lý khi nhấn vào các Quick Suggestion Chips
+    const chips = document.querySelectorAll('.chip-btn');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const query = chip.getAttribute('data-query');
+            if (query && input) {
+                input.value = query;
+                sendMessage();
+            }
+        });
+    });
+
     async function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
@@ -109,13 +129,26 @@ document.addEventListener('DOMContentLoaded', function() {
         messages.innerHTML += `<div class="chat-msg user">${escapeHtml(text)}</div>`;
         input.value = '';
 
-        // 2. Hiển thị hiệu ứng AI đang suy nghĩ
+        // 2. Hiển thị hiệu ứng AI đang soạn thảo với 3 chấm nhịp điệu (Wave)
         const typingId = 'typing-' + Date.now();
-        messages.innerHTML += `<div class="chat-msg bot typing" id="${typingId}">🌾 Đang suy nghĩ câu trả lời...</div>`;
+        messages.innerHTML += `
+            <div class="chat-msg bot" id="${typingId}">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="typing-wave">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </span>
+                    <span class="small text-muted">Trợ lý AI đang soạn câu trả lời...</span>
+                </div>
+            </div>`;
         scrollToBottom();
 
         // 3. Khóa nút gửi tạm thời
-        if (send) { send.disabled = true; send.innerText = '...'; }
+        if (send) {
+            send.disabled = true;
+            send.innerHTML = '<i class="bi bi-hourglass-split" style="font-size: 13px;"></i>';
+        }
         if (input) { input.disabled = true; }
 
         try {
@@ -142,7 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typingEl) typingEl.remove();
             messages.innerHTML += `<div class="chat-msg bot text-danger">Có lỗi kết nối. Bạn vui lòng kiểm tra lại mạng!</div>`;
         } finally {
-            if (send) { send.disabled = false; send.innerText = 'Gửi'; }
+            if (send) {
+                send.disabled = false;
+                send.innerHTML = '<i class="bi bi-send-fill" style="font-size: 14px;"></i>';
+            }
             if (input) {
                 input.disabled = false;
                 input.focus();

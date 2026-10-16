@@ -101,11 +101,16 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         try:
-            order = create_order_from_cart(request.user, cart, {
-                'full_name': request.POST['full_name'],
-                'phone': request.POST['phone'],
-                'address': request.POST['address'],
-            }, note=request.POST.get('note', ''))
+            payment_method = request.POST.get('payment_method', 'cod')
+            order = create_order_from_cart(
+                request.user, cart, {
+                    'full_name': request.POST['full_name'],
+                    'phone': request.POST['phone'],
+                    'address': request.POST['address'],
+                },
+                note=request.POST.get('note', ''),
+                payment_method=payment_method
+            )
 
             for item in order.items.all():
                 UserEvent.objects.create(
@@ -158,4 +163,27 @@ class CancelOrderView(LoginRequiredMixin, View):
             messages.success(request, "Đã hủy đơn hàng thành công")
         except ValueError as e:
             messages.error(request, str(e))
+        return redirect('cart_orders:order_detail', order_code=order_code)
+
+
+class UploadPaymentProofView(LoginRequiredMixin, View):
+    """
+    Khách hàng tải lên ảnh biên lai chuyển khoản ngân hàng (bill chuyển khoản).
+    """
+    def post(self, request, order_code):
+        order = get_object_or_404(Order, order_code=order_code, user=request.user)
+        if order.status != 'pending':
+            messages.error(request, "Chỉ có thể tải bill cho đơn hàng đang ở trạng thái 'Chờ xác nhận'.")
+            return redirect('cart_orders:order_detail', order_code=order_code)
+
+        proof_file = request.FILES.get('payment_proof')
+        if not proof_file:
+            messages.error(request, "Vui lòng chọn file ảnh biên lai chuyển khoản trước khi nhấn Gửi.")
+            return redirect('cart_orders:order_detail', order_code=order_code)
+
+        from django.utils import timezone
+        order.payment_proof = proof_file
+        order.payment_proof_uploaded_at = timezone.now()
+        order.save()
+        messages.success(request, "Đã tải lên bill chuyển khoản thành công! Admin sẽ đối soát và xác nhận đơn hàng cho bạn.")
         return redirect('cart_orders:order_detail', order_code=order_code)

@@ -125,3 +125,58 @@ class Phase5ComprehensiveTests(TestCase):
         # Kiểm tra dữ liệu đơn hàng mẫu có trong file
         order_codes = [ws.cell(row=r, column=2).value for r in range(2, ws.max_row + 1)]
         self.assertIn(self.order.order_code, order_codes)
+
+    def test_dashboard_update_vietqr_order_blocked_without_proof(self):
+        """Admin không thể xác nhận đơn hàng VietQR nếu khách chưa tải ảnh bill."""
+        vietqr_order = Order.objects.create(
+            order_code='ORD-TEST-VQ-NOBILL',
+            user=self.normal_user,
+            full_name='Khách Test VietQR',
+            phone='0988777666',
+            address='Hà Nội',
+            total_amount=100000,
+            final_amount=130000,
+            status='pending',
+            payment_method='vietqr'
+        )
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            f'/dashboard/orders/{vietqr_order.id}/update-status/',
+            {'status': 'confirmed'},
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        vietqr_order.refresh_from_db()
+        # Vẫn ở pending vì chưa có bill
+        self.assertEqual(vietqr_order.status, 'pending')
+        self.assertContains(response, 'KHÔNG THỂ XÁC NHẬN')
+
+    def test_dashboard_update_vietqr_order_succeeds_with_proof(self):
+        """Admin xác nhận thành công đơn hàng VietQR khi khách đã tải bill chuyển khoản."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        fake_bill = SimpleUploadedFile("bill.png", b"\x89PNG\r\n\x1a\ncontent", content_type="image/png")
+        vietqr_order = Order.objects.create(
+            order_code='ORD-TEST-VQ-BILL',
+            user=self.normal_user,
+            full_name='Khách Test VietQR Đã Có Bill',
+            phone='0988777666',
+            address='Hà Nội',
+            total_amount=100000,
+            final_amount=130000,
+            status='pending',
+            payment_method='vietqr',
+            payment_proof=fake_bill
+        )
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            f'/dashboard/orders/{vietqr_order.id}/update-status/',
+            {'status': 'confirmed'},
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        vietqr_order.refresh_from_db()
+        self.assertEqual(vietqr_order.status, 'confirmed')
+
+        if vietqr_order.payment_proof:
+            vietqr_order.payment_proof.delete(save=False)
+

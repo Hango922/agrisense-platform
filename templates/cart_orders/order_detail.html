@@ -45,8 +45,17 @@
                         {% for item in order.items.all %}
                             <tr>
                                 <td>
-                                    <h6 class="mb-0">{{ item.product_name }}</h6>
-                                    <small class="text-muted">{{ item.product.unit }}</small>
+                                    <h6 class="mb-0 fw-semibold">{{ item.product_name }}</h6>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <small class="text-muted">{{ item.product.unit }}</small>
+                                        {% with batch=item.product.batches.first %}
+                                            {% if batch %}
+                                                <a href="{% url 'traceability:public_trace' batch_code=batch.batch_code %}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none" target="_blank" title="Xem Hộ Chiếu Nông Sản Số của sản phẩm này">
+                                                    <i class="bi bi-shield-check me-1"></i>Nguồn gốc lô #{{ batch.batch_code }}
+                                                </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
                                 </td>
                                 <td>{{ item.price|floatformat:0 }} đ</td>
                                 <td>{{ item.quantity }}</td>
@@ -64,13 +73,78 @@
                             <td class="text-end fw-bold">{{ order.shipping_fee|floatformat:0 }} đ</td>
                         </tr>
                         <tr>
-                            <td colspan="3" class="text-end fs-5 fw-bold text-dark">Tổng thanh toán (COD):</td>
+                            <td colspan="3" class="text-end fs-5 fw-bold text-dark">Tổng thanh toán ({{ order.get_payment_method_display }}):</td>
                             <td class="text-end fs-5 fw-bold text-danger">{{ order.final_amount|floatformat:0 }} đ</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
+
+        <!-- Khối Tải Lên Bill Chuyển Khoản -->
+        {% if order.payment_method == 'vietqr' or order.payment_proof %}
+        <div class="card border-0 shadow-sm p-4 mb-4 border-start border-4 {% if order.payment_proof %}border-success bg-white{% else %}border-warning bg-warning bg-opacity-10{% endif %}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1 {% if order.payment_proof %}text-success{% else %}text-dark{% endif %}">
+                        <i class="bi bi-receipt me-2"></i> Biên Lai / Bill Chuyển Khoản Ngân Hàng
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        {% if order.payment_proof %}
+                            Biên lai đã được tải lên thành công vào lúc {{ order.payment_proof_uploaded_at|date:"d/m/Y H:i"|default:order.updated_at|date:"d/m/Y H:i" }}. Admin sẽ đối soát để xác nhận đơn.
+                        {% else %}
+                            <strong>Lưu ý quan trọng:</strong> Vui lòng chụp ảnh màn hình chuyển khoản thành công và tải lên tại đây. <em>Admin chỉ xác nhận đơn hàng khi đã có bill chuyển khoản!</em>
+                        {% endif %}
+                    </p>
+                </div>
+                {% if order.payment_proof %}
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="bi bi-check-circle-fill me-1"></i> Đã có bill
+                    </span>
+                {% else %}
+                    <span class="badge bg-danger fs-6 px-3 py-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Chưa gửi bill
+                    </span>
+                {% endif %}
+            </div>
+
+            {% if order.payment_proof %}
+                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border">
+                    <a href="{{ order.payment_proof.url }}" target="_blank" title="Bấm để xem kích thước lớn">
+                        <img src="{{ order.payment_proof.url }}" alt="Bill chuyển khoản" class="img-thumbnail shadow-sm" style="max-height: 140px; cursor: pointer;">
+                    </a>
+                    <div>
+                        <div class="fw-bold text-dark mb-1">Ảnh biên lai thanh toán của bạn</div>
+                        <div class="small text-muted mb-2">Bấm vào ảnh để xem kích thước đầy đủ</div>
+                        {% if order.status == 'pending' %}
+                            <form action="{% url 'cart_orders:upload_payment_proof' order_code=order.order_code %}" method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
+                                {% csrf_token %}
+                                <input type="file" name="payment_proof" class="form-control form-control-sm" accept="image/*" required style="max-width: 250px;">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Tải ảnh khác</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                {% if order.status == 'pending' %}
+                    <form action="{% url 'cart_orders:upload_payment_proof' order_code=order.order_code %}" method="post" enctype="multipart/form-data" class="mt-2">
+                        {% csrf_token %}
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-8">
+                                <input type="file" name="payment_proof" class="form-control" accept="image/*" required>
+                                <small class="text-muted d-block mt-1">Định dạng hỗ trợ: JPG, PNG, WEBP (ảnh chụp màn hình chuyển khoản)</small>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-success w-100 fw-bold">
+                                    <i class="bi bi-upload me-1"></i> Tải Lên Bill
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
 
         {% if order.status == 'pending' %}
             <div class="card border-0 shadow-sm p-3 bg-light">
@@ -105,28 +179,52 @@
         <!-- Thanh toán chuyển khoản nhanh qua VietQR -->
         {% if order.status != 'cancelled' %}
         <div class="card border-0 shadow-sm p-3 mb-4 border-top border-success border-4">
-            <h5 class="fw-bold mb-2 text-success">
-                <i class="bi bi-qr-code-scan me-2"></i> Thanh Toán Nhanh VietQR
-            </h5>
-            <p class="text-muted small mb-3">Quét mã bằng ứng dụng Ngân hàng (MB, VCB, Techcombank,...) để tự điền số tiền và nội dung chuyển khoản.</p>
-            <div class="text-center mb-3">
-                <img src="{{ vietqr.qr_image_url }}" alt="Mã VietQR Thanh Toán" class="img-fluid rounded border shadow-sm" style="max-height: 260px;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0 text-success">
+                    <i class="bi bi-qr-code-scan me-2"></i> Thanh Toán Nhanh VietQR
+                </h5>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">Techcombank</span>
             </div>
-            <div class="bg-light p-3 rounded small">
-                <div class="d-flex justify-content-between mb-1">
+            <p class="text-muted small mb-3">Quét mã bằng ứng dụng Ngân hàng (Techcombank, VCB, MB,...) để tự điền số tiền và nội dung chuyển khoản.</p>
+            
+            <div class="text-center mb-3">
+                <div class="tab-content" id="qrTabContent">
+                    <div class="tab-pane fade show active" id="qr-dynamic" role="tabpanel">
+                        <img src="{{ vietqr.qr_image_url }}" alt="Mã VietQR Thanh Toán" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
+                        <div class="small text-muted mt-1" style="font-size: 11px;">Mã QR động đã nhúng số tiền & nội dung đơn hàng</div>
+                    </div>
+                    <div class="tab-pane fade" id="qr-personal" role="tabpanel">
+                        {% load static %}
+                        <img src="{% static 'images/techcombank_qr.png' %}" alt="Thẻ QR Techcombank NGUYEN HONG HOANG" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
+                        <div class="small text-muted mt-1" style="font-size: 11px;">Thẻ QR Techcombank cá nhân NGUYEN HONG HOANG</div>
+                    </div>
+                </div>
+                
+                <div class="btn-group btn-group-sm mt-2" role="group">
+                    <button type="button" class="btn btn-outline-success active" data-bs-toggle="tab" data-bs-target="#qr-dynamic">
+                        <i class="bi bi-lightning-charge-fill me-1"></i>QR Đơn Hàng Tự Động
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="tab" data-bs-target="#qr-personal">
+                        <i class="bi bi-person-badge-fill me-1"></i>Thẻ QR Techcombank
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-light p-3 rounded-3 small border">
+                <div class="d-flex justify-content-between mb-1 pb-1 border-bottom">
                     <span class="text-muted">Ngân hàng:</span>
-                    <strong>{{ vietqr.bank_name }}</strong>
+                    <strong>{{ vietqr.bank_name }} (TCB)</strong>
                 </div>
-                <div class="d-flex justify-content-between mb-1">
+                <div class="d-flex justify-content-between mb-1 pb-1 border-bottom">
                     <span class="text-muted">Số tài khoản:</span>
-                    <strong class="text-primary font-monospace">{{ vietqr.account_no }}</strong>
+                    <strong class="text-primary font-monospace fs-6">{{ vietqr.account_no }}</strong>
                 </div>
-                <div class="d-flex justify-content-between mb-1">
+                <div class="d-flex justify-content-between mb-1 pb-1 border-bottom">
                     <span class="text-muted">Chủ tài khoản:</span>
-                    <strong>{{ vietqr.account_name }}</strong>
+                    <strong class="text-dark">{{ vietqr.account_name }}</strong>
                 </div>
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted">Số tiền:</span>
+                <div class="d-flex justify-content-between mb-1 pb-1 border-bottom">
+                    <span class="text-muted">Số tiền thanh toán:</span>
                     <strong class="text-danger fs-6">{{ vietqr.amount|floatformat:0 }} đ</strong>
                 </div>
                 <div class="d-flex justify-content-between">

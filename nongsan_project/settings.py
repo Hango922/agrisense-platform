@@ -107,6 +107,12 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 CHATBOT_TIMEOUT = int(os.getenv('CHATBOT_TIMEOUT', 10))
 
+# VietQR Payment Config
+VIETQR_BANK_ID = os.getenv('VIETQR_BANK_ID', 'TCB')
+VIETQR_ACCOUNT_NO = os.getenv('VIETQR_ACCOUNT_NO', '7979798950')
+VIETQR_ACCOUNT_NAME = os.getenv('VIETQR_ACCOUNT_NAME', 'NGUYEN HONG HOANG')
+VIETQR_BANK_NAME = os.getenv('VIETQR_BANK_NAME', 'Techcombank')
+
 # Logging
 os.makedirs(BASE_DIR / 'logs', exist_ok=True)
 LOGGING = {

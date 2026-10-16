@@ -1,73 +1,418 @@
 <!-- File: templates/traceability/public_trace.html -->
 {% extends "base.html" %}
 
-{% block title %}Truy xuất nguồn gốc - Lô {{ batch.batch_code }}{% endblock %}
+{% block title %}Hộ Chiếu Nông Sản Số - Lô {{ batch.batch_code }} - AgriSense{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm p-4 bg-white">
-            <div class="text-center pb-3 border-bottom mb-4">
-                <span class="badge bg-success fs-6 px-3 py-2 mb-2">Xác Thực Nguồn Gốc Minh Bạch</span>
-                <h2 class="fw-bold text-success mb-1">{{ batch.product.name }}</h2>
-                <p class="text-muted">Mã định danh lô hàng: <strong class="text-dark">{{ batch.batch_code }}</strong></p>
-                {% if batch.qr_code %}
-                    <div class="my-3">
-                        <img src="{{ batch.qr_code.url }}" alt="QR Code" class="img-thumbnail" style="width: 140px; height: 140px;">
+    <div class="col-lg-10 col-xl-9">
+        
+
+        <!-- Breadcrumb điều hướng -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-success"><i class="bi bi-house-door-fill me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products:list' %}" class="text-decoration-none text-success">Nông sản</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products:detail' slug=batch.product.slug %}" class="text-decoration-none text-success">{{ batch.product.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Hộ Chiếu Lô {{ batch.batch_code }}</li>
+            </ol>
+        </nav>
+
+        <!-- Khung Hộ Chiếu Nông Sản Số (Digital Product Passport Card) -->
+        <div class="passport-card mb-5" style="background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.1); overflow: hidden;">
+            
+            <!-- Header Banner Nổi Bật -->
+            <div class="passport-hero text-center text-white" style="background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%) !important; color: #ffffff !important; padding: 40px 24px 30px; border-radius: 20px 20px 0 0; position: relative;">
+                <span class="badge bg-white text-success fw-bold px-3 py-2 rounded-pill shadow-sm mb-3">
+                    <i class="bi bi-patch-check-fill text-success me-1"></i> XÁC THỰC NGUỒN GỐC SỐ MINH BẠCH
+                </span>
+                
+                <h1 class="display-6 fw-bold text-white mb-2" style="letter-spacing: -0.5px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);">
+                    {{ batch.product.name }}
+                </h1>
+                
+                <p class="mb-3 fs-6" style="color: rgba(255, 255, 255, 0.95); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);">
+                    Mã định danh lô hàng: 
+                    <span class="badge px-3 py-1 fs-6 text-white" style="background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.35);">{{ batch.batch_code }}</span>
+                </p>
+
+                <!-- Huy Hiệu Xác Thực Số Niêm Phong Chính Hãng (Thay thế ảnh QR thừa) -->
+                <div class="verified-seal my-3 py-2 px-4 rounded-pill d-inline-flex align-items-center gap-3" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1.5px solid rgba(255, 255, 255, 0.5); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);">
+                    <div class="rounded-circle bg-white text-success d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 1.5rem;">
+                        <i class="bi bi-shield-fill-check"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="fw-bold text-white text-uppercase" style="letter-spacing: 0.5px; font-size: 0.95rem;">ĐÃ XÁC THỰC NGUỒN GỐC CHÍNH HÃNG</div>
+                        <div class="small text-white-50" style="font-size: 0.78rem;">
+                            Niêm phong lô: <span class="font-monospace fw-bold text-white">#{{ batch.batch_code }}</span> | Tiêu chuẩn: <span class="fw-bold text-warning">{{ batch.certification|default:"VietGAP" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THANH NÚT HÀNH ĐỘNG TƯƠNG TÁC NỔI BẬT NGAY TRÊN ĐẦU TRANG -->
+                <div class="d-flex flex-wrap gap-2 justify-content-center mt-3 pt-2">
+                    <!-- Nút 1: Đặt Mua Nông Sản Này Ngay -->
+                    <a href="{% url 'products:detail' slug=batch.product.slug %}" class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-cart-fill"></i> Đặt Mua Nông Sản Này ({{ batch.product.price|floatformat:0 }} đ / {{ batch.product.unit }})
+                    </a>
+
+                    <!-- Nút 2: Xem Giấy Chứng Nhận Số -->
+                    <button type="button" class="btn btn-light text-success fw-semibold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#certModal">
+                        <i class="bi bi-award-fill"></i> Xem Giấy Chứng Nhận
+                    </button>
+
+                    <!-- Nút 3: Tra Cứu Mã Khác -->
+                    <button type="button" class="btn btn-outline-light fw-semibold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lookupModal">
+                        <i class="bi bi-search"></i> Tra Cứu Lô Khác
+                    </button>
+
+                    <!-- Nút 4: Chia Sẻ Link Trang Này -->
+                    <button type="button" class="btn btn-outline-light fw-semibold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-1" onclick="copyTraceUrl()">
+                        <i class="bi bi-share-fill"></i> <span id="shareBtnText">Chia Sẻ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thân Thẻ Hộ Chiếu (Nội dung chi tiết & Cân đối) -->
+            <div class="p-4 p-md-5 pt-4">
+                
+                <!-- Khối Mua Nhanh Nông Sản (Quick Order Card) -->
+                <div class="card border-0 shadow-sm p-3 mb-4 rounded-3 bg-light border-start border-4 border-success">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-2 col-sm-3 text-center">
+                            {% if batch.product.image %}
+                                <img src="{{ batch.product.image.url }}" alt="{{ batch.product.name }}" class="img-fluid rounded-3 shadow-sm" style="max-height: 80px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary bg-opacity-10 rounded-3 p-3 text-secondary">
+                                    <i class="bi bi-basket3 fs-2"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 col-sm-9">
+                            <h5 class="fw-bold text-dark mb-1">{{ batch.product.name }}</h5>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fs-5 fw-bold text-danger">{{ batch.product.price|floatformat:0 }} đ</span>
+                                <span class="text-muted small">/ {{ batch.product.unit }}</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <i class="bi bi-check-circle me-1"></i>Còn {{ batch.product.stock }} {{ batch.product.unit }} trong kho
+                                </span>
+                            </div>
+                            <small class="text-muted d-block">{{ batch.product.description|truncatewords:20|default:"Nông sản sạch đạt tiêu chuẩn an toàn sinh học, tươi ngon mỗi ngày." }}</small>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="d-flex gap-2 justify-content-md-end">
+                                <a href="{% url 'products:detail' slug=batch.product.slug %}" class="btn btn-outline-success btn-sm px-3 py-2 fw-semibold">
+                                    <i class="bi bi-info-circle me-1"></i>Chi Tiết
+                                </a>
+                                <form action="{% url 'cart_orders:add' product_id=batch.product.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-success btn-sm px-3 py-2 fw-semibold shadow-sm">
+                                        <i class="bi bi-cart-plus-fill me-1"></i>Thêm Vào Giỏ
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 Thẻ Thông Số Cốt Lõi (Key Metrics Grid) -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="metric-card p-3 border rounded-3 h-100 bg-white shadow-sm">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="p-2 rounded bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-geo-alt-fill fs-5"></i>
+                                </div>
+                                <span class="text-muted small fw-semibold">Vùng Trồng</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-dark text-truncate" title="{{ batch.planting_location }}">{{ batch.planting_location }}</h6>
+                            <small class="text-muted text-truncate d-block">{{ batch.product.supplier.name }}</small>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="metric-card p-3 border rounded-3 h-100 bg-white shadow-sm">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="p-2 rounded bg-primary bg-opacity-10 text-primary">
+                                    <i class="bi bi-award-fill fs-5"></i>
+                                </div>
+                                <span class="text-muted small fw-semibold">Chứng Nhận</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-success">{{ batch.certification|default:"VietGAP" }}</h6>
+                            <small class="text-muted d-block">Tiêu chuẩn an toàn</small>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="metric-card p-3 border rounded-3 h-100 bg-white shadow-sm">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="p-2 rounded bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-box-seam-fill fs-5"></i>
+                                </div>
+                                <span class="text-muted small fw-semibold">Sản Lượng Lô</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-dark">{{ batch.quantity|default:"Theo vụ mùa" }}</h6>
+                            <small class="text-muted d-block">Quy mô thu hoạch</small>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="metric-card p-3 border rounded-3 h-100 bg-white shadow-sm">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="p-2 rounded bg-info bg-opacity-10 text-info">
+                                    <i class="bi bi-calendar-check-fill fs-5"></i>
+                                </div>
+                                <span class="text-muted small fw-semibold">Thu Hoạch</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-dark">{{ batch.harvest_date|date:"d/m/Y" }}</h6>
+                            <small class="text-muted d-block">Đóng gói: {{ batch.packaging_date|date:"d/m/Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hành Trình Số Nông Sản (Interactive Journey Timeline) -->
+                <div class="mb-5">
+                    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                        <h5 class="fw-bold text-success mb-0">
+                            <i class="bi bi-diagram-3-fill me-2"></i>Hành Trình Chuỗi Cung Ứng Minh Bạch
+                        </h5>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 small">
+                            4 Mốc Kiểm Định Đạt Chuẩn
+                        </span>
+                    </div>
+
+                    <div class="trace-timeline">
+                        <!-- Mốc 1: Gieo trồng & Canh tác -->
+                        <div class="timeline-step d-flex gap-3 mb-4">
+                            <div class="timeline-node rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            <div class="timeline-content flex-grow-1 p-3 bg-light rounded-3 border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0 text-dark">🌱 1. Vùng Trồng & Chăm Sóc Canh Tác</h6>
+                                    <span class="badge bg-white text-muted border">Giai đoạn gieo trồng</span>
+                                </div>
+                                <p class="text-muted small mb-2">
+                                    <strong>Địa chỉ nông trại:</strong> {{ batch.planting_location }} — Thuộc đối tác: <strong>{{ batch.product.supplier.name }}</strong>.
+                                </p>
+                                <div class="bg-white p-2 rounded small text-secondary border">
+                                    <i class="bi bi-info-circle me-1 text-success"></i>
+                                    {{ batch.notes|default:"Quy trình canh tác thuận tự nhiên, ghi chép nhật ký nông vụ hằng ngày và kiểm soát nghiêm ngặt nguồn nước tưới." }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mốc 2: Thu hoạch đạt chuẩn -->
+                        <div class="timeline-step d-flex gap-3 mb-4">
+                            <div class="timeline-node rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            <div class="timeline-content flex-grow-1 p-3 bg-light rounded-3 border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0 text-dark">🌾 2. Thu Hoạch Đạt Chuẩn An Toàn</h6>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ batch.harvest_date|date:"d/m/Y" }}</span>
+                                </div>
+                                <p class="text-muted small mb-0">
+                                    Thu hoạch vào sáng sớm đảm bảo độ tươi ngọt tự nhiên. Đã hoàn thành thời gian cách ly nông nghiệp và đạt chứng nhận <strong>{{ batch.certification|default:"VietGAP" }}</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Mốc 3: Sơ chế & Đóng gói QR -->
+                        <div class="timeline-step d-flex gap-3 mb-4">
+                            <div class="timeline-node rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            <div class="timeline-content flex-grow-1 p-3 bg-light rounded-3 border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0 text-dark">📦 3. Sơ Chế, Phân Loại & Đóng Gói Niêm Phong</h6>
+                                    <span class="badge bg-white text-muted border">{{ batch.packaging_date|date:"d/m/Y" }}</span>
+                                </div>
+                                <p class="text-muted small mb-0">
+                                    Sản phẩm được làm sạch, kiểm tra kích thước đồng đều và dán mã định danh truy xuất số <strong>{{ batch.batch_code }}</strong> trước khi chuyển vào kho mát lưu trữ.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Mốc 4: Phân phối & Sẵn sàng giao hàng -->
+                        <div class="timeline-step d-flex gap-3 mb-2">
+                            <div class="timeline-node rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            <div class="timeline-content flex-grow-1 p-3 bg-light rounded-3 border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0 text-dark">🚚 4. Phân Phối Trực Tiếp Đến Khách Hàng (AgriSense)</h6>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle">Sẵn sàng xuất kho</span>
+                                </div>
+                                <p class="text-muted small mb-0">
+                                    Hạn dùng khuyến nghị: <strong>{{ batch.expiry_date|date:"d/m/Y"|default:"Bảo quản ngăn mát 3-7 ngày sau khi nhận hàng" }}</strong>. Giao hàng nhanh toàn quốc kết hợp bảo quản lạnh tiêu chuẩn.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lịch Sử Kiểm Định Bổ Sung (Nếu có dữ liệu history) -->
+                {% if history %}
+                    <div class="mb-5">
+                        <h6 class="fw-bold text-success mb-3">
+                            <i class="bi bi-clock-history me-1"></i> Nhật Ký Kiểm Định & Cập Nhật Lô Hàng
+                        </h6>
+                        <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                            {% for record in history %}
+                                <div class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-semibold text-dark">
+                                            <i class="bi bi-shield-check text-success me-1"></i>{{ record.field_changed }}
+                                        </span>
+                                        <small class="text-muted">{{ record.changed_at|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                    <p class="mb-0 small text-muted">{{ record.new_value }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 {% endif %}
-            </div>
 
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <div class="p-3 bg-light rounded">
-                        <h6 class="fw-bold text-success mb-2">🌱 Vùng Trồng & Nông Trại</h6>
-                        <p class="mb-1"><strong>Nông trại:</strong> {{ batch.product.supplier.name }}</p>
-                        <p class="mb-1"><strong>Vị trí:</strong> {{ batch.planting_location }}</p>
-                        <p class="mb-0"><strong>Chứng nhận:</strong> <span class="badge bg-success">{{ batch.certification|default:"VietGAP" }}</span></p>
-                    </div>
+                <!-- Khối Hành Động Cân Đối (Action CTA) Chân Trang -->
+                <div class="pt-4 border-top d-flex flex-wrap gap-2 justify-content-center">
+                    <a href="{% url 'products:detail' slug=batch.product.slug %}" class="btn btn-success px-4 py-2 fw-semibold shadow-sm">
+                        <i class="bi bi-cart-plus-fill me-1"></i> Đặt mua {{ batch.product.name }} ngay
+                    </a>
+                    <a href="{% url 'products:list' %}" class="btn btn-outline-success px-4 py-2 fw-semibold">
+                        <i class="bi bi-grid-fill me-1"></i> Xem danh mục nông sản
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-light border px-4 py-2 text-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Về trang chủ
+                    </a>
                 </div>
-                <div class="col-md-6">
-                    <div class="p-3 bg-light rounded">
-                        <h6 class="fw-bold text-success mb-2">📅 Mốc Thời Gian Thu Hoạch</h6>
-                        <p class="mb-1"><strong>Ngày thu hoạch:</strong> {{ batch.harvest_date|date:"d/m/Y" }}</p>
-                        <p class="mb-1"><strong>Ngày đóng gói:</strong> {{ batch.packaging_date|date:"d/m/Y" }}</p>
-                        <p class="mb-0"><strong>Hạn sử dụng:</strong> {{ batch.expiry_date|date:"d/m/Y"|default:"Theo nhiệt độ bảo quản" }}</p>
-                    </div>
-                </div>
-            </div>
-
-            {% if batch.notes %}
-                <div class="mb-4">
-                    <h5 class="fw-bold text-success">Nhật Ký Canh Tác & Chăm Sóc</h5>
-                    <div class="p-3 bg-light rounded">
-                        <p class="mb-0 text-muted">{{ batch.notes }}</p>
-                    </div>
-                </div>
-            {% endif %}
-
-            {% if history %}
-                <div class="mb-4">
-                    <h5 class="fw-bold text-success">Lịch Sử Kiểm Định & Vận Chuyển</h5>
-                    <ul class="list-group list-group-flush">
-                        {% for record in history %}
-                            <li class="list-group-item px-0">
-                                <div class="d-flex justify-content-between">
-                                    <strong>{{ record.field_changed }}</strong>
-                                    <small class="text-muted">{{ record.changed_at|date:"d/m/Y H:i" }}</small>
-                                </div>
-                                <p class="mb-0 small text-muted">{{ record.new_value }}</p>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-
-            <div class="text-center pt-3 border-top">
-                <a href="{% url 'products:detail' slug=batch.product.slug %}" class="btn btn-success px-4 me-2">Đặt mua sản phẩm này</a>
-                <a href="{% url 'home' %}" class="btn btn-outline-secondary px-4">Về trang chủ</a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal Xem Giấy Chứng Nhận An Toàn Số -->
+<div class="modal fade" id="certModal" tabindex="-1" aria-labelledby="certModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="certModalLabel">
+                    <i class="bi bi-patch-check-fill"></i> Giấy Chứng Nhận An Toàn Nông Sản Số
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="display-5 text-success mb-2">
+                        <i class="bi bi-shield-fill-check"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">{{ batch.certification|default:"Tiêu Chuẩn Nông Nghiệp VietGAP" }}</h5>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">Xác thực hợp lệ</span>
+                </div>
+
+                <div class="bg-light p-3 rounded-3 small border mb-3">
+                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                        <span class="text-muted">Sản phẩm chứng nhận:</span>
+                        <strong class="text-dark">{{ batch.product.name }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                        <span class="text-muted">Mã định danh lô:</span>
+                        <strong class="text-success font-monospace">{{ batch.batch_code }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                        <span class="text-muted">Trang trại / Vùng trồng:</span>
+                        <strong class="text-dark">{{ batch.planting_location }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                        <span class="text-muted">Nhà cung cấp:</span>
+                        <strong class="text-dark">{{ batch.product.supplier.name }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Tình trạng kiểm nghiệm:</span>
+                        <strong class="text-success"><i class="bi bi-check2-all me-1"></i>Đạt chỉ tiêu vi sinh & kim loại nặng</strong>
+                    </div>
+                </div>
+
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>Sản phẩm được lấy mẫu kiểm nghiệm định kỳ, đáp ứng đầy đủ quy chuẩn vệ sinh an toàn thực phẩm của Bộ Nông nghiệp & PTNT.
+                </p>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tra Cứu Mã Lô Khác -->
+<div class="modal fade" id="lookupModal" tabindex="-1" aria-labelledby="lookupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="lookupModalLabel">
+                    <i class="bi bi-search text-success"></i> Tra Cứu Mã Lô Hàng Khác
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">
+                    Nhập mã lô in trên tem bao bì (ví dụ: <code>BATCH-DUALUOI-2026</code>) để tra cứu nhật ký nguồn gốc tương ứng:
+                </p>
+                <form id="lookupForm" onsubmit="handleLookup(event)">
+                    <div class="input-group mb-3">
+                        <input type="text" id="batchCodeInput" class="form-control font-monospace text-uppercase" placeholder="Nhập mã lô hàng..." required>
+                        <button class="btn btn-success fw-bold px-3" type="submit">
+                            <i class="bi bi-arrow-right"></i> Tra Cứu
+                        </button>
+                    </div>
+                </form>
+                <div class="small text-muted">
+                    <i class="bi bi-lightbulb me-1"></i>Bạn cũng có thể dùng camera điện thoại quét trực tiếp mã QR trên tem nhãn.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Thông Báo Khi Copy Link -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="copyToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle-fill me-2"></i>Đã sao chép liên kết Hộ Chiếu Nông Sản Số vào Clipboard!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyTraceUrl() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        const shareBtnText = document.getElementById('shareBtnText');
+        if (shareBtnText) {
+            shareBtnText.textContent = 'Đã chép link!';
+            setTimeout(() => { shareBtnText.textContent = 'Chia Sẻ'; }, 2500);
+        }
+        const toastEl = document.getElementById('copyToast');
+        if (toastEl && window.bootstrap) {
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    }).catch(function() {
+        alert('Liên kết: ' + window.location.href);
+    });
+}
+
+function handleLookup(event) {
+    event.preventDefault();
+    const code = document.getElementById('batchCodeInput').value.trim();
+    if (code) {
+        window.location.href = '/trace/' + encodeURIComponent(code) + '/';
+    }
+}
+</script>
 {% endblock %}

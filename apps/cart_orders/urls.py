@@ -15,5 +15,6 @@ urlpatterns = [
     path('checkout/', views.CheckoutView.as_view(), name='checkout'),
     path('orders/', views.OrderHistoryView.as_view(), name='order_history'),
     path('orders/<str:order_code>/', views.OrderDetailView.as_view(), name='order_detail'),
+    path('orders/<str:order_code>/upload-proof/', views.UploadPaymentProofView.as_view(), name='upload_payment_proof'),
     path('orders/<str:order_code>/cancel/', views.CancelOrderView.as_view(), name='cancel_order'),
 ]

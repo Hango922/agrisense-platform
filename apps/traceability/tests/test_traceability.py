@@ -45,3 +45,15 @@ class TraceabilityTests(TestCase):
     def test_public_trace_view_404(self):
         response = self.client.get('/trace/NON-EXISTENT-CODE/')
         self.assertEqual(response.status_code, 404)
+
+    def test_trace_index_view_success(self):
+        response = self.client.get('/trace/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tra Cứu Hộ Chiếu Nông Sản Số')
+        self.assertContains(response, 'BATCH-TEST-001')
+
+    def test_trace_index_search(self):
+        response = self.client.get('/trace/?q=Bưởi')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'BATCH-TEST-001')
+

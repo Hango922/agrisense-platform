@@ -19,7 +19,10 @@
             {% if product.image %}
                 <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}" style="max-height: 380px; object-fit: contain;">
             {% else %}
-                <div class="py-5 text-muted display-1">🥬</div>
+                <div class="py-5 text-center bg-light rounded-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 320px;">
+                    <div class="display-3 text-success mb-2">🌿</div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Nông Sản Sạch Tự Nhiên</span>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -52,13 +55,38 @@
                         <div style="width: 120px;">
                             <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ product.stock }}">
                         </div>
-                        <button type="submit" class="btn btn-success btn-lg px-4 fw-bold">
+                        <button type="submit" class="btn btn-success btn-lg px-4 fw-bold shadow-sm">
                             🛒 Thêm vào giỏ hàng
                         </button>
                     </div>
                 </form>
             {% else %}
                 <div class="alert alert-warning py-2 mb-4">Sản phẩm tạm thời hết hàng. Vui lòng quay lại sau!</div>
+            {% endif %}
+
+            {% if latest_batch %}
+                <!-- Khối Hộ Chiếu Nguồn Gốc Lô Hàng Đang Bán -->
+                <div class="card border-success border-opacity-25 bg-success bg-opacity-10 rounded-3 p-3 mb-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success"><i class="bi bi-shield-check me-1"></i>Hộ Chiếu Nông Sản Số</span>
+                            <span class="fw-bold text-success font-monospace">Lô #{{ latest_batch.batch_code }}</span>
+                        </div>
+                        <span class="badge bg-white text-success border border-success-subtle fw-semibold">{{ latest_batch.certification|default:"VietGAP" }}</span>
+                    </div>
+                    <div class="small text-muted mb-2">
+                        <div><i class="bi bi-geo-alt text-danger me-1"></i><strong>Vùng trồng:</strong> {{ latest_batch.planting_location }} ({{ latest_batch.product.supplier.name }})</div>
+                        <div><i class="bi bi-calendar-check text-success me-1"></i><strong>Thu hoạch:</strong> {{ latest_batch.harvest_date|date:"d/m/Y" }} | <strong>Đóng gói:</strong> {{ latest_batch.packaging_date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top border-success border-opacity-25 gap-2">
+                        <span class="text-muted" style="font-size: 0.75rem;">
+                            <i class="bi bi-qr-code-scan me-1"></i>Tem mã QR được niêm phong trên từng bao bì giao đến bạn
+                        </span>
+                        <a href="{% url 'traceability:public_trace' batch_code=latest_batch.batch_code %}" class="btn btn-sm btn-success fw-semibold shadow-sm d-inline-flex align-items-center gap-1" target="_blank">
+                            <i class="bi bi-patch-check-fill"></i> Xem Hộ Chiếu Nguồn Gốc
+                        </a>
+                    </div>
+                </div>
             {% endif %}
 
             <hr>

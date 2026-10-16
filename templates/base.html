@@ -8,7 +8,8 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Nông Sản Sạch{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2.2">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
@@ -20,6 +21,11 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="{% url 'products:list' %}">Sản phẩm</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'traceability:trace_index' %}">
+                            <i class="bi bi-qr-code-scan me-1"></i>Truy xuất nguồn gốc
+                        </a>
+                    </li>
                 </ul>
                 <form class="d-flex me-3" action="{% url 'products:search' %}" method="get">
                     <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Tìm kiếm nông sản..." value="{{ request.GET.q|default:'' }}">
@@ -71,18 +77,73 @@
 
     <!-- Chatbot Widget -->
     <div id="chatbot-widget" class="chatbot-widget">
-        <button id="chatbot-toggle" class="chatbot-toggle">💬</button>
+        <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Mở chat">
+            <span class="pulse-ring"></span>
+            <span>💬</span>
+        </button>
         <div class="chatbot-panel shadow" id="chatbot-panel">
             <div class="chatbot-header d-flex justify-content-between align-items-center">
-                <span>🌾 Trợ lý Nông Sản AI</span>
-                <button type="button" id="chatbot-clear" class="btn btn-sm text-white p-0 border-0" title="Xóa đoạn chat để bắt đầu lại" style="font-size: 12px; background: none;">🔄 Làm mới</button>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-5">🌾</span>
+                    <div>
+                        <div class="fw-bold" style="font-size: 14.5px; line-height: 1.2;">Trợ Lý Nông Sản AI</div>
+                        <div class="small opacity-75" style="font-size: 11px;">● Trực tuyến • Sẵn sàng hỗ trợ</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <button type="button" id="chatbot-clear" class="btn btn-sm text-white p-1 border-0 opacity-75" title="Làm mới đoạn chat" style="font-size: 13px; background: none;">
+                        <i class="bi bi-arrow-clockwise fs-6"></i>
+                    </button>
+                    <button type="button" id="chatbot-close" class="btn btn-sm text-white p-1 border-0 opacity-75" title="Thu nhỏ" style="font-size: 14px; background: none;">
+                        <i class="bi bi-dash-lg fs-6"></i>
+                    </button>
+                </div>
             </div>
             <div id="chatbot-messages" class="chatbot-messages">
                 <div class="chat-msg bot">Xin chào! Tôi có thể giúp bạn tìm nông sản sạch hoặc giải đáp thắc mắc gì?</div>
             </div>
+            <!-- Quick Suggestion Chips -->
+            <div class="chatbot-chips" id="chatbot-chips">
+                <button type="button" class="chip-btn" data-query="Hôm nay có rau củ gì tươi ngon?">🥦 Rau sạch tươi</button>
+                <button type="button" class="chip-btn" data-query="Giá bưởi da xanh bao nhiêu?">🍊 Bưởi da xanh</button>
+                <button type="button" class="chip-btn" data-query="Chính sách giao hàng và phí ship?">🚚 Phí ship</button>
+                <button type="button" class="chip-btn" data-query="Tôi muốn đặt mua 2kg cà chua bi">🛒 Lên đơn cà chua</button>
+            </div>
             <div class="chatbot-input-group">
-                <input type="text" id="chatbot-input" placeholder="Hỏi về nông sản...">
-                <button id="chatbot-send">Gửi</button>
+                <input type="text" id="chatbot-input" placeholder="Hỏi về nông sản, giá, hoặc lên đơn..." autocomplete="off">
+                <button id="chatbot-send" title="Gửi tin nhắn">
+                    <i class="bi bi-send-fill" style="font-size: 14px;"></i>
+                </button>
+            </div>
+    </div>
+
+    <!-- Modal Tra Cứu Nguồn Gốc Lô Hàng Nông Sản -->
+    <div class="modal fade" id="navTraceModal" tabindex="-1" aria-labelledby="navTraceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-3">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="navTraceModalLabel">
+                        <i class="bi bi-qr-code-scan"></i> Tra Cứu Hộ Chiếu Nguồn Gốc Số
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">
+                        Nhập <strong>Mã lô hàng</strong> in trên tem nhãn bao bì sản phẩm bạn đã mua để kiểm tra nguồn gốc trang trại, ngày thu hoạch và chứng nhận kiểm định an toàn:
+                    </p>
+                    <form onsubmit="event.preventDefault(); const code = document.getElementById('navBatchCodeInput').value.trim(); if(code){ window.location.href = '/trace/' + encodeURIComponent(code) + '/'; }">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-light"><i class="bi bi-upc-scan text-success"></i></span>
+                            <input type="text" id="navBatchCodeInput" class="form-control font-monospace text-uppercase" placeholder="Ví dụ: BATCH2026010..." required>
+                            <button class="btn btn-success fw-bold px-3" type="submit">
+                                <i class="bi bi-search me-1"></i> Tra Cứu
+                            </button>
+                        </div>
+                    </form>
+                    <div class="bg-light p-2 rounded small text-muted">
+                        <i class="bi bi-info-circle text-primary me-1"></i>Bạn cũng có thể dùng camera điện thoại hoặc Zalo quét trực tiếp mã QR trên tem dán sản phẩm.
+                    </div>
+                </div>
             </div>
         </div>
     </div>

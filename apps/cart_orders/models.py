@@ -85,7 +85,10 @@ class Order(models.Model):
         ('delivered', 'Đã giao'),
         ('cancelled', 'Đã hủy'),
     ]
-    PAYMENT_CHOICES = [('cod', 'Thanh toán khi nhận hàng (COD)')]
+    PAYMENT_CHOICES = [
+        ('cod', 'Thanh toán khi nhận hàng (COD)'),
+        ('vietqr', 'Chuyển khoản qua mã QR (VietQR / Techcombank)'),
+    ]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -103,6 +106,8 @@ class Order(models.Model):
     final_amount = models.DecimalField(max_digits=12, decimal_places=0, verbose_name='Tổng thanh toán')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cod', verbose_name='Phương thức thanh toán')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True, verbose_name='Trạng thái')
+    payment_proof = models.ImageField(upload_to='payment_proofs/', null=True, blank=True, verbose_name='Ảnh bill chuyển khoản')
+    payment_proof_uploaded_at = models.DateTimeField(null=True, blank=True, verbose_name='Thời gian tải bill')
     note = models.TextField(blank=True, verbose_name='Ghi chú đơn hàng')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Thời gian đặt')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Thời gian cập nhật')
@@ -112,6 +117,28 @@ class Order(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Đơn hàng'
         verbose_name_plural = 'Danh sách đơn hàng'
+
+    def clean(self):
+        super().clean()
+        if self.payment_method == 'vietqr' and self.status in ('confirmed', 'shipping', 'delivered') and not self.payment_proof:
+            from django.core.exceptions import ValidationError
+            raise ValidationError({
+                'status': "Đơn hàng thanh toán VietQR bắt buộc phải có ảnh bill chuyển khoản trước khi Admin xác nhận đơn hàng!"
+            })
+
+    def save(self, *args, **kwargs):
+        if self.payment_method == 'vietqr' and self.status in ('confirmed', 'shipping', 'delivered') and not self.payment_proof:
+            from django.core.exceptions import ValidationError
+            raise ValidationError("Đơn hàng thanh toán VietQR bắt buộc phải có ảnh bill chuyển khoản trước khi Admin xác nhận đơn hàng!")
+        super().save(*args, **kwargs)
+
+    def can_be_confirmed(self):
+        """Kiểm tra điều kiện để admin có thể xác nhận đơn hàng: Đơn VietQR bắt buộc phải có bill."""
+        if self.status != 'pending':
+            return False
+        if self.payment_method == 'vietqr' and not self.payment_proof:
+            return False
+        return True
 
     def __str__(self):
         return self.order_code

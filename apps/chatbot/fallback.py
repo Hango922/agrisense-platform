@@ -9,13 +9,14 @@ import unicodedata
 from .prompts import FALLBACK_RESPONSES
 
 FALLBACK_RULES = [
+    (r'\b(phí ship|phi ship|phí giao hàng|phi giao hang|chính sách giao hàng|chinh sach giao hang|phí vận chuyển|phi van chuyen)\b', 'shipping'),
     (r'\b(đơn hàng|don hang|order|giao chưa|giao chua|ship|vận chuyển|van chuyen)\b', 'order'),
     (r'\b(nguồn gốc|nguon goc|xuất xứ|xuat xu|ở đâu|o dau|vùng trồng|vung trong|trang trại|trang trai)\b', 'origin'),
     (r'\b(bảo quản|bao quan|hạn sử dụng|han su dung|tủ lạnh|tu lanh|để được bao lâu|de duoc bao lau)\b', 'storage'),
     (r'\b(giá|gia|bao nhiêu|bao nhieu|tiền|tien|price|cost)\b', 'price'),
 ]
 
-RECOMMEND_PATTERNS = r'\b(tư vấn|tu van|gợi ý|goi y|nên mua|nen mua|bán chạy|ban chay|món ngon|mon ngon|loại nào ngon|loai nao ngon|nông sản hot|nong san hot|mua gì|mua gi)\b'
+RECOMMEND_PATTERNS = r'\b(tư vấn|tu van|gợi ý|goi y|nên mua|nen mua|bán chạy|ban chay|món ngon|mon ngon|loại nào ngon|loai nao ngon|nông sản hot|nong san hot|mua gì|mua gi|tươi ngon|tuoi ngon|có gì|co gi|rau củ gì|rau cu gi|rau gì|rau gi|rau sạch|rau sach|trái cây|trai cay|hoa quả|hoa qua)\b'
 GREETING_PATTERNS = r'^(xin chào|xin chao|chào|chao|hello|hi|hey|alo)\b'
 
 
@@ -113,6 +114,16 @@ def get_fallback_response(message, user=None):
 
     # Tìm sản phẩm liên quan
     products = find_matching_products(msg)
+
+    # 0. Xử lý câu hỏi về PHÍ SHIP / GIAO HÀNG
+    if matched_key == 'shipping':
+        return (
+            "🚚 **Chính sách giao hàng & Phí vận chuyển của AgriSense**:\n"
+            "• Đơn hàng từ **500.000 đ** trở lên: **MIỄN PHÍ VẬN CHUYỂN** (Freeship) toàn quốc.\n"
+            "• Đơn hàng dưới 500.000 đ: Phí ship đồng giá **30.000 đ**.\n"
+            "• Nông sản được đóng gói bảo quản mát tiêu chuẩn, giao nhanh 1-2 ngày đảm bảo luôn tươi ngon!",
+            'order'
+        )
 
     # 1. Xử lý câu hỏi về GIÁ
     if matched_key == 'price':
@@ -233,14 +244,26 @@ def get_fallback_response(message, user=None):
     if re.search(RECOMMEND_PATTERNS, msg_lower, re.IGNORECASE):
         try:
             from apps.products.models import Product
-            featured = list(Product.objects.filter(is_active=True).order_by('-created_at')[:4])
+            if 'rau' in msg_lower:
+                featured = list(Product.objects.filter(is_active=True, category__slug__icontains='rau').order_by('-created_at')[:4])
+                header = "🌾 **Hôm nay AgriSense có các loại rau củ tươi sạch đạt chuẩn VietGAP/Hữu cơ vừa về trong ngày**:"
+            elif any(w in msg_lower for w in ['trai cay', 'hoa qua', 'trái cây', 'hoa quả', 'quả']):
+                featured = list(Product.objects.filter(is_active=True, category__slug__icontains='trai-cay').order_by('-created_at')[:4])
+                header = "🌾 **Hôm nay AgriSense có các loại trái cây tươi ngon, ngọt mát đạt chuẩn an toàn**:"
+            else:
+                featured = list(Product.objects.filter(is_active=True).order_by('-created_at')[:4])
+                header = "🌾 **AgriSense gợi ý những nông sản sạch thơm ngon, được yêu thích nhất hôm nay**:"
+
+            if not featured:
+                featured = list(Product.objects.filter(is_active=True).order_by('-created_at')[:4])
+
             if featured:
-                lines = ["🌾 **AgriSense gợi ý những nông sản sạch thơm ngon, được yêu thích nhất hôm nay**:"]
+                lines = [header]
                 for p in featured:
                     p_price = format_currency(p.price)
                     cert_note = f" (Chuẩn {p.supplier.certification})" if (p.supplier and p.supplier.certification) else ""
                     lines.append(f"• **{p.name}**: **{p_price}/{p.unit}** (Kho: {p.stock} {p.unit}){cert_note}")
-                lines.append("Bạn muốn tư vấn thêm về món nào hoặc cần cách chế biến loại nào ạ?")
+                lines.append("Bạn muốn đặt loại nào hoặc cần tư vấn thêm cách chế biến không ạ?")
                 return ("\n".join(lines), 'default')
         except Exception:
             pass

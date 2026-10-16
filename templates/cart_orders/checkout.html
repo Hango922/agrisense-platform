@@ -30,13 +30,42 @@
                     <textarea name="note" class="form-control" rows="2" placeholder="Giao giờ hành chính, gọi trước khi đến,..."></textarea>
                 </div>
 
-                <div class="alert alert-light border mt-4">
+                <h6 class="fw-bold mt-4 mb-2 text-dark">Phương thức thanh toán:</h6>
+
+                <div class="card p-3 mb-2 border rounded-3 payment-method-card" style="cursor: pointer;">
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="payment_method" id="payment_cod" value="cod" checked>
-                        <label class="form-check-label fw-bold" for="payment_cod">
-                            💵 Thanh toán khi nhận hàng (COD)
+                        <label class="form-check-label fw-bold d-flex align-items-center gap-2" for="payment_cod">
+                            <span>💵</span>
+                            <span>Thanh toán khi nhận hàng (COD)</span>
                         </label>
-                        <p class="text-muted small mb-0 mt-1">Bạn sẽ thanh toán tiền mặt trực tiếp cho nhân viên giao hàng khi nhận được nông sản.</p>
+                        <p class="text-muted small mb-0 mt-1 ps-4">Bạn sẽ thanh toán tiền mặt trực tiếp cho nhân viên giao hàng khi nhận được nông sản.</p>
+                    </div>
+                </div>
+
+                <div class="card p-3 mb-3 border border-success border-opacity-50 rounded-3 payment-method-card bg-success bg-opacity-10" style="cursor: pointer;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_method" id="payment_vietqr" value="vietqr">
+                        <label class="form-check-label fw-bold d-flex align-items-center gap-2 text-success" for="payment_vietqr">
+                            <i class="bi bi-qr-code-scan"></i>
+                            <span>Chuyển khoản qua mã QR (VietQR / Techcombank)</span>
+                            <span class="badge bg-success ms-auto">Khuyên dùng</span>
+                        </label>
+                        <p class="text-muted small mb-2 mt-1 ps-4">
+                            Quét mã QR bằng App Ngân hàng (Techcombank, Vietcombank, MB, BIDV,...) để tự động điền số tiền và nội dung chuyển khoản an toàn.
+                        </p>
+                        <div id="vietqr-preview-box" class="ms-4 p-3 bg-white rounded-3 border mt-2" style="display: none;">
+                            <div class="d-flex align-items-center gap-3">
+                                {% load static %}
+                                <img src="{% static 'images/techcombank_qr.png' %}" alt="Techcombank QR NGUYEN HONG HOANG" class="img-fluid rounded border shadow-sm" style="width: 80px; height: 80px; object-fit: contain;">
+                                <div class="small">
+                                    <div class="fw-bold text-dark">Ngân hàng Techcombank</div>
+                                    <div class="text-muted">Số tài khoản: <strong class="text-primary font-monospace fs-6">7979 7989 50</strong></div>
+                                    <div class="text-muted">Chủ tài khoản: <strong>NGUYEN HONG HOANG</strong></div>
+                                    <div class="text-success small mt-1"><i class="bi bi-shield-check me-1"></i>Mã VietQR động chứa số tiền sẽ xuất hiện ngay sau khi bạn bấm xác nhận.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -91,4 +120,21 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const radios = document.querySelectorAll('input[name="payment_method"]');
+    const preview = document.getElementById('vietqr-preview-box');
+    function updatePreview() {
+        const selected = document.querySelector('input[name="payment_method"]:checked');
+        if (preview && selected) {
+            preview.style.display = (selected.value === 'vietqr') ? 'block' : 'none';
+        }
+    }
+    radios.forEach(r => r.addEventListener('change', updatePreview));
+    updatePreview();
+});
+</script>
 {% endblock %}

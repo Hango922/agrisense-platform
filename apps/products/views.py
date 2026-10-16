@@ -108,6 +108,7 @@ class ProductDetailView(DetailView):
         ctx['related_products'] = Product.objects.filter(
             category=self.object.category, is_active=True
         ).exclude(id=self.object.id)[:4]
+        ctx['latest_batch'] = self.object.batches.order_by('-created_at').first()
         return ctx
 
 

@@ -34,6 +34,15 @@ class ProductBatch(models.Model):
         verbose_name = 'Lô hàng nông sản'
         verbose_name_plural = 'Danh sách lô hàng'
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if not self.qr_code:
+            from .qr_generator import generate_qr_code
+            qr_file = generate_qr_code(self)
+            self.qr_code.save(qr_file.name, qr_file, save=False)
+            super().save(update_fields=['qr_code'])
+
     def __str__(self):
         return f"{self.batch_code} - {self.product.name}"
 

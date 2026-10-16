@@ -19,12 +19,13 @@ def calculate_shipping_fee(total):
 
 
 @transaction.atomic
-def create_order_from_cart(user, cart, address_data, note=""):
+def create_order_from_cart(user, cart, address_data, note="", payment_method="cod"):
     """
-    Tạo đơn hàng COD từ giỏ hàng trong một transaction an toàn:
+    Tạo đơn hàng từ giỏ hàng trong một transaction an toàn:
     - Kiểm tra giỏ hàng không rỗng.
     - Kiểm tra tồn kho từng mặt hàng.
     - Tính toán tổng tiền, phí vận chuyển và giảm trừ tồn kho sản phẩm.
+    - Hỗ trợ phương thức thanh toán: COD hoặc Chuyển khoản VietQR.
     - Xóa các mặt hàng trong giỏ sau khi đặt thành công.
     """
     if not cart.items.exists():
@@ -49,7 +50,7 @@ def create_order_from_cart(user, cart, address_data, note=""):
         final_amount=final,
         note=note,
         status='pending',
-        payment_method='cod',
+        payment_method=payment_method,
     )
 
     for item in cart.items.select_related('product'):

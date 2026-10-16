@@ -6,65 +6,245 @@
 
 {% block dashboard_content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-muted small mb-0">Hiển thị <strong>{{ orders|length }}</strong> đơn hàng mới nhất</p>
+    <div>
+        <p class="text-muted small mb-0">
+            Hiển thị <strong>{{ orders|length }}</strong> đơn hàng mới nhất.
+            <span class="text-danger ms-2"><i class="bi bi-shield-check me-1"></i>Chính sách: Đơn VietQR bắt buộc phải có ảnh bill chuyển khoản mới được duyệt.</span>
+        </p>
+    </div>
     <div class="d-flex gap-2">
-        <a href="{% url 'dashboard:export_orders_excel' %}" class="btn btn-success btn-sm">
-            <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel Báo Cáo
+        <a href="{% url 'dashboard:export_orders_excel' %}" class="btn btn-success btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-file-earmark-excel"></i> Xuất Excel Báo Cáo
         </a>
-        <a href="/admin/cart_orders/order/" class="btn btn-outline-secondary btn-sm" target="_blank">
-            <i class="bi bi-box-arrow-up-right me-1"></i> Quản lý nâng cao
+        <a href="/admin/cart_orders/order/" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" target="_blank">
+            <i class="bi bi-box-arrow-up-right"></i> Quản lý nâng cao
         </a>
     </div>
 </div>
 
-<div class="card shadow-sm bg-white">
+<div class="card shadow-sm bg-white border-0 rounded-3">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
-                <tr>
-                    <th>Mã Đơn</th>
+                <tr class="text-secondary small text-uppercase">
+                    <th style="width: 130px;">Mã Đơn</th>
                     <th>Khách Hàng</th>
-                    <th>Điện Thoại</th>
                     <th>Địa Chỉ Nhận Hàng</th>
-                    <th>Tổng Tiền</th>
-                    <th>Trạng Thái</th>
-                    <th>Thời Gian</th>
-                    <th class="text-end">Cập Nhật</th>
+                    <th class="text-end" style="width: 120px;">Tổng Tiền</th>
+                    <th style="width: 190px;">Thanh Toán & Bill</th>
+                    <th class="text-center" style="width: 130px;">Trạng Thái</th>
+                    <th style="width: 130px;">Thời Gian</th>
+                    <th class="text-center" style="width: 170px;">Thao Tác Admin</th>
                 </tr>
             </thead>
             <tbody>
                 {% for ord in orders %}
                     <tr>
-                        <td><strong class="text-success">{{ ord.order_code }}</strong></td>
-                        <td>{{ ord.full_name }}</td>
-                        <td>{{ ord.phone }}</td>
-                        <td class="small text-truncate" style="max-width: 220px;" title="{{ ord.address }}">{{ ord.address }}</td>
-                        <td class="fw-bold text-danger">{{ ord.final_amount|floatformat:0 }} đ</td>
+                        <!-- Mã Đơn -->
                         <td>
-                            {% if ord.status == 'pending' %}
-                                <span class="badge bg-warning text-dark">Chờ xác nhận</span>
-                            {% elif ord.status == 'confirmed' %}
-                                <span class="badge bg-info text-dark">Đã xác nhận</span>
-                            {% elif ord.status == 'shipping' %}
-                                <span class="badge bg-primary">Đang giao</span>
-                            {% elif ord.status == 'delivered' %}
-                                <span class="badge bg-success">Đã giao</span>
-                            {% elif ord.status == 'cancelled' %}
-                                <span class="badge bg-secondary">Đã hủy</span>
+                            <strong class="text-success font-monospace">{{ ord.order_code }}</strong>
+                        </td>
+
+                        <!-- Khách Hàng -->
+                        <td>
+                            <div class="fw-semibold text-dark">{{ ord.full_name }}</div>
+                            <div class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ ord.phone }}</div>
+                        </td>
+
+                        <!-- Địa Chỉ -->
+                        <td>
+                            <div class="small text-truncate" style="max-width: 200px;" title="{{ ord.address }}">
+                                {{ ord.address }}
+                            </div>
+                        </td>
+
+                        <!-- Tổng Tiền -->
+                        <td class="text-end">
+                            <span class="fw-bold text-danger">{{ ord.final_amount|floatformat:0 }} đ</span>
+                        </td>
+
+                        <!-- Phương Thức & Bill Chuyển Khoản -->
+                        <td>
+                            {% if ord.payment_method == 'vietqr' %}
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1" style="width: fit-content;">
+                                        <i class="bi bi-qr-code"></i> VietQR (Techcombank)
+                                    </span>
+                                    
+                                    {% if ord.payment_proof %}
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <button type="button" class="btn p-0 border-0 bg-transparent" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#billModal"
+                                                    data-bill-url="{{ ord.payment_proof.url }}"
+                                                    data-order-code="{{ ord.order_code }}"
+                                                    data-customer="{{ ord.full_name }}"
+                                                    data-upload-time="{{ ord.payment_proof_uploaded_at|date:'H:i d/m/Y'|default:'Đã tải lên' }}">
+                                                <img src="{{ ord.payment_proof.url }}" 
+                                                     alt="Bill {{ ord.order_code }}" 
+                                                     class="rounded border shadow-sm" 
+                                                     style="width: 38px; height: 38px; object-fit: cover; cursor: pointer;"
+                                                     title="Nhấn để phóng to ảnh bill">
+                                            </button>
+                                            <div>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle d-inline-flex align-items-center gap-1">
+                                                    <i class="bi bi-patch-check-fill"></i> Đã có bill
+                                                </span>
+                                                <div class="text-muted" style="font-size: 0.7rem;">
+                                                    {{ ord.payment_proof_uploaded_at|date:"d/m H:i"|default:"Đã tải" }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="mt-1">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> Chưa có bill
+                                            </span>
+                                            <div class="text-danger small" style="font-size: 0.72rem;">Chờ khách tải biên lai</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                    <i class="bi bi-cash-coin me-1"></i>COD (Tiền mặt)
+                                </span>
                             {% endif %}
                         </td>
-                        <td class="small text-muted">{{ ord.created_at|date:"d/m/Y H:i" }}</td>
-                        <td class="text-end">
-                            <a href="/admin/cart_orders/order/{{ ord.id }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
-                                <i class="bi bi-pencil-square"></i> Cập nhật
-                            </a>
+
+                        <!-- Trạng Thái Hiện Tại -->
+                        <td class="text-center">
+                            {% if ord.status == 'pending' %}
+                                <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-clock me-1"></i>Chờ xác nhận</span>
+                            {% elif ord.status == 'confirmed' %}
+                                <span class="badge bg-info text-dark px-2 py-1"><i class="bi bi-check2 me-1"></i>Đã xác nhận</span>
+                            {% elif ord.status == 'shipping' %}
+                                <span class="badge bg-primary px-2 py-1"><i class="bi bi-truck me-1"></i>Đang giao</span>
+                            {% elif ord.status == 'delivered' %}
+                                <span class="badge bg-success px-2 py-1"><i class="bi bi-check-all me-1"></i>Đã giao</span>
+                            {% elif ord.status == 'cancelled' %}
+                                <span class="badge bg-secondary px-2 py-1"><i class="bi bi-x me-1"></i>Đã hủy</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Thời Gian Đặt -->
+                        <td class="small text-muted">
+                            <div>{{ ord.created_at|date:"d/m/Y" }}</div>
+                            <div style="font-size: 0.75rem;">{{ ord.created_at|date:"H:i" }}</div>
+                        </td>
+
+                        <!-- Thao Tác Xác Nhận / Cập Nhật -->
+                        <td class="text-center">
+                            <div class="d-flex flex-column align-items-center gap-1">
+                                {% if ord.status == 'pending' %}
+                                    {% if ord.can_be_confirmed %}
+                                        <!-- Được phép xác nhận (Đơn COD hoặc Đơn VietQR đã tải bill) -->
+                                        <form method="POST" action="{% url 'dashboard:update_order_status' ord.id %}" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận đơn hàng #{{ ord.order_code }}?');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="status" value="confirmed">
+                                            <button type="submit" class="btn btn-sm btn-success px-2 py-1 d-inline-flex align-items-center gap-1 shadow-sm">
+                                                <i class="bi bi-check-circle-fill"></i> Xác nhận đơn
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <!-- Khóa xác nhận vì thiếu bill VietQR -->
+                                        <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1 d-inline-flex align-items-center gap-1 disabled" disabled title="Khách chưa gửi bill chuyển khoản, không thể duyệt!">
+                                            <i class="bi bi-shield-lock-fill"></i> Chờ bill đối soát
+                                        </button>
+                                        <span class="text-danger small" style="font-size: 0.7rem;"><i class="bi bi-ban me-1"></i>Cần bill để duyệt</span>
+                                    {% endif %}
+                                {% elif ord.status == 'confirmed' %}
+                                    <form method="POST" action="{% url 'dashboard:update_order_status' ord.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="shipping">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary px-2 py-1 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-truck"></i> Giao hàng
+                                        </button>
+                                    </form>
+                                {% elif ord.status == 'shipping' %}
+                                    <form method="POST" action="{% url 'dashboard:update_order_status' ord.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="delivered">
+                                        <button type="submit" class="btn btn-sm btn-outline-success px-2 py-1 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-check-all"></i> Hoàn thành
+                                        </button>
+                                    </form>
+                                {% elif ord.status == 'delivered' %}
+                                    <span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Hoàn tất</span>
+                                {% elif ord.status == 'cancelled' %}
+                                    <span class="text-muted small"><i class="bi bi-x-circle me-1"></i>Đã hủy</span>
+                                {% endif %}
+
+                                <a href="/admin/cart_orders/order/{{ ord.id }}/change/" class="btn btn-sm btn-light border text-muted py-0 px-2 mt-1" style="font-size: 0.75rem;" target="_blank" title="Mở chi tiết đơn hàng trong Django Admin">
+                                    <i class="bi bi-pencil-square me-1"></i>Chi tiết
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="8" class="text-center py-4 text-muted">Chưa có đơn hàng nào trong hệ thống.</td></tr>
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            Chưa có đơn hàng nào trong hệ thống.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modal Xem Chi Tiết Bill Chuyển Khoản -->
+<div class="modal fade" id="billModal" tabindex="-1" aria-labelledby="billModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-light">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="billModalLabel">
+                        <i class="bi bi-receipt-cutoff text-success"></i> Biên Lai Chuyển Khoản Ngân Hàng
+                    </h5>
+                    <div class="small text-muted">
+                        Đơn hàng: <strong class="text-success font-monospace" id="modalOrderCode">---</strong> | 
+                        Khách hàng: <span id="modalCustomerName" class="fw-semibold">---</span> | 
+                        Thời gian tải: <span id="modalUploadTime">---</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body text-center p-4 bg-dark-subtle">
+                <img id="modalBillImg" src="" alt="Bill chuyển khoản" class="img-fluid rounded shadow-sm" style="max-height: 520px; object-fit: contain;">
+            </div>
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <a id="modalBillDownload" href="#" target="_blank" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-box-arrow-up-right"></i> Mở ảnh gốc toàn màn hình
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng cửa sổ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const billModal = document.getElementById('billModal');
+    if (billModal) {
+        billModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+            const billUrl = button.getAttribute('data-bill-url');
+            const orderCode = button.getAttribute('data-order-code');
+            const customer = button.getAttribute('data-customer');
+            const uploadTime = button.getAttribute('data-upload-time');
+
+            document.getElementById('modalBillImg').src = billUrl;
+            document.getElementById('modalBillDownload').href = billUrl;
+            document.getElementById('modalOrderCode').textContent = '#' + orderCode;
+            document.getElementById('modalCustomerName').textContent = customer;
+            document.getElementById('modalUploadTime').textContent = uploadTime;
+        });
+    }
+});
+</script>
 {% endblock %}

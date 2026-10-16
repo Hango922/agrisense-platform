@@ -1,61 +1,273 @@
 <!-- File: templates/dashboard/traceability.html -->
 {% extends "dashboard/base.html" %}
 
-{% block title %}Lô Hàng & Mã QR - AgriSense Dashboard{% endblock %}
+{% block title %}Quản Lý Lô Hàng & Mã QR - AgriSense Dashboard{% endblock %}
 {% block header_title %}Quản Lý Lô Hàng Nông Sản & Mã QR Truy Xuất Nguồn Gốc{% endblock %}
 
 {% block dashboard_content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-muted small mb-0">Tổng cộng: <strong>{{ batches|length }}</strong> lô hàng nông sản</p>
-    <a href="/admin/traceability/productbatch/add/" class="btn btn-success" target="_blank">
-        <i class="bi bi-plus-circle me-1"></i> Thêm Lô Hàng Mới
-    </a>
+<!-- Thanh thông tin hướng dẫn nghiệp vụ -->
+<div class="alert alert-info border-0 shadow-sm d-flex flex-wrap justify-content-between align-items-center mb-4 py-3 px-4 rounded-3">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle fs-4">
+            <i class="bi bi-qr-code-scan"></i>
+        </div>
+        <div>
+            <h6 class="fw-bold mb-1 text-dark">Hệ Thống Tem Mã QR Truy Xuất Nguồn Gốc Số (Digital Product Passport)</h6>
+            <p class="text-muted small mb-0">
+                Mỗi lô hàng có 1 mã QR độc bản. Mã QR này được in lên bao bì/tem nhãn để <strong>người tiêu dùng quét bằng điện thoại</strong> và kiểm tra minh bạch toàn bộ quy trình canh tác, thu hoạch.
+            </p>
+        </div>
+    </div>
+    <div class="mt-2 mt-md-0 d-flex gap-2">
+        <a href="/admin/traceability/productbatch/add/" class="btn btn-success btn-sm shadow-sm d-inline-flex align-items-center gap-1" target="_blank">
+            <i class="bi bi-plus-circle"></i> Thêm Lô Hàng Mới
+        </a>
+    </div>
 </div>
 
-<div class="card shadow-sm bg-white">
+<div class="card shadow-sm bg-white border-0 rounded-3">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <span class="fw-bold text-dark">
+            <i class="bi bi-list-check me-2 text-success"></i>Danh Sách Lô Hàng Nông Sản ({{ batches|length }})
+        </span>
+        <span class="text-muted small">Cập nhật theo thời gian thực từ cơ sở dữ liệu</span>
+    </div>
+
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
-                <tr>
-                    <th>Mã Lô Hàng</th>
+                <tr class="text-secondary small text-uppercase">
+                    <th style="width: 140px;">Mã Lô Hàng</th>
                     <th>Nông Sản</th>
                     <th>Vùng Trồng / Trang Trại</th>
-                    <th>Ngày Thu Hoạch</th>
-                    <th>Hạn Sử Dụng</th>
-                    <th>Chứng Nhận</th>
-                    <th>Ảnh Mã QR</th>
-                    <th class="text-end">Trang Công Khai</th>
+                    <th style="width: 130px;">Thu Hoạch</th>
+                    <th style="width: 130px;">Hạn Dùng</th>
+                    <th style="width: 120px;">Chứng Nhận</th>
+                    <th class="text-center" style="width: 150px;">Tem Mã QR</th>
+                    <th class="text-end" style="width: 200px;">Thao Tác Quản Trị</th>
                 </tr>
             </thead>
             <tbody>
                 {% for b in batches %}
                     <tr>
-                        <td><strong class="text-success">{{ b.batch_code }}</strong></td>
-                        <td><strong>{{ b.product.name }}</strong></td>
-                        <td>{{ b.planting_location }}</td>
-                        <td>{{ b.harvest_date|date:"d/m/Y" }}</td>
-                        <td>{{ b.expiry_date|date:"d/m/Y"|default:"-" }}</td>
-                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">{{ b.certification|default:"VietGAP" }}</span></td>
+                        <!-- Mã Lô Hàng -->
                         <td>
-                            {% if b.qr_code %}
-                                <a href="{{ b.qr_code.url }}" target="_blank">
-                                    <img src="{{ b.qr_code.url }}" alt="QR" class="img-thumbnail" style="width: 48px; height: 48px;">
-                                </a>
+                            <strong class="text-success font-monospace">{{ b.batch_code }}</strong>
+                        </td>
+
+                        <!-- Nông Sản -->
+                        <td>
+                            <div class="fw-semibold text-dark">{{ b.product.name }}</div>
+                            <small class="text-muted">{{ b.product.category.name }}</small>
+                        </td>
+
+                        <!-- Vùng Trồng -->
+                        <td>
+                            <div class="small fw-semibold text-dark text-truncate" style="max-width: 220px;" title="{{ b.planting_location }}">
+                                <i class="bi bi-geo-alt text-danger me-1"></i>{{ b.planting_location }}
+                            </div>
+                            <small class="text-muted">{{ b.product.supplier.name }}</small>
+                        </td>
+
+                        <!-- Ngày Thu Hoạch -->
+                        <td class="small text-muted">
+                            <i class="bi bi-calendar-event me-1"></i>{{ b.harvest_date|date:"d/m/Y" }}
+                        </td>
+
+                        <!-- Hạn Sử Dụng -->
+                        <td class="small text-muted">
+                            {% if b.expiry_date %}
+                                <i class="bi bi-clock-history me-1"></i>{{ b.expiry_date|date:"d/m/Y" }}
                             {% else %}
-                                <span class="text-muted small">Chưa có QR</span>
+                                <span class="text-muted">-</span>
                             {% endif %}
                         </td>
+
+                        <!-- Chứng Nhận -->
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-patch-check-fill me-1"></i>{{ b.certification|default:"VietGAP" }}
+                            </span>
+                        </td>
+
+                        <!-- Tem Mã QR -->
+                        <td class="text-center">
+                            {% if b.qr_code %}
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-success p-1 d-inline-flex flex-column align-items-center gap-1 shadow-sm rounded-2"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#qrLabelModal"
+                                        data-batch-code="{{ b.batch_code }}"
+                                        data-product-name="{{ b.product.name }}"
+                                        data-location="{{ b.planting_location }}"
+                                        data-supplier="{{ b.product.supplier.name }}"
+                                        data-harvest="{{ b.harvest_date|date:'d/m/Y' }}"
+                                        data-expiry="{{ b.expiry_date|date:'d/m/Y'|default:'Xem bao bì' }}"
+                                        data-cert="{{ b.certification|default:'VietGAP' }}"
+                                        data-qr-url="{{ b.qr_code.url }}"
+                                        data-public-url="{% url 'traceability:public_trace' batch_code=b.batch_code %}"
+                                        data-admin-edit-url="/admin/traceability/productbatch/{{ b.id }}/change/"
+                                        title="Nhấn để xem tem in nhãn & tải mã QR">
+                                    <img src="{{ b.qr_code.url }}" alt="QR" class="rounded border" style="width: 44px; height: 44px; object-fit: contain;">
+                                    <span style="font-size: 0.7rem; font-weight: 600;"><i class="bi bi-printer me-1"></i>In / Tải QR</span>
+                                </button>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border">Chưa có QR</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Thao Tác Quản Trị -->
                         <td class="text-end">
-                            <a href="{% url 'traceability:public_trace' batch_code=b.batch_code %}" class="btn btn-sm btn-outline-success" target="_blank">
-                                <i class="bi bi-box-arrow-up-right me-1"></i> Xem QR Trace
-                            </a>
+                            <div class="d-flex justify-content-end gap-1">
+                                <!-- Nút Sửa Thông Tin Lô Hàng -->
+                                <a href="/admin/traceability/productbatch/{{ b.id }}/change/" class="btn btn-sm btn-outline-secondary" target="_blank" title="Chỉnh sửa thông tin lô hàng">
+                                    <i class="bi bi-pencil-square"></i> Sửa
+                                </a>
+
+                                <!-- Nút Xem Trang Khách Hàng Quét Mã -->
+                                <a href="{% url 'traceability:public_trace' batch_code=b.batch_code %}" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 shadow-sm" target="_blank" title="Mở trang Hộ Chiếu Nông Sản Số người tiêu dùng sẽ nhìn thấy khi quét mã">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                    <span>Trang Khách Xem</span>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="8" class="text-center py-4 text-muted">Chưa có lô hàng nào trong hệ thống.</td></tr>
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-qr-code fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            Chưa có lô hàng nông sản nào trong hệ thống.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modal Xem Chi Tiết Tem Nhãn & In Mã QR Cho Admin -->
+<div class="modal fade" id="qrLabelModal" tabindex="-1" aria-labelledby="qrLabelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="qrLabelModalLabel">
+                    <i class="bi bi-printer-fill"></i> Tem Nhãn QR Truy Xuất Lô Hàng
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            
+            <div class="modal-body p-4 text-center">
+                <!-- Khung Xem Trước Tem Nhãn In Ấn (Print Preview Label) -->
+                <div id="printableLabel" class="border border-2 border-dark rounded-3 p-3 bg-white mx-auto shadow-sm text-start" style="max-width: 380px;">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                        <div class="fw-bold text-success text-uppercase" style="font-size: 0.85rem;">🌾 AgriSense Traceability</div>
+                        <span id="modalCertBadge" class="badge bg-success" style="font-size: 0.7rem;">VietGAP</span>
+                    </div>
+
+                    <div class="row align-items-center g-2">
+                        <div class="col-5 text-center">
+                            <img id="modalQrImg" src="" alt="Mã QR" class="img-fluid rounded border p-1" style="width: 125px; height: 125px;">
+                            <div class="text-muted mt-1" style="font-size: 0.65rem;">Quét để tra cứu nguồn gốc</div>
+                        </div>
+                        <div class="col-7">
+                            <h6 id="modalProductName" class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">---</h6>
+                            <div class="small mb-1">
+                                <strong>Mã lô:</strong> <span id="modalBatchCode" class="text-success font-monospace">---</span>
+                            </div>
+                            <div class="small mb-1 text-muted" style="font-size: 0.75rem;">
+                                <strong>Vùng trồng:</strong> <span id="modalLocation">---</span>
+                            </div>
+                            <div class="small text-muted" style="font-size: 0.75rem;">
+                                <strong>Thu hoạch:</strong> <span id="modalHarvest">---</span><br>
+                                <strong>Hạn dùng:</strong> <span id="modalExpiry">---</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-top pt-1 mt-2 text-center text-muted" style="font-size: 0.65rem;">
+                        Chứng thực số bởi Nền tảng Nông sản Sạch AgriSense
+                    </div>
+                </div>
+
+                <div class="mt-3 text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>Bạn có thể tải ảnh mã QR độc lập hoặc in trực tiếp tem nhãn dán bao bì sản phẩm.
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onclick="printLabel()">
+                        <i class="bi bi-printer"></i> In Tem Nhãn
+                    </button>
+                    <a id="modalDownloadBtn" href="#" download class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-download"></i> Tải Ảnh QR (.png)
+                    </a>
+                </div>
+                <div class="d-flex gap-2">
+                    <a id="modalAdminEditBtn" href="#" target="_blank" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil"></i> Sửa Lô
+                    </a>
+                    <a id="modalPublicTraceBtn" href="#" target="_blank" class="btn btn-success btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> Xem Trang Khách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const qrModal = document.getElementById('qrLabelModal');
+    if (qrModal) {
+        qrModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const batchCode = button.getAttribute('data-batch-code');
+            const productName = button.getAttribute('data-product-name');
+            const location = button.getAttribute('data-location');
+            const harvest = button.getAttribute('data-harvest');
+            const expiry = button.getAttribute('data-expiry');
+            const cert = button.getAttribute('data-cert');
+            const qrUrl = button.getAttribute('data-qr-url');
+            const publicUrl = button.getAttribute('data-public-url');
+            const adminEditUrl = button.getAttribute('data-admin-edit-url');
+
+            document.getElementById('modalQrImg').src = qrUrl;
+            document.getElementById('modalDownloadBtn').href = qrUrl;
+            document.getElementById('modalDownloadBtn').setAttribute('download', 'QR_' + batchCode + '.png');
+            document.getElementById('modalProductName').textContent = productName;
+            document.getElementById('modalBatchCode').textContent = batchCode;
+            document.getElementById('modalLocation').textContent = location;
+            document.getElementById('modalHarvest').textContent = harvest;
+            document.getElementById('modalExpiry').textContent = expiry;
+            document.getElementById('modalCertBadge').textContent = cert;
+            document.getElementById('modalPublicTraceBtn').href = publicUrl;
+            document.getElementById('modalAdminEditBtn').href = adminEditUrl;
+        });
+    }
+});
+
+function printLabel() {
+    const labelContent = document.getElementById('printableLabel').innerHTML;
+    const printWindow = window.open('', '', 'height=500,width=500');
+    printWindow.document.write('<html><head><title>In Tem Nhãn QR AgriSense</title>');
+    printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">');
+    printWindow.document.write('<style>body { padding: 20px; font-family: sans-serif; }</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<div style="max-width: 380px; margin: 0 auto; border: 2px solid #000; border-radius: 8px; padding: 15px;">');
+    printWindow.document.write(labelContent);
+    printWindow.document.write('</div>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(function () {
+        printWindow.print();
+        printWindow.close();
+    }, 400);
+}
+</script>
 {% endblock %}

@@ -8,5 +8,6 @@ from . import views
 app_name = 'traceability'
 
 urlpatterns = [
+    path('', views.TraceIndexView.as_view(), name='trace_index'),
     path('<str:batch_code>/', views.PublicTraceView.as_view(), name='public_trace'),
 ]

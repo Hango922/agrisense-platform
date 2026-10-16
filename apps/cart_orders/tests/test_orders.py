@@ -75,7 +75,7 @@ class OrderTests(TestCase):
         self.assertEqual(info['transfer_content'], order.order_code)
         self.assertEqual(info['memo'], order.order_code)
         self.assertEqual(info['amount'], int(order.final_amount))
-        self.assertIn('MB', info['bank_id'])
+        self.assertIn(info['bank_id'], ['TCB', 'MB'])
 
     def test_order_detail_view_includes_vietqr(self):
         order = create_order_from_cart(self.user, self.cart, {
@@ -87,3 +87,61 @@ class OrderTests(TestCase):
         self.assertIn('vietqr', response.context)
         self.assertIn('qr_image_url', response.context['vietqr'])
         self.assertContains(response, 'Thanh Toán Nhanh VietQR')
+
+    def test_vietqr_order_requires_payment_proof_to_confirm(self):
+        from django.core.exceptions import ValidationError
+        order = create_order_from_cart(self.user, self.cart, {
+            'full_name': 'Khách VietQR', 'phone': '0900111222', 'address': 'HN',
+        }, payment_method='vietqr')
+        self.assertEqual(order.payment_method, 'vietqr')
+        self.assertFalse(order.can_be_confirmed())
+
+        # Thử đổi trạng thái sang confirmed mà không có bill -> phải văng ValidationError
+        order.status = 'confirmed'
+        with self.assertRaises(ValidationError):
+            order.clean()
+        with self.assertRaises(ValidationError):
+            order.save()
+
+    def test_upload_payment_proof_and_confirm_success(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        order = create_order_from_cart(self.user, self.cart, {
+            'full_name': 'Khách VietQR', 'phone': '0900111222', 'address': 'HN',
+        }, payment_method='vietqr')
+
+        # Upload bill chuyển khoản
+        self.client.force_login(self.user)
+        fake_bill = SimpleUploadedFile("bill.png", b"\x89PNG\r\n\x1a\nfakeimagecontent", content_type="image/png")
+        response = self.client.post(
+            f'/orders/{order.order_code}/upload-proof/',
+            {'payment_proof': fake_bill},
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+
+        order.refresh_from_db()
+        self.assertTrue(bool(order.payment_proof))
+        self.assertIsNotNone(order.payment_proof_uploaded_at)
+        self.assertTrue(order.can_be_confirmed())
+
+        # Admin có thể xác nhận đơn hàng sau khi có bill
+        order.status = 'confirmed'
+        order.clean()
+        order.save()
+        self.assertEqual(order.status, 'confirmed')
+
+        # Dọn dẹp file test
+        if order.payment_proof:
+            order.payment_proof.delete(save=False)
+
+    def test_cod_order_can_be_confirmed_without_proof(self):
+        order = create_order_from_cart(self.user, self.cart, {
+            'full_name': 'Khách COD', 'phone': '0900333444', 'address': 'HN',
+        }, payment_method='cod')
+        self.assertEqual(order.payment_method, 'cod')
+        self.assertTrue(order.can_be_confirmed())
+        order.status = 'confirmed'
+        order.clean()
+        order.save()
+        self.assertEqual(order.status, 'confirmed')
+

@@ -8,6 +8,8 @@ import io
 import json
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
 from django.views.generic import TemplateView
 from django.views import View
 from django.http import HttpResponse
@@ -117,6 +119,33 @@ class DashboardOrdersView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['orders'] = Order.objects.all().order_by('-created_at')[:100]
         return ctx
+
+
+@method_decorator(staff_member_required, name='dispatch')
+class DashboardUpdateOrderStatusView(View):
+    """
+    Cập nhật trạng thái đơn hàng từ Dashboard.
+    Bắt buộc: Đơn thanh toán VietQR phải có ảnh bill chuyển khoản mới được phép xác nhận (status='confirmed').
+    """
+    def post(self, request, order_id):
+        order = get_object_or_404(Order, id=order_id)
+        target_status = request.POST.get('status')
+        if not target_status:
+            messages.error(request, "Thiếu trạng thái cần cập nhật.")
+            return redirect('dashboard:orders')
+
+        # Kiểm tra điều kiện bắt buộc có bill chuyển khoản nếu là đơn VietQR
+        if target_status in ('confirmed', 'shipping', 'delivered') and order.payment_method == 'vietqr' and not order.payment_proof:
+            messages.error(
+                request,
+                f"❌ KHÔNG THỂ XÁC NHẬN: Đơn hàng #{order.order_code} thanh toán qua VietQR nhưng KHÁCH HÀNG CHƯA TẢI LÊN BILL CHUYỂN KHOẢN! Vui lòng chờ khách tải bill đối soát."
+            )
+            return redirect('dashboard:orders')
+
+        order.status = target_status
+        order.save()
+        messages.success(request, f"✅ Đã cập nhật đơn hàng #{order.order_code} sang trạng thái: {order.get_status_display()}!")
+        return redirect('dashboard:orders')
 
 
 @method_decorator(staff_member_required, name='dispatch')
