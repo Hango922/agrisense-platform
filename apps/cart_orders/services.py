@@ -109,12 +109,21 @@ def create_direct_order(user, items_data, address_data, note="Đặt hàng qua C
     shipping_fee = calculate_shipping_fee(total)
     final = total + shipping_fee
 
+    # Đảm bảo độ dài các trường khớp với ràng buộc cơ sở dữ liệu
+    raw_name = str(address_data.get('full_name') or (user.get_full_name() or user.username if user else 'Khách hàng')).strip()
+    full_name = raw_name[:100] if raw_name else 'Khách hàng'
+
+    raw_phone = str(address_data.get('phone') or getattr(user, 'phone', '') or '0900000000').strip()
+    phone = raw_phone[:15] if raw_phone else '0900000000'
+
+    raw_address = str(address_data.get('address') or 'Địa chỉ giao hàng').strip()
+
     order = Order.objects.create(
         user=user,
         order_code='ORD' + get_random_string(8, '0123456789'),
-        full_name=address_data['full_name'],
-        phone=address_data['phone'],
-        address=address_data['address'],
+        full_name=full_name,
+        phone=phone,
+        address=raw_address,
         total_amount=total,
         shipping_fee=shipping_fee,
         final_amount=final,
@@ -139,3 +148,53 @@ def create_direct_order(user, items_data, address_data, note="Đặt hàng qua C
         prod.save(update_fields=['stock'])
 
     return order
+
+
+def generate_admin_verification_bill(order_code, admin_username=None):
+    """
+    Tạo chứng từ đối soát nội bộ dạng ảnh PNG hợp lệ để gán vào payment_proof khi
+    Admin xác nhận đã nhận tiền chuyển khoản trực tiếp qua ngân hàng.
+    """
+    import io
+    from PIL import Image, ImageDraw
+    from django.core.files.base import ContentFile
+    from django.utils import timezone
+
+    width, height = 650, 400
+    img = Image.new('RGB', (width, height), color='#f8fafc')
+    draw = ImageDraw.Draw(img)
+
+    # Khung viền và header
+    draw.rectangle([(15, 15), (width - 15, height - 15)], outline='#059669', width=3)
+    draw.rectangle([(20, 20), (width - 20, 85)], fill='#059669')
+
+    # Header text
+    draw.text((35, 30), "AGRISENSE PLATFORM - XAC NHAN DOI SOAT", fill='#ffffff')
+    draw.text((35, 55), "CHUNG TU THANH TOAN NGAN HANG (ADMIN VERIFIED)", fill='#a7f3d0')
+
+    # Nội dung chứng từ
+    now_str = timezone.now().strftime("%d/%m/%Y %H:%M:%S")
+    admin_str = admin_username or "Quan Tri Vien He Thong"
+
+    lines = [
+        f"Ma don hang: #{order_code}",
+        "Phuong thuc: Chuyen khoan VietQR (Techcombank)",
+        "Trang thai: DA DOI SOAT KHOP LENH TAI KHOAN",
+        f"Nguoi doi soat: {admin_str}",
+        f"Thoi gian xac nhan: {now_str}",
+        "Ghi chu: Tien da vao tai khoan thuc te. Don hang du dieu kien xuat kho."
+    ]
+
+    y = 110
+    for line in lines:
+        draw.text((40, y), line, fill='#1e293b')
+        y += 38
+
+    # Footer
+    draw.line([(35, height - 55), (width - 35, height - 55)], fill='#cbd5e1', width=1)
+    draw.text((40, height - 42), "Chung tu xac thuc noi bo - AgriSense Safe Agriculture System", fill='#64748b')
+
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    return ContentFile(buf.getvalue(), name=f"admin_verified_{order_code}.png")
+

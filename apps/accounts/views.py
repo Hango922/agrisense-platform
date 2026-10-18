@@ -28,8 +28,17 @@ class RegisterView(CreateView):
 class LoginView(DjangoLoginView):
     """
     Trang đăng nhập hệ thống với giao diện Bootstrap 5.
+    Tự động chuyển hướng Admin vào Dashboard và Khách hàng về Trang chủ.
     """
     template_name = 'accounts/login.html'
+
+    def get_success_url(self):
+        redirect_to = self.get_redirect_url()
+        if redirect_to:
+            return redirect_to
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return reverse_lazy('dashboard:home')
+        return reverse_lazy('home')
 
 
 class LogoutView(TemplateView):

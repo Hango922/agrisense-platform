@@ -1,13 +1,42 @@
 <!-- File: templates/500.html -->
 {% extends "base.html" %}
 
-{% block title %}500 - Lỗi máy chủ{% endblock %}
+{% block title %}500 - Lỗi Máy Chủ Nội Bộ | AgriSense{% endblock %}
 
 {% block content %}
-<div class="text-center py-5">
-    <h1 class="display-1 fw-bold text-danger">500</h1>
-    <h3 class="mb-3">Đã xảy ra lỗi máy chủ nội bộ</h3>
-    <p class="text-muted mb-4">Hệ thống đang gặp sự cố kỹ thuật. Vui lòng thử lại sau ít phút.</p>
-    <a href="{% url 'home' %}" class="btn btn-success"><i class="bi bi-house-door"></i> Quay lại trang chủ</a>
+<div class="row justify-content-center py-5 my-md-4">
+    <div class="col-lg-7 col-md-9 text-center">
+        <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-white p-4 p-md-5 position-relative">
+            <!-- Background Decorative Glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 160px; height: 160px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; filter: blur(30px); pointer-events: none;"></div>
+            <div style="position: absolute; bottom: -50px; left: -50px; width: 160px; height: 160px; background: rgba(245, 158, 11, 0.08); border-radius: 50%; filter: blur(30px); pointer-events: none;"></div>
+
+            <!-- Big Icon Badge -->
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+                 style="width: 90px; height: 90px; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); color: #dc2626; font-size: 2.8rem;">
+                ⚙️
+            </div>
+
+            <div class="display-1 fw-bolder font-heading text-dark mb-1" style="letter-spacing: -0.04em;">
+                5<span class="text-danger">0</span>0
+            </div>
+
+            <h3 class="fw-bold text-dark font-heading mb-3">Hệ Thống Đang Được Bảo Trì Hoặc Xử Lý Sự Cố!</h3>
+            
+            <p class="text-muted mx-auto mb-4" style="max-width: 480px; line-height: 1.6;">
+                Đội ngũ kỹ thuật AgriSense đã ghi nhận thông tin sự cố và đang tiến hành khắc phục để nền tảng hoạt động ổn định trở lại. Vui lòng thử lại sau ít phút.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="{% url 'home' %}" class="btn btn-agri-primary px-4 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-house-door-fill"></i> Tải Lại Trang Chủ
+                </a>
+                <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-bold d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i> Quay Lại Trang Trước
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

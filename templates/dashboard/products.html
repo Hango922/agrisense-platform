@@ -1,70 +1,312 @@
 <!-- File: templates/dashboard/products.html -->
 {% extends "dashboard/base.html" %}
+{% load dashboard_tags %}
 
-{% block title %}Quản Lý Nông Sản - AgriSense Dashboard{% endblock %}
-{% block header_title %}Quản Lý Danh Sách Nông Sản & Kho Hàng{% endblock %}
+{% block title %}Nông Sản & Quản Lý Tồn Kho - AgriSense Dashboard{% endblock %}
+{% block header_title %}Quản Lý Nông Sản & Tồn Kho{% endblock %}
 
 {% block dashboard_content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-muted small mb-0">Tổng cộng: <strong>{{ products|length }}</strong> mặt hàng nông sản</p>
-    <a href="/admin/products/product/add/" class="btn btn-success" target="_blank">
-        <i class="bi bi-plus-circle me-1"></i> Thêm Nông Sản Mới
-    </a>
+<!-- Header Bar -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold text-dark font-heading mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-basket3 text-success"></i> Danh Sách Nông Sản & Kiểm Soát Kho Hàng
+        </h4>
+        <p class="text-muted small mb-0">
+            Giám sát thời gian thực số lượng tồn kho, mức tiêu thụ và trạng thái niêm yết các mặt hàng nông sản sạch.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/admin/products/category/" target="_blank" class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1">
+            <i class="bi bi-tags"></i> Danh Mục
+        </a>
+        <a href="/admin/products/product/add/" target="_blank" class="btn btn-success btn-sm px-3 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+            <i class="bi bi-plus-circle"></i> Thêm Nông Sản Mới
+        </a>
+    </div>
 </div>
 
-<div class="card shadow-sm bg-white">
+<!-- 4 Hero KPI Cards -->
+<div class="row g-3 mb-4">
+    <!-- Card 1: Tổng Nông Sản -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Tổng Mặt Hàng</span>
+                    <div class="kpi-value text-dark">{{ total_products }}</div>
+                    <div class="text-muted small">Trong toàn bộ danh mục</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i class="bi bi-basket3-fill"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                <span>Số danh mục kích hoạt</span>
+                <span class="fw-bold text-success">{{ categories|length }} nhóm</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Đang Kinh Doanh -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Đang Mở Bán</span>
+                    <div class="kpi-value text-primary">{{ active_products }}</div>
+                    <div class="text-muted small">Hiển thị trên cửa hàng</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                <span>Tỉ lệ niêm yết</span>
+                <span class="fw-bold text-primary">
+                    {% if total_products > 0 %}
+                        {% widthratio active_products total_products 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Cảnh Báo Tồn Thấp -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Cảnh Báo Tồn Kho</span>
+                    <div class="kpi-value {% if low_stock_products > 0 or out_of_stock_products > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ low_stock_products }}
+                    </div>
+                    <div class="text-muted small">Sản phẩm tồn &lt; 10 đơn vị</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center small">
+                <span class="text-muted">Đã hết hàng:</span>
+                <span class="badge {% if out_of_stock_products > 0 %}bg-danger{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                    {{ out_of_stock_products }} sản phẩm
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Tổng Giá Trị Tồn Kho -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Giá Trị Kho Hàng</span>
+                    <div class="kpi-value text-success" style="font-size: 1.7rem; white-space: nowrap;">
+                        {{ total_inventory_value|currency_format }}<span class="fs-6 fw-normal text-muted">&nbsp;đ</span>
+                    </div>
+                    <div class="text-muted small">Ước tính theo giá niêm yết</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                <span>Đơn vị tiền tệ</span>
+                <span class="fw-bold text-dark">VNĐ (Việt Nam)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bộ Lọc Nhanh & Thanh Tìm Kiếm -->
+<div class="dashboard-card mb-4 p-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <!-- Quick Filter Tabs -->
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <a href="?stock=all{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_stock_filter == 'all' %}btn-success text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                Tất cả ({{ total_products }})
+            </a>
+            <a href="?stock=active{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_stock_filter == 'active' %}btn-primary text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                Đang bán ({{ active_products }})
+            </a>
+            <a href="?stock=low{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_stock_filter == 'low' %}btn-warning text-dark shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                ⚠️ Tồn thấp &lt; 10 ({{ low_stock_products }})
+            </a>
+            <a href="?stock=out{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_stock_filter == 'out' %}btn-danger text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                Hết hàng ({{ out_of_stock_products }})
+            </a>
+        </div>
+
+        <!-- Category Dropdown & Search Form -->
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-center m-0">
+            {% if current_stock_filter and current_stock_filter != 'all' %}
+                <input type="hidden" name="stock" value="{{ current_stock_filter }}">
+            {% endif %}
+
+            <select name="category" class="form-select form-select-sm rounded-pill" style="width: auto; min-width: 170px;" onchange="this.form.submit()">
+                <option value="">-- Tất cả danh mục --</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if current_category == cat.id|stringformat:"i" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <div class="input-group input-group-sm" style="max-width: 260px;">
+                <span class="input-group-text bg-white border-end-0 rounded-start-pill text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0 rounded-end-pill" placeholder="Tìm tên nông sản, vùng trồng...">
+            </div>
+
+            {% if current_category or search_query or current_stock_filter != 'all' %}
+                <a href="{% url 'dashboard:products' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="Xóa bộ lọc">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Main Products Table Card -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-grid-3x3-gap-fill text-success"></i> Danh Sách Nông Sản Chi Tiết
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                {{ products|length }} kết quả
+            </span>
+        </div>
+        <div class="text-muted small">
+            Được sắp xếp mới nhất lên đầu
+        </div>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" style="min-width: 980px;">
             <thead class="table-light">
-                <tr>
-                    <th>Sản phẩm</th>
-                    <th>Danh mục</th>
-                    <th>Nhà cung cấp / Vùng trồng</th>
-                    <th>Giá bán</th>
-                    <th>Tồn kho</th>
-                    <th>Trạng thái</th>
-                    <th class="text-end">Hành động</th>
+                <tr class="text-secondary small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em; font-weight: 700;">
+                    <th class="ps-4" style="width: 280px;">Nông Sản</th>
+                    <th style="width: 140px;">Danh Mục</th>
+                    <th>Nhà Cung Cấp & Vùng Trồng</th>
+                    <th style="width: 150px;">Đơn Giá</th>
+                    <th style="width: 140px;">Tồn Kho</th>
+                    <th style="width: 120px;">Trạng Thái</th>
+                    <th class="pe-4 text-end" style="width: 150px;">Thao Tác</th>
                 </tr>
             </thead>
             <tbody>
                 {% for prod in products %}
                     <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
+                        <!-- Nông Sản: Ảnh + Tên + Xuất xứ -->
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center gap-3">
                                 {% if prod.image %}
-                                    <img src="{{ prod.image.url }}" class="rounded me-2 border" style="width: 44px; height: 44px; object-fit: cover;">
+                                    <img src="{{ prod.image.url }}" class="rounded-3 border shadow-xs" style="width: 50px; height: 50px; object-fit: cover;" alt="{{ prod.name }}">
                                 {% else %}
-                                    <div class="bg-light rounded me-2 text-center fs-4" style="width: 44px; height: 44px; line-height: 44px;">🥬</div>
+                                    <div class="bg-success-subtle rounded-3 text-success d-flex align-items-center justify-content-center fs-4 border" style="width: 50px; height: 50px;">
+                                        🥬
+                                    </div>
                                 {% endif %}
-                                <div>
-                                    <h6 class="mb-0 fw-bold">{{ prod.name }}</h6>
-                                    <small class="text-muted">{{ prod.origin|default:"Việt Nam" }}</small>
+                                <div class="overflow-hidden">
+                                    <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width: 200px;" title="{{ prod.name }}">
+                                        {{ prod.name }}
+                                    </h6>
+                                    <div class="small text-muted d-flex align-items-center gap-1 mt-1">
+                                        <i class="bi bi-geo-alt text-danger"></i>
+                                        <span class="text-truncate" style="max-width: 170px;">{{ prod.origin|default:"Việt Nam" }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </td>
-                        <td><span class="badge bg-light text-dark border">{{ prod.category.name }}</span></td>
-                        <td>{{ prod.supplier.name }}</td>
-                        <td class="fw-bold text-danger">{{ prod.price|floatformat:0 }} đ <small class="text-muted fw-normal">/ {{ prod.unit }}</small></td>
-                        <td>
-                            <span class="badge {% if prod.stock < 10 %}bg-danger{% else %}bg-success{% endif %}">
-                                {{ prod.stock }} {{ prod.unit }}
+
+                        <!-- Danh Mục -->
+                        <td class="py-3">
+                            <span class="badge bg-light text-dark border px-2 py-1 rounded-pill fw-semibold">
+                                {{ prod.category.name }}
                             </span>
                         </td>
-                        <td>
-                            {% if prod.is_active %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">Đang bán</span>
+
+                        <!-- Nhà Cung Cấp -->
+                        <td class="py-3">
+                            <div class="fw-semibold text-dark text-truncate" style="max-width: 220px;" title="{{ prod.supplier.name }}">
+                                {{ prod.supplier.name }}
+                            </div>
+                            <small class="text-muted d-block text-truncate" style="max-width: 220px;" title="{{ prod.supplier.address }}">
+                                {{ prod.supplier.address|default:"Đang cập nhật địa chỉ" }}
+                            </small>
+                        </td>
+
+                        <!-- Đơn Giá -->
+                        <td class="py-3">
+                            <div class="fw-bold text-success fs-6" style="white-space: nowrap;">
+                                {{ prod.price|currency_format }}&nbsp;đ
+                            </div>
+                            <span class="text-muted small" style="font-size: 11px;">/ {{ prod.unit }}</span>
+                        </td>
+
+                        <!-- Tồn Kho -->
+                        <td class="py-3">
+                            {% if prod.stock <= 0 %}
+                                <span class="badge bg-danger px-3 py-2 rounded-pill fw-bold">
+                                    <i class="bi bi-x-circle me-1"></i>Hết hàng (0)
+                                </span>
+                            {% elif prod.stock < 10 %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Còn {{ prod.stock }} {{ prod.unit }}
+                                </span>
                             {% else %}
-                                <span class="badge bg-secondary-subtle text-secondary border">Tạm dừng</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                                    <i class="bi bi-check2 me-1"></i>{{ prod.stock }} {{ prod.unit }}
+                                </span>
                             {% endif %}
                         </td>
-                        <td class="text-end">
-                            <a href="/admin/products/product/{{ prod.id }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
-                                <i class="bi bi-pencil"></i> Sửa
-                            </a>
+
+                        <!-- Trạng Thái -->
+                        <td class="py-3">
+                            {% if prod.is_active %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">
+                                    <i class="bi bi-dot"></i> Đang bán
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill fw-semibold">
+                                    <i class="bi bi-dot"></i> Tạm dừng
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Thao Tác -->
+                        <td class="pe-4 py-3 text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{% url 'products:detail' slug=prod.slug %}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-2 py-1" title="Xem trang sản phẩm ngoài website">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                                <a href="/admin/products/product/{{ prod.id }}/change/" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-semibold" title="Chỉnh sửa nông sản">
+                                    <i class="bi bi-pencil-square me-1"></i> Sửa
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="7" class="text-center py-4 text-muted">Chưa có nông sản nào trong kho.</td></tr>
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <div class="py-4">
+                                <i class="bi bi-basket3 text-secondary opacity-50 display-3 d-block mb-3"></i>
+                                <h5 class="fw-bold text-dark mb-1">Không tìm thấy nông sản nào phù hợp</h5>
+                                <p class="text-muted small mb-3">Thử thay đổi từ khóa tìm kiếm hoặc chọn lại danh mục nông sản.</p>
+                                <a href="{% url 'dashboard:products' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Xóa Bộ Lọc
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>

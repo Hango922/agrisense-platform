@@ -27,18 +27,58 @@ CONFIRM_TRIGGERS = [
     r'\b(đồng ý|dong y|ok|okie|xác nhận|xac nhan|đúng rồi|dung roi|chuẩn|chuan|yes|giao đi|giao di|tạo luôn|tao luon|được|duoc|chốt|chot)\b'
 ]
 
-PHONE_PATTERN = r'\b(0[3|5|7|8|9]\d{8})\b'
+PHONE_PATTERN = r'(?:\b(?:\+84|0)[35789](?:[\s.-]?\d){8}\b)'
+
+
+def sanitize_name(name, default_name="Khách hàng"):
+    """
+    Chuẩn hóa và làm sạch tên người nhận:
+    - Loại bỏ khoảng trắng thừa.
+    - Giới hạn tối đa 50 ký tự (chuẩn an toàn cho trường CharField 100 của Order).
+    - Loại bỏ nếu chứa giá tiền, dấu phân cách đặc biệt, danh sách sản phẩm.
+    """
+    if not name or not isinstance(name, str):
+        return default_name
+    cleaned = name.strip()
+    if len(cleaned) < 2 or len(cleaned) > 50:
+        return default_name
+    # Không thể chứa các ký tự đặc biệt của bảng kê hàng hóa
+    if any(ch in cleaned for ch in [':', '/', '\\', '$', '%', '^', '*', '{', '}', '[', ']', '|', '<', '>']):
+        return default_name
+    # Không thể chứa các từ đơn vị tính hoặc giá
+    blacklist = {'đ', 'kg', 'vnd', 'vnđ', 'kilo', 'k', 'đồng'}
+    words = set(cleaned.lower().split())
+    if words & blacklist:
+        return default_name
+    return cleaned
 
 
 def extract_phone(text):
-    """Trích xuất số điện thoại di động Việt Nam (10 số bắt đầu bằng 03, 05, 07, 08, 09)."""
+    """
+    Trích xuất số điện thoại di động Việt Nam:
+    - Chấp nhận 10 chữ số bắt đầu bằng 03, 05, 07, 08, 09 (hoặc +843, +845, +847, +848, +849).
+    - Hỗ trợ các định dạng phân cách như: 0912.345.678, 0912 345 678, 0912-345-678, +84912345678.
+    - KHÔNG gộp các con số rải rác từ giá tiền trong toàn câu.
+    """
+    # 1. Tìm chuỗi số điện thoại định dạng chuẩn có thể chứa khoảng trắng, dấu chấm hoặc gạch nối
     match = re.search(PHONE_PATTERN, text)
     if match:
-        return match.group(1)
-    # Tìm kiếm chuỗi số có dấu chấm hoặc khoảng trắng
-    clean_digits = re.sub(r'[^\d]', '', text)
-    match_clean = re.search(r'(0[3|5|7|8|9]\d{8})', clean_digits)
-    return match_clean.group(1) if match_clean else None
+        clean = re.sub(r'[^\d]', '', match.group(0))
+        if clean.startswith('84'):
+            clean = '0' + clean[2:]
+        if len(clean) == 10 and clean.startswith(('03', '05', '07', '08', '09')):
+            return clean
+
+    # 2. Dự phòng: tìm từ khóa "sđt", "sdt", "phone", "đt" theo sau bởi dãy số
+    keyword_match = re.search(r'(?:sđt|sdt|đt|dt|phone|tel|số đt|số điện thoại)\s*[:\s]*((?:\+84|0)[\d\s.-]{9,13})', text, re.IGNORECASE)
+    if keyword_match:
+        clean = re.sub(r'[^\d]', '', keyword_match.group(1))
+        if clean.startswith('84'):
+            clean = '0' + clean[2:]
+        if len(clean) == 10 and clean.startswith(('03', '05', '07', '08', '09')):
+            return clean
+
+    return None
 
 
 def extract_quantity(text, product_name=""):
@@ -86,10 +126,21 @@ def extract_address_and_name(text, phone=None):
         cleaned = re.sub(rf'(?:sđt|sdt|đt|dt|số đt|số điện thoại|so dien thoai|tel|phone)?\s*[:\s]*{phone}', '', cleaned, flags=re.IGNORECASE)
 
     # Tìm tên người nhận nếu có
-    name_match = re.search(r'(?:tên|người nhận|anh|chị|em|bác|cô)\s*[:\s]+([^\n,]+)', cleaned, re.IGNORECASE)
-    extracted_name = name_match.group(1).strip() if name_match else None
-    if extracted_name:
-        cleaned = cleaned.replace(name_match.group(0), '')
+    # Sử dụng \b boundary để không bị nhầm lẫn với các từ kết thúc bằng "anh" (vd: "xanh", "chanh", "thanh long")
+    name_match = re.search(
+        r'\b(?:tên\s*(?:người\s*nhận|là)?|người\s*nhận|nguoi\s*nhan|anh|chị|chi|em|bác|bac|cô|co)\s*[:\s]+([^\n,.;]+?)(?=\s+(?:ở|tại|sđt|sdt|đt|dt|phone|số|so\b)|[,\n.;]|$)',
+        cleaned,
+        re.IGNORECASE
+    )
+    extracted_name = None
+    if name_match:
+        candidate = name_match.group(1).strip()
+        # Xác thực tên: độ dài từ 2 đến 40 ký tự, chỉ chứa chữ cái và khoảng trắng, không chứa từ khóa nông sản/giá tiền
+        if 2 <= len(candidate) <= 40 and re.match(r'^[A-Za-zÀ-ỹ\s]+$', candidate):
+            blacklist = {'đ', 'kg', 'vnd', 'vnđ', 'dong', 'giao', 'ship', 'mua', 'dat', 'xanh', 'do', 'trang', 'don', 'hang'}
+            if not (set(candidate.lower().split()) & blacklist):
+                extracted_name = candidate
+                cleaned = cleaned.replace(name_match.group(0), '')
 
     # Tìm địa chỉ nếu có
     addr_match = re.search(r'(?:địa chỉ|ở|tại|giao đến|giao về|giao tại|dc|đc)\s*[:\s]+([^\n]+)', cleaned, re.IGNORECASE)
@@ -110,6 +161,8 @@ def extract_address_and_name(text, phone=None):
         # Xóa từ rác cuối câu như ", sđt", ", sdt", dấu phẩy, chấm thừa
         extracted_addr = re.sub(r'[,.\s]*(?:sđt|sdt|đt|dt|số đt|số điện thoại|phone|tel)?\s*$', '', extracted_addr, flags=re.IGNORECASE)
         extracted_addr = extracted_addr.strip(',. ')
+        if len(extracted_addr) > 255:
+            extracted_addr = extracted_addr[:255]
 
     return extracted_name, extracted_addr
 
@@ -172,11 +225,13 @@ def handle_order_conversation(message, user=None, session_dict=None):
             return True, "Rất tiếc, sản phẩm bạn chọn hiện không còn khả dụng trên hệ thống. Bạn vui lòng chọn lại sản phẩm nhé!"
 
         # A. Đang chờ XÁC NHẬN đơn với địa chỉ có sẵn
+        user_default_name = (user.get_full_name() or user.username if user else 'Khách hàng')
+
         if step == 'awaiting_confirm':
             # Kiểm tra nếu khách xác nhận đồng ý
             if any(re.search(pat, msg_lower, re.IGNORECASE) for pat in CONFIRM_TRIGGERS):
                 address_data = {
-                    'full_name': draft.get('full_name') or user.username,
+                    'full_name': sanitize_name(draft.get('full_name'), user_default_name),
                     'phone': draft.get('phone') or '0900000000',
                     'address': draft.get('address') or 'Địa chỉ giao hàng',
                 }
@@ -200,11 +255,11 @@ def handle_order_conversation(message, user=None, session_dict=None):
             if new_addr:
                 draft['address'] = new_addr
             if new_name:
-                draft['full_name'] = new_name
+                draft['full_name'] = sanitize_name(new_name, user_default_name)
 
             if draft.get('phone') and draft.get('address'):
                 address_data = {
-                    'full_name': draft.get('full_name') or user.username,
+                    'full_name': sanitize_name(draft.get('full_name'), user_default_name),
                     'phone': draft.get('phone'),
                     'address': draft.get('address'),
                 }
@@ -225,14 +280,13 @@ def handle_order_conversation(message, user=None, session_dict=None):
             phone = extract_phone(msg) or draft.get('phone')
             name, addr = extract_address_and_name(msg, phone)
             addr = addr or draft.get('address')
-            name = name or draft.get('full_name') or (user.get_full_name() or user.username if user else 'Khách hàng')
+            name = sanitize_name(name or draft.get('full_name'), user_default_name)
 
             if phone:
                 draft['phone'] = phone
             if addr:
                 draft['address'] = addr
-            if name:
-                draft['full_name'] = name
+            draft['full_name'] = name
 
             if phone and addr:
                 address_data = {'full_name': name, 'phone': phone, 'address': addr}
@@ -296,9 +350,10 @@ def handle_order_conversation(message, user=None, session_dict=None):
         )
 
     # Trích xuất số điện thoại và địa chỉ nếu khách đã gõ sẵn trong câu lệnh (1-Turn Order)
+    user_default_name = (user.get_full_name() or user.username if user else 'Khách hàng')
     phone = extract_phone(msg) or getattr(user, 'phone', '')
     name, addr = extract_address_and_name(msg, phone)
-    name = name or (user.get_full_name() or user.username)
+    name = sanitize_name(name, user_default_name)
 
     subtotal = product.price * qty
 
@@ -325,7 +380,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
         session_dict['chatbot_order_draft'] = {
             'product_id': product.id,
             'quantity': qty,
-            'full_name': def_addr.full_name,
+            'full_name': sanitize_name(def_addr.full_name, user_default_name),
             'phone': def_addr.phone,
             'address': def_addr.address,
             'step': 'awaiting_confirm',
@@ -343,7 +398,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
         session_dict['chatbot_order_draft'] = {
             'product_id': product.id,
             'quantity': qty,
-            'full_name': name,
+            'full_name': sanitize_name(name, user_default_name),
             'phone': phone,
             'address': addr,
             'step': 'awaiting_info',

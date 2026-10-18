@@ -1,13 +1,55 @@
 <!-- File: templates/404.html -->
 {% extends "base.html" %}
 
-{% block title %}404 - Không tìm thấy trang{% endblock %}
+{% block title %}404 - Không Tìm Thấy Trang | AgriSense{% endblock %}
 
 {% block content %}
-<div class="text-center py-5">
-    <h1 class="display-1 fw-bold text-danger">404</h1>
-    <h3 class="mb-3">Không tìm thấy trang yêu cầu</h3>
-    <p class="text-muted mb-4">Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.</p>
-    <a href="{% url 'home' %}" class="btn btn-success"><i class="bi bi-house-door"></i> Quay lại trang chủ</a>
+<div class="row justify-content-center py-5 my-md-4">
+    <div class="col-lg-7 col-md-9 text-center">
+        <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-white p-4 p-md-5 position-relative">
+            <!-- Background Decorative Glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 160px; height: 160px; background: rgba(16, 185, 129, 0.12); border-radius: 50%; filter: blur(30px); pointer-events: none;"></div>
+            <div style="position: absolute; bottom: -50px; left: -50px; width: 160px; height: 160px; background: rgba(59, 130, 246, 0.08); border-radius: 50%; filter: blur(30px); pointer-events: none;"></div>
+
+            <!-- Big Icon Badge -->
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+                 style="width: 90px; height: 90px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #059669; font-size: 2.8rem;">
+                🌱
+            </div>
+
+            <div class="display-1 fw-bolder font-heading text-dark mb-1" style="letter-spacing: -0.04em;">
+                4<span class="text-success">0</span>4
+            </div>
+
+            <h3 class="fw-bold text-dark font-heading mb-3">Rất Tiếc, Không Tìm Thấy Trang Yêu Cầu!</h3>
+            
+            <p class="text-muted mx-auto mb-4" style="max-width: 480px; line-height: 1.6;">
+                Trang hoặc nông sản bạn đang tìm kiếm có thể đã được chuyển đổi danh mục, tạm dừng cung cấp hoặc đường dẫn không còn tồn tại.
+            </p>
+
+            <!-- Search Bar Shortcut -->
+            <form action="{% url 'products:search' %}" method="get" class="mx-auto mb-4" style="max-width: 420px;">
+                <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                    <span class="input-group-text bg-white border-0 ps-3 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-0 py-2" placeholder="Tìm kiếm nông sản khác (bưởi, dâu, cải,...)..." required>
+                    <button class="btn btn-success px-4 fw-bold" type="submit" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+                        Tìm
+                    </button>
+                </div>
+            </form>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="{% url 'home' %}" class="btn btn-agri-primary px-4 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-house-door-fill"></i> Về Trang Chủ
+                </a>
+                <a href="{% url 'products:list' %}" class="btn btn-outline-success px-4 py-2 rounded-pill fw-bold d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-basket3-fill"></i> Khám Phá Nông Sản
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

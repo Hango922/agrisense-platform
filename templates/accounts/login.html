@@ -1,36 +1,108 @@
 <!-- File: templates/accounts/login.html -->
 {% extends "base.html" %}
 
-{% block title %}Đăng nhập - Nông Sản Sạch{% endblock %}
+{% block title %}Đăng nhập - AgriSense Nông Sản Sạch{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow-sm border-0 mt-4">
-            <div class="card-body p-4">
-                <h3 class="card-title text-center text-success fw-bold mb-4">Đăng Nhập</h3>
-                <form method="post" action="{% url 'accounts:login' %}">
+<div class="row justify-content-center my-4">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white mb-4">
+            <div class="p-4 text-center" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-bottom: 1px solid #d1fae5;">
+                <div class="agri-brand-logo mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.6rem;">
+                    <i class="bi bi-flower1"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">Mừng Bạn Trở Lại!</h3>
+                <p class="text-muted small mb-0">Đăng nhập để đặt mua nông sản chuẩn VietGAP</p>
+            </div>
+
+            <div class="p-4">
+                <form method="post" action="">
                     {% csrf_token %}
+                    {% if request.GET.next %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
+                    {% endif %}
+                    
                     {% if form.errors %}
-                        <div class="alert alert-danger py-2">
-                            Tên đăng nhập hoặc mật khẩu không chính xác.
+                        <div class="alert alert-danger py-2 px-3 rounded-3 small mb-3">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i> Tên đăng nhập hoặc mật khẩu không chính xác.
                         </div>
                     {% endif %}
+                    
                     <div class="mb-3">
-                        <label class="form-label">Tên đăng nhập</label>
-                        <input type="text" name="username" class="form-control" required autofocus>
+                        <label class="form-label fw-bold small text-muted">Tên đăng nhập</label>
+                        <div class="input-group input-group-seamless">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" id="id_username" name="username" class="form-control" placeholder="Nhập username" required autofocus value="{{ form.username.value|default:'' }}">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Mật khẩu</label>
-                        <input type="password" name="password" class="form-control" required>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted">Mật khẩu</label>
+                        <div class="input-group input-group-seamless">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" id="id_password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Đăng nhập</button>
+
+                    <button type="submit" class="btn btn-agri-primary w-100 py-3 fw-bold justify-content-center shadow mb-3">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng Nhập
+                    </button>
                 </form>
-                <div class="text-center mt-3">
-                    <p class="text-muted small">Chưa có tài khoản? <a href="{% url 'accounts:register' %}" class="text-success fw-bold">Đăng ký ngay</a></p>
+
+                <!-- Thẻ Hướng Dẫn & Điền Nhanh Tài Khoản Demo -->
+                <div class="p-3 rounded-3 bg-light border mb-3">
+                    <div class="fw-bold text-dark small mb-2 d-flex align-items-center gap-1">
+                        <i class="bi bi-key-fill text-warning"></i> Tài Khoản Thử Nghiệm Có Sẵn:
+                    </div>
+                    
+                    <div class="d-flex flex-column gap-2">
+                        <!-- Nút 1: Điền Admin -->
+                        <button type="button" class="btn btn-outline-success btn-sm text-start py-2 px-3 rounded-3 d-flex justify-content-between align-items-center bg-white" onclick="fillAccount('demo_admin', 'Admin@123')">
+                            <div>
+                                <strong class="text-dark d-block">👑 Quản trị viên (Admin)</strong>
+                                <small class="text-muted" style="font-size: 11px;">User: <code>demo_admin</code> (hoặc <code>admin</code>) | Pass: <code>Admin@123</code></small>
+                            </div>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Điền</span>
+                        </button>
+
+                        <!-- Nút 2: Điền Khách Hàng -->
+                        <button type="button" class="btn btn-outline-secondary btn-sm text-start py-2 px-3 rounded-3 d-flex justify-content-between align-items-center bg-white" onclick="fillAccount('demo_customer', 'Demo@123')">
+                            <div>
+                                <strong class="text-dark d-block">🛒 Khách hàng (Member)</strong>
+                                <small class="text-muted" style="font-size: 11px;">User: <code>demo_customer</code> | Pass: <code>Demo@123</code></small>
+                            </div>
+                            <span class="badge bg-secondary-subtle text-secondary border">Điền</span>
+                        </button>
+                    </div>
+                    <div class="text-muted small mt-2" style="font-size: 11px;">
+                        <i class="bi bi-info-circle me-1 text-primary"></i>Lưu ý: Mật khẩu có chữ <strong>A</strong> viết hoa và ký tự <strong>@</strong>.
+                    </div>
+                </div>
+
+                <div class="text-center pt-2 border-top">
+                    <p class="text-muted small mb-0">
+                        Chưa có tài khoản? 
+                        <a href="{% url 'accounts:register' %}" class="text-success fw-bold text-decoration-none">
+                            Đăng ký tài khoản mới →
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillAccount(username, password) {
+    const userInput = document.getElementById('id_username');
+    const passInput = document.getElementById('id_password');
+    if (userInput && passInput) {
+        userInput.value = username;
+        passInput.value = password;
+        userInput.focus();
+    }
+}
+</script>
 {% endblock %}

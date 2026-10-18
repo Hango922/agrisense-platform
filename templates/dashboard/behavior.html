@@ -1,85 +1,337 @@
 <!-- File: templates/dashboard/behavior.html -->
 {% extends "dashboard/base.html" %}
 
-{% block title %}Nhật Ký Hành Vi AI - AgriSense Dashboard{% endblock %}
-{% block header_title %}Phân Tích Hành Vi Người Dùng & Dữ Liệu Học Máy (30 Ngày){% endblock %}
+{% block title %}Nhật Ký Hành Vi & AI Insights - AgriSense Dashboard{% endblock %}
+{% block header_title %}Nhật Ký Hành Vi & Dữ Liệu AI{% endblock %}
 
 {% block dashboard_content %}
-<!-- Event Type Breakdown Cards -->
-<div class="row g-3 mb-4">
-    {% for stat in event_counts %}
-        <div class="col-xl-2 col-md-4 col-sm-6">
-            <div class="card p-3 bg-white shadow-sm border text-center">
-                <span class="badge bg-light text-success border mb-1 small text-uppercase">{{ stat.event_type }}</span>
-                <h3 class="fw-bold text-dark mb-0">{{ stat.count }}</h3>
-                <span class="text-muted small">tương tác</span>
-            </div>
-        </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="alert alert-light border text-center text-muted">Chưa có sự kiện nào trong 30 ngày qua.</div>
-        </div>
-    {% endfor %}
+<!-- Header Bar -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold text-dark font-heading mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow text-success"></i> Giám Sát Hành Vi Khách Hàng & Dữ Liệu Huấn Luyện AI
+        </h4>
+        <p class="text-muted small mb-0">
+            Ghi nhận 100% sự kiện tương tác thời gian thực (lượt xem, tìm kiếm, giỏ hàng, đặt hàng, chat AI) phục vụ thuật toán gợi ý nông sản thông minh.
+        </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold d-inline-flex align-items-center gap-2">
+            <span class="live-dot"></span>
+            <span>Ghi nhận thời gian thực</span>
+        </span>
+    </div>
 </div>
 
-<!-- 50 Most Recent Events Table -->
-<div class="card shadow-sm bg-white">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold mb-0 text-dark">50 Tương Tác Gần Nhất Được Hệ Thống Ghi Nhận</h5>
-        <span class="text-muted small">Thời gian thực</span>
+<!-- 6 Interactive Metric KPI Cards -->
+<div class="row g-3 mb-4">
+    <!-- 1. Xem sản phẩm -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label" style="font-size: 11px;">Xem Nông Sản</span>
+                    <div class="kpi-value text-info fs-3">{{ view_count }}</div>
+                </div>
+                <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 18px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
+                    <i class="bi bi-eye-fill"></i>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-top text-muted small" style="font-size: 11px;">
+                Lượt click xem chi tiết
+            </div>
+        </div>
     </div>
+
+    <!-- 2. Tìm kiếm -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label" style="font-size: 11px;">Tìm Kiếm</span>
+                    <div class="kpi-value text-warning fs-3">{{ search_count }}</div>
+                </div>
+                <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 18px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <i class="bi bi-search"></i>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-top text-muted small" style="font-size: 11px;">
+                Truy vấn từ khóa nông sản
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Thêm giỏ hàng -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label" style="font-size: 11px;">Thêm Vào Giỏ</span>
+                    <div class="kpi-value text-primary fs-3">{{ cart_count }}</div>
+                </div>
+                <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 18px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                    <i class="bi bi-cart-plus-fill"></i>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-top text-muted small" style="font-size: 11px;">
+                Ý định mua hàng cao
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Đặt hàng -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label" style="font-size: 11px;">Đơn Mua Hàng</span>
+                    <div class="kpi-value text-success fs-3">{{ purchase_count }}</div>
+                </div>
+                <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 18px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i class="bi bi-bag-check-fill"></i>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-top text-muted small" style="font-size: 11px;">
+                Chuyển đổi hoàn tất
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Đánh giá -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label" style="font-size: 11px;">Đánh Giá Sao</span>
+                    <div class="kpi-value text-danger fs-3">{{ review_count }}</div>
+                </div>
+                <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 18px; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                    <i class="bi bi-chat-heart-fill"></i>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-top text-muted small" style="font-size: 11px;">
+                Phản hồi chất lượng
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Trò chuyện AI Assistant -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label" style="font-size: 11px;">Chat AI Assistant</span>
+                    <div class="kpi-value text-purple fs-3" style="color: #8b5cf6;">{{ chat_count }}</div>
+                </div>
+                <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 18px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                    <i class="bi bi-robot"></i>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-top text-muted small" style="font-size: 11px;">
+                Tư vấn tự động
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bộ Lọc Nhanh & Thanh Tìm Kiếm -->
+<div class="dashboard-card mb-4 p-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <!-- Event Type Filter Pills -->
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <a href="?type=all{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_type == 'all' %}btn-success text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                Tất cả ({{ total_events_30d }})
+            </a>
+            <a href="?type=view{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_type == 'view' %}btn-info text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                👀 Xem hàng ({{ view_count }})
+            </a>
+            <a href="?type=search{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_type == 'search' %}btn-warning text-dark shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                🔍 Tìm kiếm ({{ search_count }})
+            </a>
+            <a href="?type=add_to_cart{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_type == 'add_to_cart' %}btn-primary text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                🛒 Thêm giỏ ({{ cart_count }})
+            </a>
+            <a href="?type=purchase{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_type == 'purchase' %}btn-success text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                🛍️ Mua hàng ({{ purchase_count }})
+            </a>
+            <a href="?type=chat{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_type == 'chat' %}btn-dark text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                🤖 Chat AI ({{ chat_count }})
+            </a>
+        </div>
+
+        <!-- Search Form -->
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-center m-0">
+            {% if current_type and current_type != 'all' %}
+                <input type="hidden" name="type" value="{{ current_type }}">
+            {% endif %}
+
+            <div class="input-group input-group-sm" style="max-width: 280px;">
+                <span class="input-group-text bg-white border-end-0 rounded-start-pill text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0 rounded-end-pill" placeholder="Tìm theo user, từ khóa, sp...">
+            </div>
+
+            {% if search_query or current_type != 'all' %}
+                <a href="{% url 'dashboard:behavior' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="Xóa bộ lọc">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Main Activity Table Card -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-activity text-success"></i> 100 Sự Kiện Hành Vi Gần Nhất
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                {{ recent_events|length }} tương tác
+            </span>
+        </div>
+        <div class="text-muted small d-flex align-items-center gap-1">
+            <i class="bi bi-clock-history"></i> Cập nhật liên tục
+        </div>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-hover table-sm align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" style="min-width: 980px;">
             <thead class="table-light">
-                <tr>
-                    <th>Thời Gian</th>
-                    <th>Người Dùng / Session</th>
-                    <th>Loại Sự Kiện</th>
-                    <th>Nông Sản Liên Quan</th>
-                    <th>Từ Khóa Tìm Kiếm</th>
+                <tr class="text-secondary small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em; font-weight: 700;">
+                    <th class="ps-4" style="width: 170px;">Thời Gian</th>
+                    <th style="width: 220px;">Người Dùng / Phiên</th>
+                    <th style="width: 170px;">Loại Tương Tác</th>
+                    <th>Nông Sản / Danh Mục Liên Quan</th>
+                    <th class="pe-4" style="width: 250px;">Chi Tiết / Từ Khóa</th>
                 </tr>
             </thead>
             <tbody>
                 {% for ev in recent_events %}
                     <tr>
-                        <td class="small text-muted">{{ ev.created_at|date:"d/m/Y H:i:s" }}</td>
-                        <td>
+                        <!-- Thời Gian -->
+                        <td class="ps-4 py-3">
+                            <div class="small fw-semibold text-dark">{{ ev.created_at|date:"d/m/Y" }}</div>
+                            <small class="text-muted font-monospace" style="font-size: 11px;">{{ ev.created_at|date:"H:i:s" }}</small>
+                        </td>
+
+                        <!-- Người Dùng / Phiên -->
+                        <td class="py-3">
                             {% if ev.user %}
-                                <strong>{{ ev.user.username }}</strong>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                                         style="width: 32px; height: 32px; font-size: 13px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                        {{ ev.user.username|slice:":1"|upper }}
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-dark text-truncate" style="max-width: 160px;" title="{{ ev.user.username }}">
+                                            {{ ev.user.username }}
+                                        </div>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 10px;">Thành viên</span>
+                                    </div>
+                                </div>
                             {% else %}
-                                <span class="text-muted small">Khách ({{ ev.session_key|slice:":10" }})</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center flex-shrink-0 border"
+                                         style="width: 32px; height: 32px; font-size: 13px;">
+                                        <i class="bi bi-incognito"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="text-muted small font-monospace text-truncate" style="max-width: 160px;" title="{{ ev.session_key }}">
+                                            Khách #{{ ev.session_key|slice:":8" }}
+                                        </div>
+                                        <span class="badge bg-light text-muted border" style="font-size: 10px;">Chưa đăng nhập</span>
+                                    </div>
+                                </div>
                             {% endif %}
                         </td>
-                        <td>
+
+                        <!-- Loại Tương Tác -->
+                        <td class="py-3">
                             {% if ev.event_type == 'view' %}
-                                <span class="badge bg-info-subtle text-info border">Xem sản phẩm</span>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-eye"></i> Xem nông sản
+                                </span>
                             {% elif ev.event_type == 'search' %}
-                                <span class="badge bg-warning-subtle text-warning-emphasis border">Tìm kiếm</span>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-search"></i> Tìm kiếm
+                                </span>
                             {% elif ev.event_type == 'add_to_cart' %}
-                                <span class="badge bg-primary-subtle text-primary border">Thêm giỏ</span>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                </span>
                             {% elif ev.event_type == 'purchase' %}
-                                <span class="badge bg-success-subtle text-success border">Mua hàng</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-bag-check-fill"></i> Mua hàng
+                                </span>
                             {% elif ev.event_type == 'review' %}
-                                <span class="badge bg-danger-subtle text-danger border">Đánh giá</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-chat-heart"></i> Đánh giá
+                                </span>
                             {% elif ev.event_type == 'chat' %}
-                                <span class="badge bg-secondary-subtle text-secondary border">Chat AI</span>
+                                <span class="badge border px-3 py-2 rounded-pill fw-semibold d-inline-flex align-items-center gap-1" style="background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe;">
+                                    <i class="bi bi-robot"></i> Chat với AI
+                                </span>
                             {% else %}
-                                <span class="badge bg-light text-dark border">{{ ev.event_type }}</span>
+                                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">
+                                    {{ ev.event_type }}
+                                </span>
                             {% endif %}
                         </td>
-                        <td>
+
+                        <!-- Nông Sản / Danh Mục Liên Quan -->
+                        <td class="py-3">
                             {% if ev.product %}
-                                <strong>{{ ev.product.name }}</strong>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-success"><i class="bi bi-box-seam"></i></span>
+                                    <a href="{% url 'products:detail' slug=ev.product.slug %}" target="_blank" class="fw-semibold text-dark text-decoration-none text-truncate" style="max-width: 250px;" title="{{ ev.product.name }}">
+                                        {{ ev.product.name }}
+                                    </a>
+                                </div>
                             {% elif ev.category %}
-                                <span class="text-muted">[Danh mục] {{ ev.category.name }}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-muted"><i class="bi bi-folder2-open"></i></span>
+                                    <span class="text-muted small">[Danh mục] {{ ev.category.name }}</span>
+                                </div>
                             {% else %}
-                                <span class="text-muted">-</span>
+                                <span class="text-muted small">-</span>
                             {% endif %}
                         </td>
-                        <td>{{ ev.keyword|default:"-" }}</td>
+
+                        <!-- Chi Tiết / Từ Khóa -->
+                        <td class="pe-4 py-3">
+                            {% if ev.keyword %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill">
+                                    <i class="bi bi-search me-1"></i>"{{ ev.keyword }}"
+                                </span>
+                            {% elif ev.metadata %}
+                                <span class="text-muted small font-monospace text-truncate d-inline-block" style="max-width: 230px;" title="{{ ev.metadata }}">
+                                    {{ ev.metadata }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="5" class="text-center py-4 text-muted">Chưa ghi nhận sự kiện nào.</td></tr>
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <div class="py-4">
+                                <i class="bi bi-graph-up text-secondary opacity-50 display-3 d-block mb-3"></i>
+                                <h5 class="fw-bold text-dark mb-1">Chưa ghi nhận sự kiện tương tác nào</h5>
+                                <p class="text-muted small mb-3">Hệ thống sẽ tự động cập nhật khi có khách hàng tương tác với website.</p>
+                                <a href="{% url 'dashboard:behavior' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Xóa Bộ Lọc
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>

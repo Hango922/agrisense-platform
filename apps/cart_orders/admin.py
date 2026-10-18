@@ -49,6 +49,7 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('order_code', 'full_name', 'phone', 'user__username')
     inlines = [OrderItemInline]
     readonly_fields = ('order_code', 'payment_proof_preview', 'payment_proof_uploaded_at', 'created_at', 'updated_at')
+    actions = ['approve_orders_action']
 
     def final_amount_formatted(self, obj):
         return f"{obj.final_amount:,} đ"
@@ -76,3 +77,33 @@ class OrderAdmin(admin.ModelAdmin):
             )
         return "Chưa có ảnh bill chuyển khoản"
     payment_proof_preview.short_description = 'Xem trước bill chuyển khoản'
+
+    def save_model(self, request, obj, form, change):
+        from django.utils import timezone
+        if obj.payment_method == 'vietqr' and obj.status in ('confirmed', 'shipping', 'delivered') and not obj.payment_proof:
+            from .services import generate_admin_verification_bill
+            proof_file = generate_admin_verification_bill(obj.order_code, admin_username=request.user.username)
+            obj.payment_proof.save(f"admin_verified_{obj.order_code}.png", proof_file, save=False)
+            obj.payment_proof_uploaded_at = timezone.now()
+            note_line = f"[Admin {request.user.username} đã đối soát ngân hàng qua Django Admin lúc {timezone.now().strftime('%d/%m/%Y %H:%M')}]"
+            obj.note = (obj.note + "\n" + note_line).strip() if obj.note else note_line
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description="Duyệt các đơn hàng đã chọn (Admin đối soát thành công)")
+    def approve_orders_action(self, request, queryset):
+        from django.utils import timezone
+        from .services import generate_admin_verification_bill
+        count = 0
+        for order in queryset:
+            if order.status == 'pending':
+                if order.payment_method == 'vietqr' and not order.payment_proof:
+                    proof_file = generate_admin_verification_bill(order.order_code, admin_username=request.user.username)
+                    order.payment_proof.save(f"admin_verified_{order.order_code}.png", proof_file, save=False)
+                    order.payment_proof_uploaded_at = timezone.now()
+                    note_line = f"[Admin {request.user.username} duyệt hàng loạt lúc {timezone.now().strftime('%d/%m/%Y %H:%M')}]"
+                    order.note = (order.note + "\n" + note_line).strip() if order.note else note_line
+                order.status = 'confirmed'
+                order.save()
+                count += 1
+        self.message_user(request, f"✅ Đã duyệt thành công {count} đơn hàng!")
+

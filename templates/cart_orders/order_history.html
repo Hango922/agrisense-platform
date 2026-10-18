@@ -1,47 +1,81 @@
 <!-- File: templates/cart_orders/order_history.html -->
 {% extends "base.html" %}
+{% load dashboard_tags %}
 
-{% block title %}Lịch sử đơn hàng - Nông Sản Sạch{% endblock %}
+{% block title %}Lịch sử đơn hàng - AgriSense{% endblock %}
 
 {% block content %}
-<h3 class="fw-bold mb-4 text-success">📜 Lịch Sử Đơn Hàng Của Bạn</h3>
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'accounts:profile' %}" class="text-decoration-none text-success">Hồ sơ cá nhân</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Lịch sử đơn hàng</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-receipt-cutoff text-success"></i> Lịch Sử Đơn Hàng Của Bạn
+        </h3>
+        <p class="text-muted small mb-0">Theo dõi tiến độ giao hàng và thông tin thanh toán các đơn nông sản đã mua</p>
+    </div>
+</div>
 
 {% if orders %}
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
-                <thead class="table-light">
+                <thead class="table-light small text-muted">
                     <tr>
-                        <th>Mã đơn</th>
-                        <th>Ngày đặt</th>
+                        <th class="ps-4">Mã đơn hàng</th>
+                        <th>Thời gian đặt</th>
                         <th>Người nhận</th>
-                        <th>Tổng tiền</th>
+                        <th>Tổng thanh toán</th>
                         <th>Trạng thái</th>
-                        <th>Hành động</th>
+                        <th class="pe-4 text-end">Chi tiết</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ord in orders %}
                         <tr>
-                            <td><strong class="text-success">{{ ord.order_code }}</strong></td>
-                            <td>{{ ord.created_at|date:"d/m/Y H:i" }}</td>
-                            <td>{{ ord.full_name }} ({{ ord.phone }})</td>
-                            <td class="fw-bold text-danger">{{ ord.final_amount|floatformat:0 }} đ</td>
-                            <td>
+                            <td class="ps-4 py-3">
+                                <span class="fw-bold font-monospace text-success">#{{ ord.order_code }}</span>
+                            </td>
+                            <td class="py-3 text-muted small">{{ ord.created_at|date:"d/m/Y H:i" }}</td>
+                            <td class="py-3">
+                                <div class="fw-semibold text-dark">{{ ord.full_name }}</div>
+                                <small class="text-muted">{{ ord.phone }}</small>
+                            </td>
+                            <td class="py-3 fw-bold text-danger text-nowrap">{{ ord.final_amount|currency_format }}&nbsp;đ</td>
+                            <td class="py-3">
                                 {% if ord.status == 'pending' %}
-                                    <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                                        <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
+                                    </span>
                                 {% elif ord.status == 'confirmed' %}
-                                    <span class="badge bg-info text-dark">Đã xác nhận</span>
+                                    <span class="badge bg-info text-dark px-3 py-2 rounded-pill">
+                                        <i class="bi bi-check2 me-1"></i>Đã xác nhận
+                                    </span>
                                 {% elif ord.status == 'shipping' %}
-                                    <span class="badge bg-primary">Đang giao</span>
+                                    <span class="badge bg-primary px-3 py-2 rounded-pill">
+                                        <i class="bi bi-truck me-1"></i>Đang giao hàng
+                                    </span>
                                 {% elif ord.status == 'delivered' %}
-                                    <span class="badge bg-success">Đã giao</span>
+                                    <span class="badge bg-success px-3 py-2 rounded-pill">
+                                        <i class="bi bi-patch-check-fill me-1"></i>Giao thành công
+                                    </span>
                                 {% elif ord.status == 'cancelled' %}
-                                    <span class="badge bg-secondary">Đã hủy</span>
+                                    <span class="badge bg-secondary px-3 py-2 rounded-pill">
+                                        <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                    </span>
                                 {% endif %}
                             </td>
-                            <td>
-                                <a href="{% url 'cart_orders:order_detail' order_code=ord.order_code %}" class="btn btn-sm btn-outline-success">Xem chi tiết</a>
+                            <td class="pe-4 py-3 text-end">
+                                <a href="{% url 'cart_orders:order_detail' order_code=ord.order_code %}" class="btn btn-sm btn-agri-outline-green rounded-pill px-3">
+                                    Xem đơn <i class="bi bi-arrow-right-short"></i>
+                                </a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -50,12 +84,14 @@
         </div>
     </div>
 {% else %}
-    <div class="card border-0 shadow-sm text-center py-5">
-        <div class="display-3 text-muted mb-3">📄</div>
-        <h4>Bạn chưa có đơn hàng nào</h4>
-        <p class="text-muted">Các đơn hàng bạn đã đặt sẽ được lưu trữ và theo dõi tại đây.</p>
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5 px-3 bg-white">
+        <div class="display-2 text-muted mb-3 opacity-50">📦</div>
+        <h4 class="fw-bold text-dark mb-2">Bạn chưa có đơn hàng nào</h4>
+        <p class="text-muted small mb-4">Các đơn hàng bạn đặt sẽ được hiển thị và cập nhật trạng thái liên tục tại đây.</p>
         <div>
-            <a href="{% url 'products:list' %}" class="btn btn-success px-4 py-2">Bắt đầu mua sắm</a>
+            <a href="{% url 'products:list' %}" class="btn btn-agri-primary px-4 py-2">
+                <i class="bi bi-bag-plus me-1"></i> Bắt Đầu Mua Sắm
+            </a>
         </div>
     </div>
 {% endif %}

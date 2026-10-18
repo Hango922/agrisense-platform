@@ -6,148 +6,420 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Bảng Điều Khiển Quản Trị - AgriSense{% endblock %}</title>
-    <!-- Bootstrap 5.3 CDN -->
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 CDN & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <style>
-        body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            background-color: #f4f6f9;
+        :root {
+            --agri-admin-bg: #f8fafc;
+            --agri-sidebar-bg: #0b1120;
+            --agri-sidebar-border: #1e293b;
+            --agri-sidebar-hover: #1e293b;
+            --agri-primary: #10b981;
+            --agri-primary-hover: #059669;
+            --agri-primary-dark: #064e3b;
+            --agri-primary-gradient: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
         }
-        .sidebar {
-            width: 250px;
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--agri-admin-bg);
+            color: #1e293b;
             min-height: 100vh;
-            background-color: #1e293b;
+            display: flex;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-heading {
+            font-family: var(--font-heading);
+            letter-spacing: -0.02em;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 270px;
+            min-height: 100vh;
+            background-color: var(--agri-sidebar-bg);
             color: #cbd5e1;
             transition: all 0.3s;
+            border-right: 1px solid var(--agri-sidebar-border);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
         }
-        .sidebar .nav-link {
-            color: #94a3b8;
-            padding: 12px 20px;
-            font-weight: 500;
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            border-radius: 8px;
-            margin: 4px 12px;
-            transition: all 0.2s;
+            border-bottom: 1px solid var(--agri-sidebar-border);
+            text-decoration: none;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            color: #ffffff;
-            background-color: #0f172a;
-        }
-        .sidebar .nav-link i {
-            font-size: 1.1rem;
-        }
-        .sidebar-brand {
-            padding: 20px;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #10b981;
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--agri-primary-gradient);
+            color: white;
             display: flex;
             align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid #334155;
+            justify-content: center;
+            font-size: 1.35rem;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
         }
+
+        .sidebar-brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .sidebar-brand-name {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-brand-badge {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--agri-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .sidebar-nav-header {
+            padding: 16px 20px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+        }
+
+        .sidebar .nav-link {
+            color: #94a3b8;
+            padding: 11px 16px;
+            font-weight: 600;
+            font-size: 13.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 12px;
+            margin: 3px 12px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sidebar .nav-link:hover {
+            color: #ffffff;
+            background-color: var(--agri-sidebar-hover);
+            transform: translateX(4px);
+        }
+
+        .sidebar .nav-link.active {
+            color: #ffffff;
+            background: var(--agri-primary-gradient);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+        }
+
+        .sidebar .nav-link i {
+            font-size: 1.15rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* User footer in sidebar */
+        .sidebar-user-box {
+            margin: 12px;
+            padding: 12px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+        }
+
+        /* Main Workspace Content */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             min-width: 0;
+            background-color: var(--agri-admin-bg);
         }
+
         .top-navbar {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid #e2e8f0;
-            padding: 12px 24px;
+            padding: 14px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         }
-        .card {
+
+        /* Pulse live dot */
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Metric KPI Cards */
+        .kpi-card {
+            border-radius: 18px;
+            padding: 24px 22px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1;
+        }
+
+        .kpi-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .kpi-value {
+            font-family: var(--font-heading);
+            font-size: 2.1rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #64748b;
+        }
+
+        /* Modern Dashboard Card */
+        .dashboard-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+            padding: 24px;
+            transition: all 0.25s ease;
+        }
+
+        .dashboard-card:hover {
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        /* Buttons & Actions */
+        .btn-excel {
+            background: linear-gradient(135deg, #107c41 0%, #15803d 100%);
+            color: white;
+            font-weight: 600;
+            border-radius: 20px;
+            padding: 8px 18px;
             border: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(16, 124, 65, 0.3);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-excel:hover {
+            background: linear-gradient(135deg, #0f6e3a 0%, #166534 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 124, 65, 0.4);
+        }
+
+        .btn-store-link {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            border-radius: 20px;
+            padding: 7px 16px;
+            font-weight: 600;
+            font-size: 13.5px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-store-link:hover {
+            background: #10b981;
+            color: #ffffff;
+            border-color: #10b981;
         }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="d-flex">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar d-flex flex-column flex-shrink-0">
-            <div class="sidebar-brand">
-                <span>🌾 AgriSense Admin</span>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar d-flex flex-column flex-shrink-0">
+        <!-- Sidebar Brand -->
+        <a href="{% url 'dashboard:home' %}" class="sidebar-brand">
+            <div class="sidebar-brand-icon">
+                <i class="bi bi-flower1"></i>
             </div>
-            <ul class="nav nav-pills flex-column mt-3 mb-auto">
-                <li class="nav-item">
-                    <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                        <i class="bi bi-speedometer2"></i> Tổng Quan
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'dashboard:products' %}" class="nav-link {% if request.resolver_match.url_name == 'products' %}active{% endif %}">
-                        <i class="bi bi-basket3"></i> Sản Phẩm
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'dashboard:orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
-                        <i class="bi bi-receipt"></i> Đơn Hàng
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'dashboard:customers' %}" class="nav-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
-                        <i class="bi bi-people"></i> Khách Hàng (AI)
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'dashboard:behavior' %}" class="nav-link {% if request.resolver_match.url_name == 'behavior' %}active{% endif %}">
-                        <i class="bi bi-graph-up-arrow"></i> Nhật Ký Hành Vi
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'dashboard:traceability' %}" class="nav-link {% if request.resolver_match.url_name == 'traceability' %}active{% endif %}">
-                        <i class="bi bi-qr-code-scan"></i> Mã QR Lô Hàng
-                    </a>
-                </li>
-            </ul>
-            <hr class="border-secondary mx-3 my-2">
-            <div class="px-3 pb-3">
-                <a href="/admin/" target="_blank" class="btn btn-outline-light btn-sm w-100 mb-2 text-start">
-                    <i class="bi bi-gear me-1"></i> Django Admin Gốc
+            <div class="sidebar-brand-text">
+                <span class="sidebar-brand-name">AgriSense</span>
+                <span class="sidebar-brand-badge">Admin Intelligence</span>
+            </div>
+        </a>
+
+        <!-- Navigation Section -->
+        <div class="sidebar-nav-header">Trung Tâm Điều Hành</div>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i> Tổng Quan KPI
                 </a>
-                <a href="{% url 'home' %}" class="btn btn-success btn-sm w-100 text-start">
-                    <i class="bi bi-shop me-1"></i> Về Website Bán Hàng
+            </li>
+            <li>
+                <a href="{% url 'dashboard:products' %}" class="nav-link {% if request.resolver_match.url_name == 'products' %}active{% endif %}">
+                    <i class="bi bi-basket3"></i> Nông Sản & Tồn Kho
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'dashboard:orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+                    <i class="bi bi-receipt"></i> Quản Lý Đơn Hàng
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'dashboard:customers' %}" class="nav-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
+                    <i class="bi bi-people"></i> Phân Nhóm Khách Hàng (AI)
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'dashboard:behavior' %}" class="nav-link {% if request.resolver_match.url_name == 'behavior' %}active{% endif %}">
+                    <i class="bi bi-graph-up-arrow"></i> Nhật Ký Hành Vi
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'dashboard:traceability' %}" class="nav-link {% if request.resolver_match.url_name == 'traceability' %}active{% endif %}">
+                    <i class="bi bi-qr-code-scan"></i> Mã QR Lô Hàng
+                </a>
+            </li>
+        </ul>
+
+        <!-- Sidebar User Footer -->
+        <div class="sidebar-user-box mt-auto">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px; font-size: 14px;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div class="overflow-hidden">
+                    <div class="fw-bold text-white text-truncate small">{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div class="text-success small" style="font-size: 11px;">Quản trị viên tối cao</div>
+                </div>
+            </div>
+            <div class="d-flex gap-1 pt-1 border-top border-secondary border-opacity-25">
+                <a href="{% url 'home' %}" class="btn btn-sm btn-outline-light flex-grow-1 text-center py-1" style="font-size: 11.5px; border-color: #334155;">
+                    <i class="bi bi-shop me-1"></i> Xem Cửa Hàng
+                </a>
+                <a href="/admin/" target="_blank" class="btn btn-sm btn-outline-secondary px-2 py-1" style="font-size: 11.5px;" title="Mở Django Admin gốc">
+                    <i class="bi bi-gear"></i>
                 </a>
             </div>
-        </aside>
-
-        <!-- Main Workspace -->
-        <div class="main-content">
-            <!-- Top Navbar Header -->
-            <header class="top-navbar d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Quản Trị Viên</span>
-                    <h5 class="mb-0 fw-bold text-dark">{% block header_title %}Bảng Điều Khiển{% endblock %}</h5>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="text-muted small">Xin chào, <strong>{{ request.user.username }}</strong></span>
-                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
-                    </a>
-                </div>
-            </header>
-
-            <!-- Main Page Content Body -->
-            <main class="p-4">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
-                {% block dashboard_content %}{% endblock %}
-            </main>
         </div>
+    </aside>
+
+    <!-- Main Workspace Content -->
+    <div class="main-content">
+        <!-- Top Navbar Header -->
+        <header class="top-navbar d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-bold d-flex align-items-center gap-2" style="font-size: 12px;">
+                    <span class="live-dot"></span>
+                    <span>Hệ Thống Trực Tuyến</span>
+                </span>
+                <h4 class="mb-0 fw-bold text-dark font-heading">{% block header_title %}Bảng Điều Khiển{% endblock %}</h4>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'home' %}" class="btn-store-link">
+                    <i class="bi bi-box-arrow-up-right"></i> Xem Website Bán Hàng
+                </a>
+
+                <div class="vr mx-1 opacity-25"></div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small text-muted d-none d-md-inline">Xin chào, <strong>{{ request.user.username }}</strong></span>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Đăng xuất">
+                        <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Page Content Body -->
+        <main class="p-3 p-lg-4">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block dashboard_content %}{% endblock %}
+        </main>
     </div>
 
     <!-- Bootstrap 5.3 JS Bundle -->

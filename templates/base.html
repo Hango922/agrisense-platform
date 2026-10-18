@@ -6,85 +6,260 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>{% block title %}Nông Sản Sạch{% endblock %}</title>
+    <title>{% block title %}AgriSense - Nông Sản Sạch Tươi Ngon & AI{% endblock %}</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3 & Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2.2">
+    
+    <!-- AgriSense Custom Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3.3">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+    <!-- Top Announcement Bar -->
+    <div class="py-1 px-3 text-center text-white small" style="background: linear-gradient(90deg, #064e3b 0%, #059669 50%, #064e3b 100%); font-size: 12.5px; font-weight: 500;">
+        <span>🌿 Cam kết 100% Nông Sản Chuẩn Sạch VietGAP & GlobalGAP • Miễn phí vận chuyển từ 500.000 đ • Trợ lý AI hỗ trợ 24/7</span>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-lg sticky-top agri-navbar shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">🌾 Nông Sản Sạch</a>
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <!-- Brand Logo -->
+            <a class="agri-brand" href="{% url 'home' %}">
+                <div class="agri-brand-logo">
+                    <i class="bi bi-flower1"></i>
+                </div>
+                <div class="agri-brand-text">
+                    <span class="agri-brand-name">Agri<span>Sense</span></span>
+                    <span class="agri-brand-tag">Nông Sản Sạch & AI</span>
+                </div>
+            </a>
+
+            <!-- Mobile Toggle Button -->
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <!-- Nav Content -->
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'products:list' %}">Sản phẩm</a></li>
+                <ul class="navbar-nav me-auto ms-lg-4 gap-1">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'traceability:trace_index' %}">
-                            <i class="bi bi-qr-code-scan me-1"></i>Truy xuất nguồn gốc
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="bi bi-house-door"></i> Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/products/' in request.path %}active{% endif %}" href="{% url 'products:list' %}">
+                            <i class="bi bi-basket3"></i> Nông sản
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-trace-pill ms-lg-1" href="{% url 'traceability:trace_index' %}">
+                            <i class="bi bi-qr-code-scan"></i> Hộ chiếu nguồn gốc
                         </a>
                     </li>
                 </ul>
-                <form class="d-flex me-3" action="{% url 'products:search' %}" method="get">
-                    <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Tìm kiếm nông sản..." value="{{ request.GET.q|default:'' }}">
-                    <button class="btn btn-outline-light btn-sm" type="submit">Tìm</button>
+
+                <!-- Search Input Form -->
+                <form class="nav-search-form me-lg-3 my-2 my-lg-0" action="{% url 'products:search' %}" method="get">
+                    <i class="bi bi-search nav-search-icon"></i>
+                    <input class="form-control nav-search-input" type="search" name="q" placeholder="Tìm rau củ, trái cây, bưởi..." value="{{ request.GET.q|default:'' }}" autocomplete="off">
                 </form>
-                <ul class="navbar-nav">
+
+                <!-- Right Action Icons & User Menu -->
+                <ul class="navbar-nav align-items-lg-center gap-2">
+                    <!-- Cart Button -->
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="{% url 'cart_orders:cart' %}">
-                            🛒 Giỏ hàng <span class="badge bg-warning text-dark">{{ cart_count|default:"0" }}</span>
+                        <a class="nav-cart-btn" href="{% url 'cart_orders:cart' %}" title="Xem giỏ hàng">
+                            <i class="bi bi-cart3 fs-5 text-success"></i>
+                            <span class="d-none d-xl-inline small">Giỏ hàng</span>
+                            <span class="nav-cart-badge">{{ cart_count|default:"0" }}</span>
                         </a>
                     </li>
+
                     {% if user.is_authenticated %}
+                        <!-- User Profile Dropdown -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">{{ user.username }}</a>
+                            <a class="nav-user-toggle dropdown-toggle text-decoration-none" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="nav-user-avatar">
+                                    {{ user.username|slice:":1"|upper }}
+                                </span>
+                                <span class="d-inline-block text-truncate" style="max-width: 110px;">{{ user.username }}</span>
+                            </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
-                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Hồ sơ cá nhân</a></li>
-                                <li><a class="dropdown-item" href="{% url 'cart_orders:order_history' %}">Lịch sử đơn hàng</a></li>
+                                <li class="px-3 py-2 border-bottom mb-1 bg-light rounded-top">
+                                    <div class="fw-bold text-dark">{{ user.get_full_name|default:user.username }}</div>
+                                    <div class="small text-muted" style="font-size: 11px;">
+                                        {% if user.is_superuser or user.is_staff %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Quản trị viên</span>
+                                        {% else %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Khách hàng thành viên</span>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                        <i class="bi bi-person text-success"></i> Hồ sơ cá nhân
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'cart_orders:order_history' %}">
+                                        <i class="bi bi-clock-history text-primary"></i> Lịch sử đơn hàng
+                                    </a>
+                                </li>
                                 {% if user.is_staff or user.is_superuser %}
-                                    <li><a class="dropdown-item text-primary fw-bold" href="{% url 'dashboard:home' %}">Dashboard Quản trị</a></li>
+                                    <li><hr class="dropdown-divider my-1"></li>
+                                    <li>
+                                        <a class="dropdown-item text-primary fw-semibold" href="{% url 'dashboard:home' %}">
+                                            <i class="bi bi-speedometer2 text-primary"></i> Dashboard Quản trị
+                                        </a>
+                                    </li>
                                 {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">Đăng xuất</a></li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                        <i class="bi bi-box-arrow-right text-danger"></i> Đăng xuất
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Đăng nhập</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register' %}">Đăng ký</a></li>
+                        <!-- Login / Register Buttons -->
+                        <li class="nav-item">
+                            <a class="nav-link px-3" href="{% url 'accounts:login' %}">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-agri-primary btn-sm px-3 py-2" href="{% url 'accounts:register' %}">
+                                <i class="bi bi-person-plus me-1"></i> Đăng ký
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
+    <!-- Main Content Container -->
     <main class="container my-4">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle-fill fs-5"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endif %}
+
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-        <p class="mb-0">© 2026 Nông Sản Sạch — Nguyễn Hồng Hoàng</p>
+    <!-- Modern Multi-Column Footer -->
+    <footer class="agri-footer">
+        <div class="container">
+            <div class="row g-4 mb-4">
+                <!-- Col 1: Brand & Slogan -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="agri-brand-logo" style="width: 34px; height: 34px; font-size: 1.1rem;">
+                            <i class="bi bi-flower1"></i>
+                        </div>
+                        <span class="fs-4 fw-bold text-white font-heading">Agri<span class="text-success">Sense</span></span>
+                    </div>
+                    <p class="text-muted small mb-3" style="line-height: 1.7;">
+                        Nền tảng thương mại điện tử chuyên biệt dành cho nông sản sạch, nông sản hữu cơ và đặc sản vùng miền Việt Nam.
+                        Kết nối trực tiếp từ vườn đến bàn ăn với chuẩn kiểm định minh bạch và công nghệ AI đàm thoại thông minh.
+                    </p>
+                    <div class="d-flex align-items-center gap-2 text-muted small">
+                        <i class="bi bi-geo-alt text-success"></i> Hà Nội, Việt Nam
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-muted small mt-1">
+                        <i class="bi bi-envelope text-success"></i> contact@agrisense.vn
+                    </div>
+                </div>
+
+                <!-- Col 2: Quick Links -->
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h5>Khám Phá</h5>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                        <li><a href="{% url 'home' %}"><i class="bi bi-chevron-right me-1 text-success small"></i>Trang chủ</a></li>
+                        <li><a href="{% url 'products:list' %}"><i class="bi bi-chevron-right me-1 text-success small"></i>Nông sản sạch</a></li>
+                        <li><a href="{% url 'traceability:trace_index' %}"><i class="bi bi-chevron-right me-1 text-success small"></i>Hộ chiếu nguồn gốc</a></li>
+                        <li><a href="{% url 'cart_orders:cart' %}"><i class="bi bi-chevron-right me-1 text-success small"></i>Giỏ hàng</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Standards & Safety -->
+                <div class="col-lg-3 col-md-6 col-6">
+                    <h5>Tiêu Chuẩn & Cam Kết</h5>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                        <li class="text-muted"><i class="bi bi-patch-check-fill text-success me-2"></i>100% Tiêu chuẩn VietGAP</li>
+                        <li class="text-muted"><i class="bi bi-patch-check-fill text-success me-2"></i>Chứng nhận GlobalGAP</li>
+                        <li class="text-muted"><i class="bi bi-shield-lock-fill text-success me-2"></i>Mã QR truy xuất độc bản</li>
+                        <li class="text-muted"><i class="bi bi-arrow-repeat text-success me-2"></i>Đổi trả trong 24h nếu lỗi</li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Payments & Technology -->
+                <div class="col-lg-3 col-md-6">
+                    <h5>Thanh Toán & Công Nghệ</h5>
+                    <p class="text-muted small mb-2">Hỗ trợ thanh toán không dùng tiền mặt tức thì:</p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-dark border border-secondary text-light px-2 py-2">
+                            <i class="bi bi-qr-code me-1 text-warning"></i> VietQR Napas 247
+                        </span>
+                        <span class="badge bg-dark border border-secondary text-light px-2 py-2">
+                            <i class="bi bi-cash-coin me-1 text-success"></i> COD Tiền mặt
+                        </span>
+                    </div>
+                    <div class="p-2 rounded bg-dark border border-secondary small text-muted">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-robot text-success fs-5"></i>
+                            <div>
+                                <div class="text-light fw-bold" style="font-size: 12px;">Chatbot AI Tư Vấn</div>
+                                <div style="font-size: 11px;">Tư vấn và lên đơn tự động 24/7</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-secondary my-3 opacity-25">
+
+            <!-- Bottom Copyright & Credits -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center small text-muted pt-2 gap-2">
+                <div>
+                    © 2026 <strong>AgriSense Platform</strong> — Nông Sản Sạch & Trí Tuệ Nhân Tạo
+                </div>
+                <div>
+                    Dự án BTL CNPM / HTTT — Sinh viên: <strong class="text-light">Nguyễn Hồng Hoàng</strong> (MSSV: 20234070)
+                </div>
+            </div>
+        </div>
     </footer>
 
     <!-- Chatbot Widget -->
     <div id="chatbot-widget" class="chatbot-widget">
-        <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Mở chat">
+        <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Mở Trợ lý Nông Sản AI" title="Trò chuyện với AI">
             <span class="pulse-ring"></span>
-            <span>💬</span>
+            <i class="bi bi-chat-dots-fill"></i>
         </button>
-        <div class="chatbot-panel shadow" id="chatbot-panel">
+        <div class="chatbot-panel shadow-lg" id="chatbot-panel">
             <div class="chatbot-header d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="fs-5">🌾</span>
+                    <div class="rounded-circle bg-white text-success d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 16px;">
+                        <i class="bi bi-robot"></i>
+                    </div>
                     <div>
                         <div class="fw-bold" style="font-size: 14.5px; line-height: 1.2;">Trợ Lý Nông Sản AI</div>
                         <div class="small opacity-75" style="font-size: 11px;">● Trực tuyến • Sẵn sàng hỗ trợ</div>
@@ -100,28 +275,31 @@
                 </div>
             </div>
             <div id="chatbot-messages" class="chatbot-messages">
-                <div class="chat-msg bot">Xin chào! Tôi có thể giúp bạn tìm nông sản sạch hoặc giải đáp thắc mắc gì?</div>
+                <div class="chat-msg bot">
+                    Xin chào! Tôi là Trợ lý AI của AgriSense. Tôi có thể tư vấn nông sản theo mùa, báo giá hoặc giúp bạn lên đơn hàng tự động ngay tại đây!
+                </div>
             </div>
             <!-- Quick Suggestion Chips -->
             <div class="chatbot-chips" id="chatbot-chips">
                 <button type="button" class="chip-btn" data-query="Hôm nay có rau củ gì tươi ngon?">🥦 Rau sạch tươi</button>
                 <button type="button" class="chip-btn" data-query="Giá bưởi da xanh bao nhiêu?">🍊 Bưởi da xanh</button>
                 <button type="button" class="chip-btn" data-query="Chính sách giao hàng và phí ship?">🚚 Phí ship</button>
-                <button type="button" class="chip-btn" data-query="Tôi muốn đặt mua 2kg cà chua bi">🛒 Lên đơn cà chua</button>
+                <button type="button" class="chip-btn" data-query="Tôi muốn đặt mua 2kg cà chua bi">🛒 Lên đơn tự động</button>
             </div>
             <div class="chatbot-input-group">
-                <input type="text" id="chatbot-input" placeholder="Hỏi về nông sản, giá, hoặc lên đơn..." autocomplete="off">
+                <input type="text" id="chatbot-input" placeholder="Hỏi giá, nguồn gốc hoặc lên đơn nhanh..." autocomplete="off">
                 <button id="chatbot-send" title="Gửi tin nhắn">
                     <i class="bi bi-send-fill" style="font-size: 14px;"></i>
                 </button>
             </div>
+        </div>
     </div>
 
     <!-- Modal Tra Cứu Nguồn Gốc Lô Hàng Nông Sản -->
     <div class="modal fade" id="navTraceModal" tabindex="-1" aria-labelledby="navTraceModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg border-0 rounded-3">
-                <div class="modal-header bg-success text-white">
+            <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="modal-header text-white" style="background: var(--agri-hero-gradient);">
                     <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="navTraceModalLabel">
                         <i class="bi bi-qr-code-scan"></i> Tra Cứu Hộ Chiếu Nguồn Gốc Số
                     </h5>
@@ -135,12 +313,12 @@
                         <div class="input-group mb-3">
                             <span class="input-group-text bg-light"><i class="bi bi-upc-scan text-success"></i></span>
                             <input type="text" id="navBatchCodeInput" class="form-control font-monospace text-uppercase" placeholder="Ví dụ: BATCH2026010..." required>
-                            <button class="btn btn-success fw-bold px-3" type="submit">
+                            <button class="btn btn-agri-primary px-3" type="submit">
                                 <i class="bi bi-search me-1"></i> Tra Cứu
                             </button>
                         </div>
                     </form>
-                    <div class="bg-light p-2 rounded small text-muted">
+                    <div class="bg-light p-3 rounded-3 small text-muted border">
                         <i class="bi bi-info-circle text-primary me-1"></i>Bạn cũng có thể dùng camera điện thoại hoặc Zalo quét trực tiếp mã QR trên tem dán sản phẩm.
                     </div>
                 </div>

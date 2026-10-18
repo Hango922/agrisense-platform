@@ -1,179 +1,300 @@
 <!-- File: templates/products/detail.html -->
 {% extends "base.html" %}
 
-{% block title %}{{ product.name }} - Nông Sản Sạch{% endblock %}
+{% block title %}{{ product.name }} - AgriSense Nông Sản Sạch{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'home' %}">Trang chủ</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'products:list' %}">Sản phẩm</a></li>
-        <li class="breadcrumb-item active">{{ product.name }}</li>
+<!-- Breadcrumb điều hướng -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products:list' %}" class="text-decoration-none text-success">Nông sản sạch</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products:list' %}?category={{ product.category.slug }}" class="text-decoration-none text-success">{{ product.category.name }}</a></li>
+        <li class="breadcrumb-item active text-truncate" style="max-width: 250px;" aria-current="page">{{ product.name }}</li>
     </ol>
 </nav>
 
 <div class="row g-4">
-    <!-- Hình ảnh sản phẩm -->
-    <div class="col-md-5">
-        <div class="card border-0 shadow-sm p-2 text-center bg-white">
-            {% if product.image %}
-                <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}" style="max-height: 380px; object-fit: contain;">
-            {% else %}
-                <div class="py-5 text-center bg-light rounded-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 320px;">
-                    <div class="display-3 text-success mb-2">🌿</div>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Nông Sản Sạch Tự Nhiên</span>
+    <!-- Cột trái: Hình ảnh sản phẩm & Cam kết -->
+    <div class="col-lg-5 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden p-3 bg-white text-center mb-4">
+            <div class="rounded-3 overflow-hidden bg-light position-relative d-flex align-items-center justify-content-center" style="min-height: 380px;">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="img-fluid rounded-3" alt="{{ product.name }}" style="max-height: 380px; width: 100%; object-fit: contain;">
+                {% else %}
+                    <div class="py-5 text-center d-flex flex-column align-items-center justify-content-center">
+                        <div class="display-1 text-success mb-2">🥬</div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
+                            Nông Sản Tự Nhiên VietGAP
+                        </span>
+                    </div>
+                {% endif %}
+                <span class="badge bg-success position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-patch-check-fill me-1"></i>100% Sạch Tươi Mới
+                </span>
+            </div>
+        </div>
+
+        <!-- 3 Cam kết mua sắm an tâm -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex align-items-center gap-3 mb-2 pb-2 border-bottom">
+                <div class="feature-icon-circle bg-success bg-opacity-10 text-success" style="width: 40px; height: 40px; font-size: 18px;">
+                    <i class="bi bi-shield-check"></i>
                 </div>
-            {% endif %}
+                <div>
+                    <div class="fw-bold small text-dark">Kiểm định nghiêm ngặt</div>
+                    <small class="text-muted" style="font-size: 11.5px;">Chứng nhận VietGAP / GlobalGAP từng vụ thu hoạch</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-2 pb-2 border-bottom">
+                <div class="feature-icon-circle bg-primary bg-opacity-10 text-primary" style="width: 40px; height: 40px; font-size: 18px;">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <div>
+                    <div class="fw-bold small text-dark">Giao nhanh giữ lạnh</div>
+                    <small class="text-muted" style="font-size: 11.5px;">Vận chuyển túi bảo ôn giữ trọn độ tươi ngon</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="feature-icon-circle bg-warning bg-opacity-10 text-warning" style="width: 40px; height: 40px; font-size: 18px;">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                <div>
+                    <div class="fw-bold small text-dark">Đổi trả trong 24 giờ</div>
+                    <small class="text-muted" style="font-size: 11.5px;">Hoàn tiền hoặc đổi mới ngay nếu sản phẩm dập nát</small>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Thông tin chi tiết & Đặt mua -->
-    <div class="col-md-7">
-        <div class="card border-0 shadow-sm p-4 bg-white h-100">
-            <span class="badge bg-success align-self-start mb-2">{{ product.category.name }}</span>
-            <h2 class="fw-bold mb-2">{{ product.name }}</h2>
-            <div class="mb-3">
-                <span class="text-warning fs-5">★ {{ avg_rating|floatformat:1 }}</span>
-                <span class="text-muted small ms-2">({{ product.reviews.count }} lượt đánh giá)</span>
-            </div>
-            <div class="mb-3">
-                <span class="text-danger display-6 fw-bold">{{ product.price|floatformat:0 }} đ</span>
-                <span class="text-muted fs-5">/ {{ product.unit }}</span>
+    <!-- Cột phải: Thông tin chi tiết & Đặt mua -->
+    <div class="col-lg-7 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-bold">
+                    {{ product.category.name }}
+                </span>
+                <span class="badge bg-light text-muted border px-2 py-1 small">
+                    Mã SP: #{{ product.id }}
+                </span>
             </div>
 
-            <ul class="list-unstyled text-muted small mb-4">
-                <li><strong>Nhà cung cấp / Trang trại:</strong> {{ product.supplier.name }} ({{ product.supplier.certification|default:"Chuẩn sạch" }})</li>
-                <li><strong>Xuất xứ:</strong> {{ product.origin|default:"Việt Nam" }}</li>
-                <li><strong>Mùa vụ:</strong> {{ product.season|default:"Quanh năm" }}</li>
-                <li><strong>Tình trạng:</strong> <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">{% if product.stock > 0 %}Còn hàng ({{ product.stock }} {{ product.unit }}){% else %}Hết hàng{% endif %}</span></li>
-            </ul>
+            <h1 class="display-6 fw-bold text-dark mb-2" style="font-size: 2rem;">{{ product.name }}</h1>
 
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center text-warning fs-5">
+                    <i class="bi bi-star-fill"></i>
+                    <span class="fw-bold text-dark fs-6 ms-1">{{ avg_rating|floatformat:1 }}</span>
+                </div>
+                <span class="text-muted small">•</span>
+                <span class="text-muted small">{{ product.reviews.count }} lượt đánh giá thực tế</span>
+                <span class="text-muted small">•</span>
+                <span class="badge {% if product.stock > 0 %}bg-success-subtle text-success border border-success-subtle{% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %}">
+                    {% if product.stock > 0 %}Còn {{ product.stock }} {{ product.unit }}{% else %}Tạm hết hàng{% endif %}
+                </span>
+            </div>
+
+            <!-- Giá bán nổi bật -->
+            <div class="p-3 rounded-3 mb-4 d-flex align-items-baseline gap-2" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+                <span class="display-5 fw-bold text-danger">{{ product.price|floatformat:0 }} đ</span>
+                <span class="fs-5 text-muted fw-semibold">/ {{ product.unit }}</span>
+                <span class="ms-auto badge bg-success text-white small">Đã gồm VAT</span>
+            </div>
+
+            <!-- Thông số tóm tắt -->
+            <div class="row g-2 mb-4">
+                <div class="col-sm-6">
+                    <div class="p-2 rounded bg-light border small">
+                        <span class="text-muted d-block">Nhà cung cấp / Trang trại:</span>
+                        <strong class="text-dark">{{ product.supplier.name }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-2 rounded bg-light border small">
+                        <span class="text-muted d-block">Xuất xứ / Vùng trồng:</span>
+                        <strong class="text-dark"><i class="bi bi-geo-alt text-danger me-1"></i>{{ product.origin|default:"Việt Nam" }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-2 rounded bg-light border small">
+                        <span class="text-muted d-block">Mùa vụ thu hoạch:</span>
+                        <strong class="text-dark">{{ product.season|default:"Quanh năm" }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-2 rounded bg-light border small">
+                        <span class="text-muted d-block">Chứng nhận kiểm định:</span>
+                        <strong class="text-success"><i class="bi bi-patch-check-fill me-1"></i>{{ product.supplier.certification|default:"VietGAP" }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Thêm Giỏ Hàng -->
             {% if product.stock > 0 %}
                 <form action="{% url 'cart_orders:add' product_id=product.id %}" method="post" class="mb-4">
                     {% csrf_token %}
                     <div class="d-flex align-items-center gap-3">
-                        <div style="width: 120px;">
-                            <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ product.stock }}">
+                        <div style="width: 130px;">
+                            <label class="form-label small fw-bold text-muted mb-1">Số lượng:</label>
+                            <input type="number" name="quantity" class="form-control form-control-lg text-center fw-bold" value="1" min="1" max="{{ product.stock }}">
                         </div>
-                        <button type="submit" class="btn btn-success btn-lg px-4 fw-bold shadow-sm">
-                            🛒 Thêm vào giỏ hàng
-                        </button>
+                        <div class="flex-grow-1 align-self-end">
+                            <button type="submit" class="btn btn-agri-primary btn-lg w-100 py-3 fw-bold justify-content-center shadow">
+                                <i class="bi bi-cart-plus-fill fs-5"></i> Thêm Vào Giỏ Hàng
+                            </button>
+                        </div>
                     </div>
                 </form>
             {% else %}
-                <div class="alert alert-warning py-2 mb-4">Sản phẩm tạm thời hết hàng. Vui lòng quay lại sau!</div>
+                <div class="alert alert-warning py-3 rounded-3 mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                    <div>Sản phẩm tạm thời hết hàng do vừa kết thúc đợt thu hoạch. Vui lòng quay lại sau!</div>
+                </div>
             {% endif %}
 
+            <!-- HỘ CHIẾU NGUỒN GỐC SỐ CỦA LÔ HÀNG ĐANG LƯU HÀNH -->
             {% if latest_batch %}
-                <!-- Khối Hộ Chiếu Nguồn Gốc Lô Hàng Đang Bán -->
-                <div class="card border-success border-opacity-25 bg-success bg-opacity-10 rounded-3 p-3 mb-4 shadow-sm">
+                <div class="card border border-success border-opacity-50 rounded-4 p-3 mb-4 shadow-sm" style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-success"><i class="bi bi-shield-check me-1"></i>Hộ Chiếu Nông Sản Số</span>
+                            <span class="badge bg-success px-2 py-1"><i class="bi bi-shield-check me-1"></i>Hộ Chiếu Nông Sản Số</span>
                             <span class="fw-bold text-success font-monospace">Lô #{{ latest_batch.batch_code }}</span>
                         </div>
                         <span class="badge bg-white text-success border border-success-subtle fw-semibold">{{ latest_batch.certification|default:"VietGAP" }}</span>
                     </div>
                     <div class="small text-muted mb-2">
                         <div><i class="bi bi-geo-alt text-danger me-1"></i><strong>Vùng trồng:</strong> {{ latest_batch.planting_location }} ({{ latest_batch.product.supplier.name }})</div>
-                        <div><i class="bi bi-calendar-check text-success me-1"></i><strong>Thu hoạch:</strong> {{ latest_batch.harvest_date|date:"d/m/Y" }} | <strong>Đóng gói:</strong> {{ latest_batch.packaging_date|date:"d/m/Y" }}</div>
+                        <div><i class="bi bi-calendar-check text-success me-1"></i><strong>Ngày thu hoạch:</strong> {{ latest_batch.harvest_date|date:"d/m/Y" }} | <strong>Đóng gói:</strong> {{ latest_batch.packaging_date|date:"d/m/Y" }}</div>
                     </div>
                     <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top border-success border-opacity-25 gap-2">
-                        <span class="text-muted" style="font-size: 0.75rem;">
-                            <i class="bi bi-qr-code-scan me-1"></i>Tem mã QR được niêm phong trên từng bao bì giao đến bạn
+                        <span class="text-muted" style="font-size: 0.8rem;">
+                            <i class="bi bi-qr-code-scan text-success me-1"></i>Tem mã QR số được niêm phong trực tiếp trên bao bì
                         </span>
-                        <a href="{% url 'traceability:public_trace' batch_code=latest_batch.batch_code %}" class="btn btn-sm btn-success fw-semibold shadow-sm d-inline-flex align-items-center gap-1" target="_blank">
-                            <i class="bi bi-patch-check-fill"></i> Xem Hộ Chiếu Nguồn Gốc
+                        <a href="{% url 'traceability:public_trace' batch_code=latest_batch.batch_code %}" class="btn btn-sm btn-success fw-semibold shadow-sm d-inline-flex align-items-center gap-1 rounded-pill px-3" target="_blank">
+                            <i class="bi bi-patch-check-fill"></i> Xem Hộ Chiếu Chi Tiết
                         </a>
                     </div>
                 </div>
             {% endif %}
 
-            <hr>
-            <div class="mb-3">
-                <h5 class="fw-bold text-success">Mô tả sản phẩm</h5>
-                <p class="text-muted">{{ product.description|default:"Sản phẩm nông sản tươi sạch, thu hoạch đúng quy trình đảm bảo an toàn vệ sinh thực phẩm." }}</p>
+            <hr class="my-4">
+
+            <!-- Mô tả & Hướng dẫn sử dụng -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-card-text text-success"></i> Mô Tả Sản Phẩm
+                </h5>
+                <p class="text-muted" style="line-height: 1.8;">
+                    {{ product.description|default:"Sản phẩm nông sản tươi sạch, được trồng và thu hoạch theo đúng quy trình nghiêm ngặt, đảm bảo vệ sinh an toàn thực phẩm và giữ trọn dưỡng chất tự nhiên." }}
+                </p>
             </div>
+
             {% if product.usage %}
-                <div class="mb-3">
-                    <h6 class="fw-bold text-success">Hướng dẫn sử dụng & Chế biến</h6>
-                    <p class="text-muted small">{{ product.usage }}</p>
+                <div class="mb-3 p-3 rounded-3 bg-light border">
+                    <h6 class="fw-bold text-dark mb-1"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Hướng Dẫn Sử Dụng & Chế Biến</h6>
+                    <p class="text-muted small mb-0">{{ product.usage }}</p>
                 </div>
             {% endif %}
+
             {% if product.storage %}
-                <div class="mb-3">
-                    <h6 class="fw-bold text-success">Bảo quản</h6>
-                    <p class="text-muted small">{{ product.storage }}</p>
+                <div class="mb-3 p-3 rounded-3 bg-light border">
+                    <h6 class="fw-bold text-dark mb-1"><i class="bi bi-snow text-info me-1"></i>Cách Bảo Quản Nông Sản</h6>
+                    <p class="text-muted small mb-0">{{ product.storage }}</p>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Đánh giá và nhận xét -->
-<div class="row mt-5">
-    <div class="col-md-8">
-        <div class="card border-0 shadow-sm p-4 bg-white">
-            <h4 class="fw-bold mb-3">Đánh giá từ khách hàng</h4>
+<!-- Đánh giá và Sản phẩm liên quan -->
+<div class="row g-4 mt-2">
+    <!-- Cột trái: Đánh giá khách hàng -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h4 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-chat-heart text-danger me-2"></i>Đánh Giá Từ Khách Hàng
+                </h4>
+                <div class="text-warning fw-bold">
+                    ★ {{ avg_rating|floatformat:1 }} / 5.0
+                </div>
+            </div>
 
             {% if user.is_authenticated %}
-                <form action="{% url 'products:add_review' slug=product.slug %}" method="post" class="mb-4 p-3 bg-light rounded">
+                <form action="{% url 'products:add_review' slug=product.slug %}" method="post" class="mb-4 p-3 bg-light rounded-3 border">
                     {% csrf_token %}
-                    <h6 class="fw-bold">Gửi đánh giá của bạn</h6>
+                    <h6 class="fw-bold text-dark mb-2">Để lại nhận xét của bạn:</h6>
                     <div class="mb-2">
-                        <label class="form-label small">Đánh giá sao:</label>
-                        <select name="rating" class="form-select form-select-sm" style="width: 150px;">
-                            <option value="5">⭐⭐⭐⭐⭐ (5 sao)</option>
-                            <option value="4">⭐⭐⭐⭐ (4 sao)</option>
-                            <option value="3">⭐⭐⭐ (3 sao)</option>
-                            <option value="2">⭐⭐ (2 sao)</option>
-                            <option value="1">⭐ (1 sao)</option>
+                        <label class="form-label small text-muted">Số sao đánh giá:</label>
+                        <select name="rating" class="form-select form-select-sm" style="width: 170px;">
+                            <option value="5">⭐⭐⭐⭐⭐ (5 sao - Tuyệt vời)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 sao - Rất ngon)</option>
+                            <option value="3">⭐⭐⭐ (3 sao - Bình thường)</option>
+                            <option value="2">⭐⭐ (2 sao - Cần cải thiện)</option>
+                            <option value="1">⭐ (1 sao - Không hài lòng)</option>
                         </select>
                     </div>
                     <div class="mb-2">
-                        <textarea name="comment" class="form-control" rows="2" placeholder="Chia sẻ cảm nhận về chất lượng nông sản..."></textarea>
+                        <textarea name="comment" class="form-control" rows="2" placeholder="Chia sẻ cảm nhận chân thực về độ tươi ngon, đóng gói..." required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success btn-sm">Gửi nhận xét</button>
+                    <button type="submit" class="btn btn-success btn-sm px-3 fw-bold rounded-pill">
+                        <i class="bi bi-send-fill me-1"></i> Gửi Đánh Giá
+                    </button>
                 </form>
             {% else %}
-                <p class="text-muted small"><a href="{% url 'accounts:login' %}">Đăng nhập</a> để viết đánh giá cho sản phẩm này.</p>
+                <div class="alert alert-light border rounded-3 p-3 mb-4 small text-muted">
+                    <i class="bi bi-info-circle text-primary me-1"></i>Bạn cần <a href="{% url 'accounts:login' %}" class="fw-bold text-success text-decoration-underline">Đăng nhập</a> để viết đánh giá cho nông sản này.
+                </div>
             {% endif %}
 
             <div class="reviews-list">
                 {% for rev in reviews %}
                     <div class="border-bottom py-3">
-                        <div class="d-flex justify-content-between">
-                            <strong>{{ rev.user.username }}</strong>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: 700; font-size: 13px;">
+                                    {{ rev.user.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <strong class="text-dark">{{ rev.user.username }}</strong>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 10px;">Đã mua hàng</span>
+                                </div>
+                            </div>
                             <span class="text-warning">★ {{ rev.rating }}</span>
                         </div>
-                        <p class="text-muted small mb-1">{{ rev.comment }}</p>
-                        <span class="text-muted" style="font-size: 11px;">{{ rev.created_at|date:"d/m/Y H:i" }}</span>
+                        <p class="text-muted small mb-1 ps-4 ms-2">{{ rev.comment }}</p>
+                        <span class="text-muted ps-4 ms-2" style="font-size: 11px;">{{ rev.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
                 {% empty %}
-                    <p class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-chat-square-text fs-3 d-block mb-2 text-muted"></i>
+                        <span>Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên thưởng thức và đánh giá nhé!</span>
+                    </div>
                 {% endfor %}
             </div>
         </div>
     </div>
 
-    <!-- Sản phẩm liên quan -->
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-3 bg-white">
-            <h5 class="fw-bold mb-3">Nông sản cùng loại</h5>
+    <!-- Cột phải: Nông sản cùng loại -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom">Nông Sản Cùng Loại</h5>
             {% for rel in related_products %}
-                <div class="d-flex align-items-center mb-3">
+                <div class="d-flex align-items-center mb-3 pb-3 border-bottom last-border-0">
                     {% if rel.image %}
-                        <img src="{{ rel.image.url }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        <img src="{{ rel.image.url }}" class="rounded-3 me-3 border" style="width: 65px; height: 65px; object-fit: cover;">
                     {% else %}
-                        <div class="bg-light rounded me-3 text-center py-2" style="width: 60px; height: 60px;">🥬</div>
+                        <div class="bg-light rounded-3 me-3 text-center py-3 fs-4" style="width: 65px; height: 65px;">🥬</div>
                     {% endif %}
-                    <div>
-                        <h6 class="mb-0"><a href="{% url 'products:detail' slug=rel.slug %}" class="text-decoration-none text-dark">{{ rel.name }}</a></h6>
-                        <span class="text-danger fw-bold small">{{ rel.price|floatformat:0 }} đ</span>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1" style="font-size: 14.5px;">
+                            <a href="{% url 'products:detail' slug=rel.slug %}" class="text-decoration-none text-dark fw-bold">{{ rel.name }}</a>
+                        </h6>
+                        <div class="text-danger fw-bold small">{{ rel.price|floatformat:0 }} đ <span class="text-muted fw-normal">/ {{ rel.unit }}</span></div>
                     </div>
                 </div>
             {% empty %}
-                <p class="text-muted small">Không có sản phẩm cùng danh mục.</p>
+                <p class="text-muted small mb-0">Không có sản phẩm nào cùng danh mục.</p>
             {% endfor %}
         </div>
     </div>

@@ -168,3 +168,36 @@ class ChatbotOrderingTests(TestCase):
         data = resp.json()
         self.assertIn('chỉ còn', data['reply'])
         self.assertIn('5 kg', data['reply'])
+
+    def test_order_with_complex_list_message_and_address(self):
+        """Khách paste danh sách giá sản phẩm rồi cung cấp SĐT + Địa chỉ không bị lỗi full_name quá dài."""
+        self.client.force_login(self.user)
+
+        # Lượt 1: Khách paste tin nhắn có chứa nhiều giá tiền (vd: 45.000 đ/kg...)
+        r1 = self.client.post(
+            '/chatbot/send/',
+            json.dumps({'message': 'lên đơn - Súp lơ xanh: 45.000 đ/kg - Cà rốt Đà Lạt: 25.000 đ/kg'}),
+            content_type='application/json'
+        )
+        self.assertEqual(r1.status_code, 200)
+        d1 = r1.json()
+        self.assertIn('Bạn muốn đặt mua', d1['reply'])
+        self.assertIn('Số điện thoại nhận hàng', d1['reply'])
+
+        # Lượt 2: Khách cung cấp SĐT và Địa chỉ
+        r2 = self.client.post(
+            '/chatbot/send/',
+            json.dumps({'message': '0912345678, số 15 Hai Bà Trưng, Hà Nội'}),
+            content_type='application/json'
+        )
+        self.assertEqual(r2.status_code, 200)
+        d2 = r2.json()
+        self.assertIn('ĐẶT HÀNG THÀNH CÔNG', d2['reply'])
+        self.assertNotIn('Có lỗi khi tạo đơn', d2['reply'])
+
+        # Kiểm tra Order trong DB
+        order = Order.objects.filter(user=self.user).latest('id')
+        self.assertEqual(order.phone, '0912345678')
+        self.assertIn('Hai Bà Trưng', order.address)
+        self.assertLessEqual(len(order.full_name), 100)
+

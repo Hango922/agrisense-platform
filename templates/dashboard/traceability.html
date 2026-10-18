@@ -1,100 +1,246 @@
 <!-- File: templates/dashboard/traceability.html -->
 {% extends "dashboard/base.html" %}
 
-{% block title %}Quản Lý Lô Hàng & Mã QR - AgriSense Dashboard{% endblock %}
-{% block header_title %}Quản Lý Lô Hàng Nông Sản & Mã QR Truy Xuất Nguồn Gốc{% endblock %}
+{% block title %}Quản Lý Lô Hàng & Tem Mã QR - AgriSense Dashboard{% endblock %}
+{% block header_title %}Quản Lý Lô Hàng & Tem Mã QR{% endblock %}
 
 {% block dashboard_content %}
-<!-- Thanh thông tin hướng dẫn nghiệp vụ -->
-<div class="alert alert-info border-0 shadow-sm d-flex flex-wrap justify-content-between align-items-center mb-4 py-3 px-4 rounded-3">
-    <div class="d-flex align-items-center gap-3">
-        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle fs-4">
-            <i class="bi bi-qr-code-scan"></i>
-        </div>
-        <div>
-            <h6 class="fw-bold mb-1 text-dark">Hệ Thống Tem Mã QR Truy Xuất Nguồn Gốc Số (Digital Product Passport)</h6>
-            <p class="text-muted small mb-0">
-                Mỗi lô hàng có 1 mã QR độc bản. Mã QR này được in lên bao bì/tem nhãn để <strong>người tiêu dùng quét bằng điện thoại</strong> và kiểm tra minh bạch toàn bộ quy trình canh tác, thu hoạch.
-            </p>
-        </div>
+<!-- Header Bar -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold text-dark font-heading mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-qr-code-scan text-success"></i> Hệ Thống Tem Mã QR Truy Xuất Nguồn Gốc Số
+        </h4>
+        <p class="text-muted small mb-0">
+            Hộ chiếu nông sản số (Digital Product Passport) – Quản lý lô hàng, mã QR in tem bao bì và nhật ký canh tác minh bạch.
+        </p>
     </div>
-    <div class="mt-2 mt-md-0 d-flex gap-2">
-        <a href="/admin/traceability/productbatch/add/" class="btn btn-success btn-sm shadow-sm d-inline-flex align-items-center gap-1" target="_blank">
+    <div class="d-flex gap-2">
+        <a href="{% url 'traceability:trace_index' %}" target="_blank" class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1">
+            <i class="bi bi-search"></i> Cổng Tra Cứu Công Khai
+        </a>
+        <a href="/admin/traceability/productbatch/add/" target="_blank" class="btn btn-success btn-sm px-3 rounded-pill fw-semibold shadow-sm d-inline-flex align-items-center gap-1" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
             <i class="bi bi-plus-circle"></i> Thêm Lô Hàng Mới
         </a>
     </div>
 </div>
 
-<div class="card shadow-sm bg-white border-0 rounded-3">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-        <span class="fw-bold text-dark">
-            <i class="bi bi-list-check me-2 text-success"></i>Danh Sách Lô Hàng Nông Sản ({{ batches|length }})
-        </span>
-        <span class="text-muted small">Cập nhật theo thời gian thực từ cơ sở dữ liệu</span>
+<!-- 4 Hero KPI Cards -->
+<div class="row g-3 mb-4">
+    <!-- Card 1: Tổng Lô Hàng -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Tổng Lô Hàng</span>
+                    <div class="kpi-value text-dark">{{ total_batches }}</div>
+                    <div class="text-muted small">Đã định danh trên hệ thống</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i class="bi bi-boxes"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                <span>Số mặt hàng áp dụng</span>
+                <span class="fw-bold text-success">{{ products_with_batch }} nông sản</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Tem Mã QR Đã Cấp -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Tem QR Sẵn Sàng</span>
+                    <div class="kpi-value text-primary">{{ has_qr_count }}</div>
+                    <div class="text-muted small">Mã QR động tự tạo</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                    <i class="bi bi-qr-code"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                <span>Tỉ lệ cấp mã</span>
+                <span class="fw-bold text-primary">
+                    {% if total_batches > 0 %}
+                        {% widthratio has_qr_count total_batches 100 %}%
+                    {% else %}
+                        100%
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Đạt Chứng Nhận An Toàn -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Đạt Chuẩn An Toàn</span>
+                    <div class="kpi-value text-warning">{{ certified_count }}</div>
+                    <div class="text-muted small">VietGAP, GlobalGAP, Hữu cơ</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <i class="bi bi-patch-check-fill"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                <span>Chứng nhận xác thực</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Đã kiểm duyệt</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Thông Tin Hướng Dẫn Số Hóa -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label text-success">Quy Trình In Tem</span>
+                    <div class="fs-6 fw-bold text-dark mt-2 mb-1">In Tem & Dán Bao Bì</div>
+                    <div class="text-muted small">Quét bằng camera điện thoại không cần cài app</div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); width: 44px; height: 44px; font-size: 20px;">
+                    <i class="bi bi-phone"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top border-success-subtle d-flex justify-content-between align-items-center small">
+                <span class="text-success fw-semibold">Chuẩn GS1 Việt Nam</span>
+                <i class="bi bi-arrow-right text-success"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bộ Lọc Nhanh & Thanh Tìm Kiếm -->
+<div class="dashboard-card mb-4 p-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <!-- Quick Filter Pills -->
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <a href="?cert=all{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_cert == 'all' %}btn-success text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                Tất cả ({{ total_batches }})
+            </a>
+            <a href="?cert=VietGAP{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_cert == 'VietGAP' %}btn-success text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                🌿 VietGAP
+            </a>
+            <a href="?cert=GlobalGAP{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_cert == 'GlobalGAP' %}btn-primary text-white shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                🌍 GlobalGAP
+            </a>
+            <a href="?cert=Organic{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="btn btn-sm rounded-pill px-3 fw-semibold {% if current_cert == 'Organic' %}btn-warning text-dark shadow-sm{% else %}btn-light text-secondary border{% endif %}">
+                ✨ Hữu Cơ (Organic)
+            </a>
+        </div>
+
+        <!-- Search Form -->
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-center m-0">
+            {% if current_cert and current_cert != 'all' %}
+                <input type="hidden" name="cert" value="{{ current_cert }}">
+            {% endif %}
+
+            <div class="input-group input-group-sm" style="max-width: 280px;">
+                <span class="input-group-text bg-white border-end-0 rounded-start-pill text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0 rounded-end-pill" placeholder="Mã lô, nông sản, nông trại...">
+            </div>
+
+            {% if search_query or current_cert != 'all' %}
+                <a href="{% url 'dashboard:traceability' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="Xóa bộ lọc">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Main Batches Table Card -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-list-check text-success"></i> Danh Sách Lô Hàng Nông Sản & Tem Nhãn
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                {{ batches|length }} lô hàng
+            </span>
+        </div>
+        <div class="text-muted small">
+            Được sắp xếp mới nhất lên đầu
+        </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" style="min-width: 1020px;">
             <thead class="table-light">
-                <tr class="text-secondary small text-uppercase">
-                    <th style="width: 140px;">Mã Lô Hàng</th>
-                    <th>Nông Sản</th>
-                    <th>Vùng Trồng / Trang Trại</th>
-                    <th style="width: 130px;">Thu Hoạch</th>
-                    <th style="width: 130px;">Hạn Dùng</th>
-                    <th style="width: 120px;">Chứng Nhận</th>
-                    <th class="text-center" style="width: 150px;">Tem Mã QR</th>
-                    <th class="text-end" style="width: 200px;">Thao Tác Quản Trị</th>
+                <tr class="text-secondary small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em; font-weight: 700;">
+                    <th class="ps-4" style="width: 140px;">Mã Lô</th>
+                    <th style="width: 220px;">Nông Sản</th>
+                    <th>Vùng Trồng & Trang Trại</th>
+                    <th style="width: 120px;">Thu Hoạch</th>
+                    <th style="width: 120px;">Hạn Dùng</th>
+                    <th style="width: 130px;">Chứng Nhận</th>
+                    <th class="text-center" style="width: 130px;">Tem Mã QR</th>
+                    <th class="pe-4 text-end" style="width: 190px;">Thao Tác</th>
                 </tr>
             </thead>
             <tbody>
                 {% for b in batches %}
                     <tr>
                         <!-- Mã Lô Hàng -->
-                        <td>
-                            <strong class="text-success font-monospace">{{ b.batch_code }}</strong>
+                        <td class="ps-4 py-3">
+                            <strong class="text-success font-monospace fs-6">{{ b.batch_code }}</strong>
                         </td>
 
                         <!-- Nông Sản -->
-                        <td>
-                            <div class="fw-semibold text-dark">{{ b.product.name }}</div>
-                            <small class="text-muted">{{ b.product.category.name }}</small>
+                        <td class="py-3">
+                            <div class="fw-bold text-dark text-truncate" style="max-width: 200px;" title="{{ b.product.name }}">
+                                {{ b.product.name }}
+                            </div>
+                            <span class="badge bg-light text-muted border" style="font-size: 11px;">
+                                {{ b.product.category.name }}
+                            </span>
                         </td>
 
                         <!-- Vùng Trồng -->
-                        <td>
-                            <div class="small fw-semibold text-dark text-truncate" style="max-width: 220px;" title="{{ b.planting_location }}">
+                        <td class="py-3">
+                            <div class="small fw-semibold text-dark text-truncate" style="max-width: 230px;" title="{{ b.planting_location }}">
                                 <i class="bi bi-geo-alt text-danger me-1"></i>{{ b.planting_location }}
                             </div>
-                            <small class="text-muted">{{ b.product.supplier.name }}</small>
+                            <small class="text-muted d-block text-truncate" style="max-width: 230px;">
+                                {{ b.product.supplier.name }}
+                            </small>
                         </td>
 
                         <!-- Ngày Thu Hoạch -->
-                        <td class="small text-muted">
-                            <i class="bi bi-calendar-event me-1"></i>{{ b.harvest_date|date:"d/m/Y" }}
+                        <td class="py-3 small text-muted">
+                            <i class="bi bi-calendar-check text-success me-1"></i>{{ b.harvest_date|date:"d/m/Y" }}
                         </td>
 
                         <!-- Hạn Sử Dụng -->
-                        <td class="small text-muted">
+                        <td class="py-3 small text-muted">
                             {% if b.expiry_date %}
-                                <i class="bi bi-clock-history me-1"></i>{{ b.expiry_date|date:"d/m/Y" }}
+                                <i class="bi bi-clock-history text-muted me-1"></i>{{ b.expiry_date|date:"d/m/Y" }}
                             {% else %}
                                 <span class="text-muted">-</span>
                             {% endif %}
                         </td>
 
                         <!-- Chứng Nhận -->
-                        <td>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                        <td class="py-3">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">
                                 <i class="bi bi-patch-check-fill me-1"></i>{{ b.certification|default:"VietGAP" }}
                             </span>
                         </td>
 
                         <!-- Tem Mã QR -->
-                        <td class="text-center">
+                        <td class="py-3 text-center">
                             {% if b.qr_code %}
                                 <button type="button" 
-                                        class="btn btn-sm btn-outline-success p-1 d-inline-flex flex-column align-items-center gap-1 shadow-sm rounded-2"
+                                        class="btn btn-sm btn-outline-success p-1 d-inline-flex flex-column align-items-center gap-1 shadow-xs rounded-3 border-success-subtle"
                                         data-bs-toggle="modal" 
                                         data-bs-target="#qrLabelModal"
                                         data-batch-code="{{ b.batch_code }}"
@@ -108,8 +254,8 @@
                                         data-public-url="{% url 'traceability:public_trace' batch_code=b.batch_code %}"
                                         data-admin-edit-url="/admin/traceability/productbatch/{{ b.id }}/change/"
                                         title="Nhấn để xem tem in nhãn & tải mã QR">
-                                    <img src="{{ b.qr_code.url }}" alt="QR" class="rounded border" style="width: 44px; height: 44px; object-fit: contain;">
-                                    <span style="font-size: 0.7rem; font-weight: 600;"><i class="bi bi-printer me-1"></i>In / Tải QR</span>
+                                    <img src="{{ b.qr_code.url }}" alt="QR" class="rounded border bg-white" style="width: 44px; height: 44px; object-fit: contain;">
+                                    <span style="font-size: 0.68rem; font-weight: 700;"><i class="bi bi-printer me-1"></i>In / Tải QR</span>
                                 </button>
                             {% else %}
                                 <span class="badge bg-secondary-subtle text-secondary border">Chưa có QR</span>
@@ -117,17 +263,13 @@
                         </td>
 
                         <!-- Thao Tác Quản Trị -->
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end gap-1">
-                                <!-- Nút Sửa Thông Tin Lô Hàng -->
-                                <a href="/admin/traceability/productbatch/{{ b.id }}/change/" class="btn btn-sm btn-outline-secondary" target="_blank" title="Chỉnh sửa thông tin lô hàng">
-                                    <i class="bi bi-pencil-square"></i> Sửa
+                        <td class="pe-4 py-3 text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{% url 'traceability:public_trace' batch_code=b.batch_code %}" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1 shadow-xs" target="_blank" title="Xem trang Hộ Chiếu Nông Sản Số người tiêu dùng quét mã">
+                                    <i class="bi bi-box-arrow-up-right"></i> Khách Xem
                                 </a>
-
-                                <!-- Nút Xem Trang Khách Hàng Quét Mã -->
-                                <a href="{% url 'traceability:public_trace' batch_code=b.batch_code %}" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 shadow-sm" target="_blank" title="Mở trang Hộ Chiếu Nông Sản Số người tiêu dùng sẽ nhìn thấy khi quét mã">
-                                    <i class="bi bi-box-arrow-up-right"></i>
-                                    <span>Trang Khách Xem</span>
+                                <a href="/admin/traceability/productbatch/{{ b.id }}/change/" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1" target="_blank" title="Chỉnh sửa thông tin lô hàng">
+                                    <i class="bi bi-pencil-square"></i>
                                 </a>
                             </div>
                         </td>
@@ -135,8 +277,14 @@
                 {% empty %}
                     <tr>
                         <td colspan="8" class="text-center py-5 text-muted">
-                            <i class="bi bi-qr-code fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                            Chưa có lô hàng nông sản nào trong hệ thống.
+                            <div class="py-4">
+                                <i class="bi bi-qr-code text-secondary opacity-50 display-3 d-block mb-3"></i>
+                                <h5 class="fw-bold text-dark mb-1">Không tìm thấy lô hàng nào phù hợp</h5>
+                                <p class="text-muted small mb-3">Thử kiểm tra lại từ khóa tìm kiếm hoặc bấm nút bên dưới để tạo lô hàng mới.</p>
+                                <a href="/admin/traceability/productbatch/add/" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
+                                    <i class="bi bi-plus-circle me-1"></i> Thêm Lô Hàng Mới
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}
@@ -148,10 +296,10 @@
 <!-- Modal Xem Chi Tiết Tem Nhãn & In Mã QR Cho Admin -->
 <div class="modal fade" id="qrLabelModal" tabindex="-1" aria-labelledby="qrLabelModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-success text-white">
+        <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
                 <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="qrLabelModalLabel">
-                    <i class="bi bi-printer-fill"></i> Tem Nhãn QR Truy Xuất Lô Hàng
+                    <i class="bi bi-printer-fill"></i> Tem Nhãn QR Truy Xuất Nguồn Gốc Số
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
@@ -195,18 +343,18 @@
 
             <div class="modal-footer bg-light d-flex justify-content-between">
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" onclick="printLabel()">
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold d-inline-flex align-items-center gap-1" onclick="printLabel()">
                         <i class="bi bi-printer"></i> In Tem Nhãn
                     </button>
-                    <a id="modalDownloadBtn" href="#" download class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1">
+                    <a id="modalDownloadBtn" href="#" download class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold d-inline-flex align-items-center gap-1">
                         <i class="bi bi-download"></i> Tải Ảnh QR (.png)
                     </a>
                 </div>
                 <div class="d-flex gap-2">
-                    <a id="modalAdminEditBtn" href="#" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <a id="modalAdminEditBtn" href="#" target="_blank" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold">
                         <i class="bi bi-pencil"></i> Sửa Lô
                     </a>
-                    <a id="modalPublicTraceBtn" href="#" target="_blank" class="btn btn-success btn-sm">
+                    <a id="modalPublicTraceBtn" href="#" target="_blank" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold">
                         <i class="bi bi-box-arrow-up-right"></i> Xem Trang Khách
                     </a>
                 </div>
@@ -214,7 +362,6 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}

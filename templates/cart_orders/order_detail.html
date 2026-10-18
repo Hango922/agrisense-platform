@@ -1,80 +1,111 @@
 <!-- File: templates/cart_orders/order_detail.html -->
 {% extends "base.html" %}
 
-{% block title %}Chi tiết đơn hàng {{ order.order_code }} - Nông Sản Sạch{% endblock %}
+{% block title %}Chi tiết đơn hàng {{ order.order_code }} - AgriSense{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="fw-bold mb-1 text-success">Đơn Hàng #{{ order.order_code }}</h3>
-        <p class="text-muted small mb-0">Thời gian đặt: {{ order.created_at|date:"d/m/Y H:i:s" }}</p>
-    </div>
-    <div>
-        {% if order.status == 'pending' %}
-            <span class="badge bg-warning text-dark fs-6 px-3 py-2">Chờ xác nhận</span>
-        {% elif order.status == 'confirmed' %}
-            <span class="badge bg-info text-dark fs-6 px-3 py-2">Đã xác nhận</span>
-        {% elif order.status == 'shipping' %}
-            <span class="badge bg-primary fs-6 px-3 py-2">Đang giao hàng</span>
-        {% elif order.status == 'delivered' %}
-            <span class="badge bg-success fs-6 px-3 py-2">Giao thành công</span>
-        {% elif order.status == 'cancelled' %}
-            <span class="badge bg-secondary fs-6 px-3 py-2">Đã hủy</span>
-        {% endif %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cart_orders:order_history' %}" class="text-decoration-none text-success">Lịch sử đơn hàng</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Đơn #{{ order.order_code }}</li>
+    </ol>
+</nav>
+
+<!-- Order Status Banner -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">Đơn Hàng Nông Sản</span>
+                <h3 class="fw-bold mb-0 text-dark font-monospace">#{{ order.order_code }}</h3>
+            </div>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-clock me-1"></i>Thời gian đặt: {{ order.created_at|date:"d/m/Y H:i:s" }}
+            </p>
+        </div>
+        <div>
+            {% if order.status == 'pending' %}
+                <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
+                </span>
+            {% elif order.status == 'confirmed' %}
+                <span class="badge bg-info text-dark fs-6 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-check2-all me-1"></i>Đã xác nhận
+                </span>
+            {% elif order.status == 'shipping' %}
+                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-truck me-1"></i>Đang giao hàng
+                </span>
+            {% elif order.status == 'delivered' %}
+                <span class="badge bg-success fs-6 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-patch-check-fill me-1"></i>Giao thành công
+                </span>
+            {% elif order.status == 'cancelled' %}
+                <span class="badge bg-secondary fs-6 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-x-circle me-1"></i>Đã hủy
+                </span>
+            {% endif %}
+        </div>
     </div>
 </div>
 
 <div class="row g-4">
-    <!-- Danh sách sản phẩm -->
+    <!-- Cột trái: Danh sách sản phẩm & Bill -->
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold">Chi Tiết Sản Phẩm Đặt Mua</h5>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+            <div class="card-header bg-white py-3 px-4 border-bottom">
+                <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-basket2-fill text-success"></i> Chi Tiết Sản Phẩm Đặt Mua
+                </h5>
             </div>
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light small text-muted">
                         <tr>
-                            <th>Sản phẩm</th>
+                            <th class="ps-4">Sản phẩm</th>
                             <th>Đơn giá</th>
-                            <th>Số lượng</th>
-                            <th class="text-end">Thành tiền</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end pe-4">Thành tiền</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in order.items.all %}
                             <tr>
-                                <td>
-                                    <h6 class="mb-0 fw-semibold">{{ item.product_name }}</h6>
+                                <td class="ps-4 py-3">
+                                    <h6 class="mb-1 fw-bold text-dark">{{ item.product_name }}</h6>
                                     <div class="d-flex align-items-center gap-2 mt-1">
-                                        <small class="text-muted">{{ item.product.unit }}</small>
+                                        <small class="text-muted">Đơn vị: {{ item.product.unit }}</small>
                                         {% with batch=item.product.batches.first %}
                                             {% if batch %}
                                                 <a href="{% url 'traceability:public_trace' batch_code=batch.batch_code %}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none" target="_blank" title="Xem Hộ Chiếu Nông Sản Số của sản phẩm này">
-                                                    <i class="bi bi-shield-check me-1"></i>Nguồn gốc lô #{{ batch.batch_code }}
+                                                    <i class="bi bi-shield-check me-1"></i>Hộ chiếu lô #{{ batch.batch_code }}
                                                 </a>
                                             {% endif %}
                                         {% endwith %}
                                     </div>
                                 </td>
-                                <td>{{ item.price|floatformat:0 }} đ</td>
-                                <td>{{ item.quantity }}</td>
-                                <td class="text-end fw-bold text-success">{{ item.subtotal|floatformat:0 }} đ</td>
+                                <td class="py-3 text-muted">{{ item.price|floatformat:0 }} đ</td>
+                                <td class="py-3 text-center fw-bold">{{ item.quantity }}</td>
+                                <td class="text-end pe-4 py-3 fw-bold text-success">{{ item.subtotal|floatformat:0 }} đ</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot class="table-light">
                         <tr>
-                            <td colspan="3" class="text-end">Tiền hàng:</td>
-                            <td class="text-end fw-bold">{{ order.total_amount|floatformat:0 }} đ</td>
+                            <td colspan="3" class="text-end ps-4 text-muted">Tiền hàng:</td>
+                            <td class="text-end pe-4 fw-bold text-dark">{{ order.total_amount|floatformat:0 }} đ</td>
                         </tr>
                         <tr>
-                            <td colspan="3" class="text-end">Phí vận chuyển:</td>
-                            <td class="text-end fw-bold">{{ order.shipping_fee|floatformat:0 }} đ</td>
+                            <td colspan="3" class="text-end ps-4 text-muted">Phí vận chuyển:</td>
+                            <td class="text-end pe-4 fw-bold text-dark">{{ order.shipping_fee|floatformat:0 }} đ</td>
                         </tr>
-                        <tr>
-                            <td colspan="3" class="text-end fs-5 fw-bold text-dark">Tổng thanh toán ({{ order.get_payment_method_display }}):</td>
-                            <td class="text-end fs-5 fw-bold text-danger">{{ order.final_amount|floatformat:0 }} đ</td>
+                        <tr class="border-top border-2">
+                            <td colspan="3" class="text-end ps-4 fs-6 fw-bold text-dark">
+                                Tổng thanh toán ({{ order.get_payment_method_display }}):
+                            </td>
+                            <td class="text-end pe-4 fs-5 fw-bold text-danger">{{ order.final_amount|floatformat:0 }} đ</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -83,35 +114,35 @@
 
         <!-- Khối Tải Lên Bill Chuyển Khoản -->
         {% if order.payment_method == 'vietqr' or order.payment_proof %}
-        <div class="card border-0 shadow-sm p-4 mb-4 border-start border-4 {% if order.payment_proof %}border-success bg-white{% else %}border-warning bg-warning bg-opacity-10{% endif %}">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-4 {% if order.payment_proof %}border-success{% else %}border-warning{% endif %}">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                 <div>
-                    <h5 class="fw-bold mb-1 {% if order.payment_proof %}text-success{% else %}text-dark{% endif %}">
-                        <i class="bi bi-receipt me-2"></i> Biên Lai / Bill Chuyển Khoản Ngân Hàng
+                    <h5 class="fw-bold mb-1 {% if order.payment_proof %}text-success{% else %}text-dark{% endif %} d-flex align-items-center gap-2">
+                        <i class="bi bi-receipt"></i> Biên Lai Chuyển Khoản Ngân Hàng
                     </h5>
                     <p class="text-muted small mb-0">
                         {% if order.payment_proof %}
-                            Biên lai đã được tải lên thành công vào lúc {{ order.payment_proof_uploaded_at|date:"d/m/Y H:i"|default:order.updated_at|date:"d/m/Y H:i" }}. Admin sẽ đối soát để xác nhận đơn.
+                            Biên lai đã được tải lên thành công vào lúc {{ order.payment_proof_uploaded_at|date:"d/m/Y H:i"|default:order.updated_at|date:"d/m/Y H:i" }}.
                         {% else %}
-                            <strong>Lưu ý quan trọng:</strong> Vui lòng chụp ảnh màn hình chuyển khoản thành công và tải lên tại đây. <em>Admin chỉ xác nhận đơn hàng khi đã có bill chuyển khoản!</em>
+                            <strong>Lưu ý:</strong> Vui lòng chụp ảnh màn hình chuyển khoản và tải lên tại đây để Admin đối soát duyệt đơn nhanh chóng.
                         {% endif %}
                     </p>
                 </div>
                 {% if order.payment_proof %}
-                    <span class="badge bg-success fs-6 px-3 py-2">
-                        <i class="bi bi-check-circle-fill me-1"></i> Đã có bill
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
+                        <i class="bi bi-check-circle-fill me-1"></i> Đã tải bill
                     </span>
                 {% else %}
-                    <span class="badge bg-danger fs-6 px-3 py-2">
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
                         <i class="bi bi-exclamation-triangle-fill me-1"></i> Chưa gửi bill
                     </span>
                 {% endif %}
             </div>
 
             {% if order.payment_proof %}
-                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border">
+                <div class="d-flex flex-wrap align-items-center gap-3 p-3 bg-light rounded-3 border">
                     <a href="{{ order.payment_proof.url }}" target="_blank" title="Bấm để xem kích thước lớn">
-                        <img src="{{ order.payment_proof.url }}" alt="Bill chuyển khoản" class="img-thumbnail shadow-sm" style="max-height: 140px; cursor: pointer;">
+                        <img src="{{ order.payment_proof.url }}" alt="Bill chuyển khoản" class="img-thumbnail shadow-sm rounded-3" style="max-height: 120px; cursor: pointer;">
                     </a>
                     <div>
                         <div class="fw-bold text-dark mb-1">Ảnh biên lai thanh toán của bạn</div>
@@ -120,7 +151,7 @@
                             <form action="{% url 'cart_orders:upload_payment_proof' order_code=order.order_code %}" method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
                                 {% csrf_token %}
                                 <input type="file" name="payment_proof" class="form-control form-control-sm" accept="image/*" required style="max-width: 250px;">
-                                <button type="submit" class="btn btn-sm btn-outline-success">Tải ảnh khác</button>
+                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3">Tải ảnh khác</button>
                             </form>
                         {% endif %}
                     </div>
@@ -132,11 +163,11 @@
                         <div class="row g-2 align-items-center">
                             <div class="col-md-8">
                                 <input type="file" name="payment_proof" class="form-control" accept="image/*" required>
-                                <small class="text-muted d-block mt-1">Định dạng hỗ trợ: JPG, PNG, WEBP (ảnh chụp màn hình chuyển khoản)</small>
+                                <small class="text-muted d-block mt-1">Hỗ trợ JPG, PNG, WEBP (ảnh chụp màn hình app ngân hàng)</small>
                             </div>
                             <div class="col-md-4">
-                                <button type="submit" class="btn btn-success w-100 fw-bold">
-                                    <i class="bi bi-upload me-1"></i> Tải Lên Bill
+                                <button type="submit" class="btn btn-success w-100 fw-bold py-2 rounded-pill">
+                                    <i class="bi bi-upload me-1"></i> Tải Lên Bill Ngay
                                 </button>
                             </div>
                         </div>
@@ -147,65 +178,84 @@
         {% endif %}
 
         {% if order.status == 'pending' %}
-            <div class="card border-0 shadow-sm p-3 bg-light">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-light border">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="fw-bold mb-1 text-danger">Bạn muốn hủy đơn hàng này?</h6>
-                        <small class="text-muted">Chỉ có thể hủy đơn khi đơn hàng đang ở trạng thái 'Chờ xác nhận'.</small>
+                        <h6 class="fw-bold mb-1 text-danger">Hủy đơn hàng?</h6>
+                        <small class="text-muted">Bạn có thể tự hủy đơn khi đơn hàng đang ở trạng thái 'Chờ xác nhận'.</small>
                     </div>
                     <form action="{% url 'cart_orders:cancel_order' order_code=order.order_code %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">Hủy Đơn Hàng</button>
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                            Hủy Đơn Hàng
+                        </button>
                     </form>
                 </div>
             </div>
         {% endif %}
     </div>
 
-    <!-- Thông tin giao nhận -->
+    <!-- Cột phải: Thông tin nhận hàng & VietQR -->
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm p-3 mb-4">
-            <h5 class="fw-bold mb-3 border-bottom pb-2">Thông Tin Giao Hàng</h5>
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><strong>Người nhận:</strong> {{ order.full_name }}</li>
-                <li class="mb-2"><strong>Điện thoại:</strong> {{ order.phone }}</li>
-                <li class="mb-2"><strong>Địa chỉ:</strong> {{ order.address }}</li>
-                <li class="mb-2"><strong>Phương thức:</strong> {{ order.get_payment_method_display }}</li>
+        <!-- Thông tin giao nhận -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+            <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark">Thông Tin Nhận Hàng</h5>
+            <ul class="list-unstyled mb-0 small">
+                <li class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Người nhận:</span>
+                    <strong class="text-dark">{{ order.full_name }}</strong>
+                </li>
+                <li class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Điện thoại:</span>
+                    <strong class="text-dark">{{ order.phone }}</strong>
+                </li>
+                <li class="mb-2">
+                    <span class="text-muted d-block">Địa chỉ giao:</span>
+                    <strong class="text-dark">{{ order.address }}</strong>
+                </li>
+                <li class="mb-2 d-flex justify-content-between">
+                    <span class="text-muted">Hình thức:</span>
+                    <span class="badge bg-light text-dark border">{{ order.get_payment_method_display }}</span>
+                </li>
                 {% if order.note %}
-                    <li class="mb-2"><strong>Ghi chú:</strong> <span class="fst-italic text-muted">{{ order.note }}</span></li>
+                    <li class="mt-2 pt-2 border-top">
+                        <span class="text-muted d-block">Ghi chú:</span>
+                        <span class="fst-italic text-dark">{{ order.note }}</span>
+                    </li>
                 {% endif %}
             </ul>
         </div>
-        <!-- Thanh toán chuyển khoản nhanh qua VietQR -->
+
+        <!-- Khối VietQR Chuyển Khoản Tự Động -->
         {% if order.status != 'cancelled' %}
-        <div class="card border-0 shadow-sm p-3 mb-4 border-top border-success border-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-top border-4 border-success">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="fw-bold mb-0 text-success">
-                    <i class="bi bi-qr-code-scan me-2"></i> Thanh Toán Nhanh VietQR
+                <h5 class="fw-bold mb-0 text-success d-flex align-items-center gap-2">
+                    <i class="bi bi-qr-code-scan"></i> Thanh Toán Nhanh VietQR
                 </h5>
                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">Techcombank</span>
             </div>
-            <p class="text-muted small mb-3">Quét mã bằng ứng dụng Ngân hàng (Techcombank, VCB, MB,...) để tự điền số tiền và nội dung chuyển khoản.</p>
+            <p class="text-muted small mb-3">Quét mã bằng app ngân hàng để tự điền số tiền và nội dung chuyển khoản chuẩn xác.</p>
             
             <div class="text-center mb-3">
                 <div class="tab-content" id="qrTabContent">
                     <div class="tab-pane fade show active" id="qr-dynamic" role="tabpanel">
-                        <img src="{{ vietqr.qr_image_url }}" alt="Mã VietQR Thanh Toán" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
-                        <div class="small text-muted mt-1" style="font-size: 11px;">Mã QR động đã nhúng số tiền & nội dung đơn hàng</div>
+                        <img src="{{ vietqr.qr_image_url }}" alt="Mã VietQR Thanh Toán" class="img-fluid rounded-3 border shadow-sm p-1 bg-white" style="max-height: 230px;">
+                        <div class="small text-muted mt-1" style="font-size: 11px;">Mã QR động chứa số tiền & mã đơn</div>
                     </div>
                     <div class="tab-pane fade" id="qr-personal" role="tabpanel">
                         {% load static %}
-                        <img src="{% static 'images/techcombank_qr.png' %}" alt="Thẻ QR Techcombank NGUYEN HONG HOANG" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
-                        <div class="small text-muted mt-1" style="font-size: 11px;">Thẻ QR Techcombank cá nhân NGUYEN HONG HOANG</div>
+                        <img src="{% static 'images/techcombank_qr.png' %}" alt="Thẻ QR Techcombank NGUYEN HONG HOANG" class="img-fluid rounded-3 border shadow-sm p-1 bg-white" style="max-height: 230px;">
+                        <div class="small text-muted mt-1" style="font-size: 11px;">Thẻ QR cá nhân NGUYEN HONG HOANG</div>
                     </div>
                 </div>
                 
                 <div class="btn-group btn-group-sm mt-2" role="group">
-                    <button type="button" class="btn btn-outline-success active" data-bs-toggle="tab" data-bs-target="#qr-dynamic">
-                        <i class="bi bi-lightning-charge-fill me-1"></i>QR Đơn Hàng Tự Động
+                    <button type="button" class="btn btn-outline-success active rounded-start-pill" data-bs-toggle="tab" data-bs-target="#qr-dynamic">
+                        <i class="bi bi-lightning-charge-fill me-1"></i>QR Tự Động
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="tab" data-bs-target="#qr-personal">
-                        <i class="bi bi-person-badge-fill me-1"></i>Thẻ QR Techcombank
+                    <button type="button" class="btn btn-outline-secondary rounded-end-pill" data-bs-toggle="tab" data-bs-target="#qr-personal">
+                        <i class="bi bi-person-badge-fill me-1"></i>QR Cố Định
                     </button>
                 </div>
             </div>
@@ -235,7 +285,9 @@
         </div>
         {% endif %}
 
-        <a href="{% url 'cart_orders:order_history' %}" class="btn btn-outline-secondary w-100">← Quay lại danh sách đơn hàng</a>
+        <a href="{% url 'cart_orders:order_history' %}" class="btn btn-outline-secondary w-100 rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách đơn hàng
+        </a>
     </div>
 </div>
 {% endblock %}

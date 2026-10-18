@@ -2,75 +2,111 @@
 {% extends "dashboard/base.html" %}
 
 {% block title %}Tổng Quan Quản Trị - AgriSense Dashboard{% endblock %}
-{% block header_title %}Tổng Quan Hoạt Động Kinh Doanh & AI (30 Ngày Qua){% endblock %}
+{% block header_title %}Tổng Quan Hoạt Động Kinh Doanh & AI{% endblock %}
 
 {% block dashboard_content %}
-<!-- Action Toolbar -->
-<div class="d-flex justify-content-between align-items-center mb-4">
+<!-- Welcome & Action Toolbar -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <p class="text-muted small mb-0">Hệ thống phân tích kinh doanh, dự báo nhu cầu và phân nhóm khách hàng bằng AI.</p>
+        <h4 class="fw-bold text-dark mb-1 font-heading">
+            Báo Cáo Tình Hình Kinh Doanh & Trí Tuệ Nhân Tạo
+        </h4>
+        <p class="text-muted small mb-0">
+            Dữ liệu tổng hợp 30 ngày gần nhất • Tự động phân tích hành vi khách hàng qua mô hình RFM & K-Means
+        </p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'dashboard:export_orders_excel' %}" class="btn btn-success shadow-sm">
-            <i class="bi bi-file-earmark-excel me-1"></i> Xuất Báo Cáo Excel (.xlsx)
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'dashboard:export_orders_excel' %}" class="btn-excel">
+            <i class="bi bi-file-earmark-excel-fill"></i> Xuất Báo Cáo Excel (.xlsx)
         </a>
-        <a href="{% url 'dashboard:orders' %}" class="btn btn-outline-primary shadow-sm">
-            <i class="bi bi-receipt me-1"></i> Danh Sách Đơn Hàng
+        <a href="{% url 'dashboard:orders' %}" class="btn btn-outline-secondary rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1" style="font-size: 13.5px;">
+            <i class="bi bi-receipt"></i> Danh Sách Đơn Hàng
         </a>
     </div>
 </div>
 
-<!-- KPI Summary Cards -->
-<div class="row g-3 mb-4">
+<!-- 4 Premium KPI Metric Cards -->
+<div class="row g-4 mb-4">
+    <!-- KPI 1: Doanh Thu -->
     <div class="col-xl-3 col-md-6">
-        <div class="card p-3 bg-white shadow-sm border-start border-success border-4">
-            <div class="d-flex justify-content-between align-items-center">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <span class="text-muted small fw-semibold text-uppercase">Doanh Thu (30 Ngày)</span>
-                    <h3 class="fw-bold text-success mb-0 mt-1">{{ total_revenue|floatformat:0 }} đ</h3>
+                    <span class="kpi-label">Doanh Thu (30 Ngày)</span>
+                    <div class="kpi-value text-success">{{ total_revenue|floatformat:0 }} <small style="font-size: 1.1rem; font-weight: 600;">đ</small></div>
                 </div>
-                <div class="fs-1 text-success opacity-75">
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                     <i class="bi bi-cash-stack"></i>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="card p-3 bg-white shadow-sm border-start border-primary border-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted small fw-semibold text-uppercase">Đơn Hàng (30 Ngày)</span>
-                    <h3 class="fw-bold text-primary mb-0 mt-1">{{ total_orders }}</h3>
-                </div>
-                <div class="fs-1 text-primary opacity-75">
-                    <i class="bi bi-cart-check"></i>
-                </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                <span class="badge bg-success-subtle text-success border border-success-subtle small fw-bold">
+                    <i class="bi bi-graph-up-arrow me-1"></i>Đơn thực giao
+                </span>
+                <span class="small text-muted">Doanh số thực tế</span>
             </div>
         </div>
     </div>
+
+    <!-- KPI 2: Đơn Hàng -->
     <div class="col-xl-3 col-md-6">
-        <div class="card p-3 bg-white shadow-sm border-start border-info border-4">
-            <div class="d-flex justify-content-between align-items-center">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <span class="text-muted small fw-semibold text-uppercase">Tổng Khách Hàng</span>
-                    <h3 class="fw-bold text-info mb-0 mt-1">{{ total_customers }}</h3>
+                    <span class="kpi-label">Tổng Đơn Hàng</span>
+                    <div class="kpi-value text-primary">{{ total_orders }} <small style="font-size: 1.1rem; font-weight: 600;">đơn</small></div>
                 </div>
-                <div class="fs-1 text-info opacity-75">
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                    <i class="bi bi-cart-check-fill"></i>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-bold">
+                    <i class="bi bi-qr-code me-1"></i>VietQR & COD
+                </span>
+                <span class="small text-muted">30 ngày qua</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI 3: Khách Hàng AI -->
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="kpi-label">Tổng Khách Hàng (AI)</span>
+                    <div class="kpi-value text-dark" style="color: #6366f1 !important;">{{ total_customers }} <small style="font-size: 1.1rem; font-weight: 600;">người</small></div>
+                </div>
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
                     <i class="bi bi-people-fill"></i>
                 </div>
             </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                <span class="badge bg-secondary-subtle text-secondary border small fw-bold">
+                    <i class="bi bi-cpu me-1"></i>RFM Segmentation
+                </span>
+                <span class="small text-muted">Tài khoản thành viên</span>
+            </div>
         </div>
     </div>
+
+    <!-- KPI 4: Nông Sản -->
     <div class="col-xl-3 col-md-6">
-        <div class="card p-3 bg-white shadow-sm border-start border-warning border-4">
-            <div class="d-flex justify-content-between align-items-center">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <span class="text-muted small fw-semibold text-uppercase">Sản Phẩm Đang Bán</span>
-                    <h3 class="fw-bold text-warning mb-0 mt-1">{{ total_products }}</h3>
+                    <span class="kpi-label">Sản Phẩm Đang Bán</span>
+                    <div class="kpi-value text-warning">{{ total_products }} <small style="font-size: 1.1rem; font-weight: 600;">mặt hàng</small></div>
                 </div>
-                <div class="fs-1 text-warning opacity-75">
+                <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                     <i class="bi bi-flower2"></i>
                 </div>
+            </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle small fw-bold">
+                    <i class="bi bi-patch-check-fill me-1"></i>Chuẩn VietGAP
+                </span>
+                <span class="small text-muted">Tồn kho hoạt động</span>
             </div>
         </div>
     </div>
@@ -80,19 +116,19 @@
 <div class="row g-4 mb-4">
     <!-- Revenue Trend 30 Days (Line Chart) -->
     <div class="col-lg-8">
-        <div class="card shadow-sm p-4 bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="dashboard-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h5 class="fw-bold mb-1 text-dark">
-                        <i class="bi bi-graph-up text-success me-2"></i> Xu Hướng Doanh Thu 30 Ngày Gần Nhất
+                    <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up-arrow text-success"></i> Xu Hướng Doanh Thu 30 Ngày Gần Nhất
                     </h5>
-                    <small class="text-muted">Biểu đồ đường biểu diễn biến động doanh số theo từng ngày (đơn vị: VNĐ)</small>
+                    <small class="text-muted">Biểu đồ đường biểu diễn biến động doanh số thu về theo từng ngày (đơn vị: VNĐ)</small>
                 </div>
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
-                    <i class="bi bi-calendar-check me-1"></i> 30 ngày qua
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                    <i class="bi bi-calendar3 me-1"></i> 30 ngày qua
                 </span>
             </div>
-            <div style="position: relative; height: 320px; width: 100%;">
+            <div style="position: relative; height: 330px; width: 100%;">
                 <canvas id="revenueChart"></canvas>
             </div>
         </div>
@@ -100,61 +136,84 @@
 
     <!-- AI Customer Segmentation (Doughnut Chart) -->
     <div class="col-lg-4">
-        <div class="card shadow-sm p-4 bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="fw-bold mb-1 text-dark">
-                        <i class="bi bi-pie-chart text-primary me-2"></i> Phân Nhóm AI
-                    </h5>
-                    <small class="text-muted">Tỉ lệ phân loại khách hàng tự động</small>
+        <div class="dashboard-card h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-pie-chart-fill text-primary"></i> Phân Nhóm Khách Hàng (AI)
+                        </h5>
+                        <small class="text-muted">Tỉ lệ cơ cấu nhóm khách hàng</small>
+                    </div>
+                    <a href="{% url 'dashboard:customers' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size: 11.5px;">
+                        Chi tiết →
+                    </a>
                 </div>
-                <a href="{% url 'dashboard:customers' %}" class="btn btn-sm btn-outline-primary">Chi tiết →</a>
+                <div style="position: relative; height: 260px; width: 100%;">
+                    <canvas id="segmentChart"></canvas>
+                </div>
             </div>
-            <div style="position: relative; height: 260px; width: 100%;">
-                <canvas id="segmentChart"></canvas>
-            </div>
-            <div class="text-center mt-3 small text-muted">
-                Phân tích định kỳ qua thuật toán RFM & mô hình KMeans
+            <div class="p-3 rounded-3 bg-light border mt-3 text-center small text-muted">
+                <i class="bi bi-robot text-primary me-1"></i>Phân tích tự động dựa trên tần suất mua và lịch sử tương tác
             </div>
         </div>
     </div>
 </div>
 
-<!-- Row 2: Top Products Bar Chart & Tables -->
+<!-- Row 2: Top Products Bar Chart & Leaderboard Table -->
 <div class="row g-4 mb-4">
     <!-- Top Bestselling Products Chart & Table -->
     <div class="col-lg-7">
-        <div class="card shadow-sm p-4 bg-white h-100">
+        <div class="dashboard-card h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-bar-chart-line text-warning me-2"></i> Top Nông Sản Bán Chạy (30 Ngày)
-                </h5>
-                <a href="{% url 'dashboard:products' %}" class="btn btn-sm btn-outline-success">Xem kho hàng →</a>
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-trophy-fill text-warning"></i> Top Nông Sản Bán Chạy Nhất (30 Ngày)
+                    </h5>
+                    <small class="text-muted">Xếp hạng các sản phẩm có sản lượng tiêu thụ cao nhất</small>
+                </div>
+                <a href="{% url 'dashboard:products' %}" class="btn btn-sm btn-outline-success rounded-pill px-3" style="font-size: 12px;">
+                    Kho hàng →
+                </a>
             </div>
+
             <!-- Bar Chart -->
             <div style="position: relative; height: 220px; width: 100%;" class="mb-4">
                 <canvas id="topProductsChart"></canvas>
             </div>
-            <!-- Table list -->
+
+            <!-- Leaderboard Table -->
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light small text-muted">
                         <tr>
-                            <th style="width: 50px;">#</th>
+                            <th style="width: 60px;" class="text-center">Hạng</th>
                             <th>Tên Nông Sản</th>
-                            <th class="text-end">Số Lượng Đã Bán</th>
+                            <th class="text-end pe-3">Số Lượng Đã Bán</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in top_products %}
                             <tr>
-                                <td>
-                                    <span class="badge {% if forloop.counter <= 3 %}bg-warning text-dark{% else %}bg-secondary{% endif %} rounded-circle">
-                                        {{ forloop.counter }}
-                                    </span>
+                                <td class="text-center">
+                                    {% if forloop.counter == 1 %}
+                                        <span class="badge rounded-circle p-2 bg-warning text-dark shadow-sm" title="Hạng 1">🥇</span>
+                                    {% elif forloop.counter == 2 %}
+                                        <span class="badge rounded-circle p-2 bg-secondary-subtle text-dark shadow-sm" title="Hạng 2">🥈</span>
+                                    {% elif forloop.counter == 3 %}
+                                        <span class="badge rounded-circle p-2 bg-danger-subtle text-dark shadow-sm" title="Hạng 3">🥉</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border rounded-circle" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;">
+                                            {{ forloop.counter }}
+                                        </span>
+                                    {% endif %}
                                 </td>
-                                <td><strong>{{ item.product_name }}</strong></td>
-                                <td class="text-end fw-bold text-success fs-6">{{ item.total }}</td>
+                                <td>
+                                    <strong class="text-dark">{{ item.product_name }}</strong>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <span class="fw-bold text-success fs-6">{{ item.total }}</span> <small class="text-muted">sản phẩm</small>
+                                </td>
                             </tr>
                         {% empty %}
                             <tr>
@@ -171,37 +230,60 @@
 
     <!-- Customer Segments AI Breakdown List -->
     <div class="col-lg-5">
-        <div class="card shadow-sm p-4 bg-white h-100">
+        <div class="dashboard-card h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-diagram-3 text-info me-2"></i> Chi Tiết Phân Nhóm Khách Hàng
-                </h5>
-                <a href="{% url 'dashboard:behavior' %}" class="btn btn-sm btn-outline-info">Nhật ký AI →</a>
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-diagram-3-fill text-info"></i> Chi Tiết Phân Nhóm Khách Hàng AI
+                    </h5>
+                    <small class="text-muted">Danh sách tài khoản theo nhóm hành vi</small>
+                </div>
+                <a href="{% url 'dashboard:behavior' %}" class="btn btn-sm btn-outline-info rounded-pill px-3" style="font-size: 12px;">
+                    Nhật ký AI →
+                </a>
             </div>
-            <p class="text-muted small mb-3">Danh sách số lượng tài khoản theo từng nhóm hành vi tiêu dùng.</p>
+
             <ul class="list-group list-group-flush">
                 {% for seg in segments %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
                         <div>
                             {% if seg.segment == 'new' %}
-                                <span class="badge bg-warning text-dark me-2">Khách mới</span>
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill me-2">
+                                    <i class="bi bi-stars me-1"></i>Khách mới
+                                </span>
                             {% elif seg.segment == 'interested' %}
-                                <span class="badge bg-primary me-2">Quan tâm</span>
+                                <span class="badge bg-primary px-3 py-2 rounded-pill me-2">
+                                    <i class="bi bi-eye me-1"></i>Quan tâm
+                                </span>
                             {% elif seg.segment == 'loyal' %}
-                                <span class="badge bg-success me-2">Thường xuyên</span>
+                                <span class="badge bg-success px-3 py-2 rounded-pill me-2">
+                                    <i class="bi bi-heart-fill me-1"></i>Thường xuyên
+                                </span>
                             {% elif seg.segment == 'at_risk' %}
-                                <span class="badge bg-danger me-2">Nguy cơ rời bỏ</span>
+                                <span class="badge bg-danger px-3 py-2 rounded-pill me-2">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Nguy cơ rời bỏ
+                                </span>
                             {% else %}
-                                <span class="badge bg-secondary me-2">Bình thường</span>
+                                <span class="badge bg-secondary px-3 py-2 rounded-pill me-2">
+                                    <i class="bi bi-person me-1"></i>Bình thường
+                                </span>
                             {% endif %}
-                            <span class="small text-muted">{{ seg.segment }}</span>
+                            <small class="text-muted font-monospace">{{ seg.segment }}</small>
                         </div>
-                        <span class="badge bg-dark rounded-pill fs-6 px-3">{{ seg.count }} khách</span>
+                        <span class="badge bg-dark rounded-pill fs-6 px-3 py-2">{{ seg.count }} khách</span>
                     </li>
                 {% empty %}
-                    <li class="list-group-item text-muted text-center py-4">Chưa có khách hàng đăng ký.</li>
+                    <li class="list-group-item text-muted text-center py-4">Chưa có khách hàng đăng ký trong hệ thống.</li>
                 {% endfor %}
             </ul>
+
+            <div class="mt-4 p-3 rounded-3 bg-light border small text-muted">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i>
+                    <strong class="text-dark">Tối ưu hóa chiến dịch:</strong>
+                </div>
+                <div>Gửi voucher ưu đãi tới nhóm <em>Nguy cơ rời bỏ</em> và gửi thông báo sản phẩm mùa mới tới nhóm <em>Thường xuyên</em>.</div>
+            </div>
         </div>
     </div>
 </div>
@@ -227,14 +309,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     data: revData,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                    borderWidth: 2.5,
+                    borderWidth: 3,
                     fill: true,
-                    tension: 0.35,
+                    tension: 0.38,
                     pointBackgroundColor: '#059669',
                     pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 3.5,
-                    pointHoverRadius: 6,
+                    pointBorderWidth: 2.5,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
                 }]
             },
             options: {
@@ -243,6 +325,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 10,
+                        cornerRadius: 8,
                         callbacks: {
                             label: function(context) {
                                 const val = context.parsed.y || 0;
@@ -292,8 +379,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         '#ef4444', // Nguy cơ rời bỏ (đỏ)
                         '#64748b'  // Khác (xám)
                     ],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
                 }]
             },
             options: {
@@ -302,20 +390,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { boxWidth: 12, padding: 12, font: { size: 11 } }
+                        labels: { boxWidth: 12, padding: 12, font: { size: 11.5 } }
                     },
                     tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 10,
+                        cornerRadius: 8,
                         callbacks: {
                             label: function(context) {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const current = context.parsed || 0;
                                 const pct = total > 0 ? ((current / total) * 100).toFixed(1) : 0;
-                                return ` ${context.label}: ${current} (${pct}%)`;
+                                return ` ${context.label}: ${current} khách (${pct}%)`;
                             }
                         }
                     }
                 },
-                cutout: '65%'
+                cutout: '68%'
             }
         });
     }
@@ -333,10 +424,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     label: 'Số lượng bán',
                     data: topData,
-                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                    hoverBackgroundColor: '#10b981',
+                    borderColor: '#059669',
                     borderWidth: 1,
-                    borderRadius: 6,
+                    borderRadius: 8,
                 }]
             },
             options: {
@@ -345,6 +437,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 10,
+                        cornerRadius: 8,
                         callbacks: {
                             label: function(context) {
                                 return 'Đã bán: ' + context.parsed.y + ' sản phẩm';

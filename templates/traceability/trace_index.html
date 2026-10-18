@@ -5,48 +5,49 @@
 
 {% block content %}
 <!-- Banner Hero Tra Cứu Nguồn Gốc -->
-<div class="p-4 p-md-5 mb-4 bg-white rounded-3 shadow-sm border">
-    <div class="row align-items-center">
+<div class="agri-hero-banner mb-4">
+    <div class="row align-items-center g-4">
         <div class="col-lg-7">
-            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold mb-3">
-                <i class="bi bi-patch-check-fill me-1"></i> MINH BẠCH NGUỒN GỐC NÔNG SẢN
-            </span>
-            <h1 class="display-6 fw-bold text-dark mb-3">
-                🌾 Tra Cứu Hộ Chiếu Nông Sản Số
+            <div class="hero-pill-badge">
+                <i class="bi bi-shield-fill-check text-warning"></i>
+                <span>CÔNG NGHỆ MINH BẠCH NGUỒN GỐC NÔNG SẢN</span>
+            </div>
+            <h1 class="hero-title text-white">
+                Tra Cứu <span style="color: #6ee7b7;">Hộ Chiếu Nông Sản Số</span>
             </h1>
-            <p class="lead text-muted mb-4" style="font-size: 1.05rem;">
-                Mỗi lô nông sản tại AgriSense đều được cấp một <strong>Hộ Chiếu Số</strong> định danh độc bản.
+            <p class="hero-subtitle mb-4">
+                Mỗi lô nông sản tại AgriSense đều được cấp một <strong>Hộ Chiếu Số độc bản</strong>.
                 Quý khách có thể tra cứu nhanh quy trình canh tác, vùng trồng và chứng nhận an toàn thực phẩm VietGAP/GlobalGAP bên dưới.
             </p>
 
             <!-- Khung Tìm Kiếm Mã Lô Nhanh -->
             <form action="{% url 'traceability:trace_index' %}" method="get" class="mb-3">
-                <div class="input-group input-group-lg shadow-sm">
-                    <span class="input-group-text bg-light text-success border-end-0">
-                        <i class="bi bi-upc-scan fs-5"></i>
+                <div class="input-group input-group-lg shadow rounded-pill overflow-hidden bg-white p-1">
+                    <span class="input-group-text bg-white border-0 text-success ps-3">
+                        <i class="bi bi-upc-scan fs-4"></i>
                     </span>
-                    <input type="text" name="q" class="form-control border-start-0" 
-                           placeholder="Nhập mã lô (VD: BATCH-DUALUOI-2026, BATCH-GUNG-TUOI-29...)" 
+                    <input type="text" name="q" class="form-control border-0 shadow-none px-2" 
+                           placeholder="Nhập mã lô hàng (VD: BATCH-DUALUOI-2026...)" 
                            value="{{ query }}">
-                    <button class="btn btn-success fw-bold px-4" type="submit">
+                    <button class="btn btn-agri-primary px-4 rounded-pill" type="submit">
                         <i class="bi bi-search me-1"></i> Tra Cứu
                     </button>
                 </div>
             </form>
-            <div class="small text-muted">
+            <div class="small text-white opacity-80">
                 <i class="bi bi-lightbulb text-warning me-1"></i>
                 <em>Mẹo: Bạn cũng có thể dùng camera điện thoại hoặc Zalo quét trực tiếp tem mã QR dán trên từng bao bì hoa quả khi nhận hàng.</em>
             </div>
         </div>
 
         <div class="col-lg-5 text-center d-none d-lg-block">
-            <div class="p-4 rounded-4 bg-light border shadow-sm">
-                <div class="display-1 text-success mb-2">
-                    <i class="bi bi-shield-fill-check"></i>
+            <div class="hero-glass-card">
+                <div class="display-3 text-warning mb-2">
+                    <i class="bi bi-patch-check-fill"></i>
                 </div>
-                <h5 class="fw-bold text-dark mb-2">Cam Kết Minh Bạch 100%</h5>
-                <p class="text-muted small mb-0">
-                    Mọi lô hàng đều được ghi nhận nhật ký nông vụ từ lúc gieo hạt, thu hoạch tại vườn đến khi đóng gói bảo quản giao tới tận tay bạn.
+                <h4 class="fw-bold text-white mb-2">Cam Kết Minh Bạch 100%</h4>
+                <p class="small text-white opacity-80 mb-0">
+                    Mọi lô hàng đều được ghi nhận nhật ký nông vụ từ lúc gieo hạt, bón phân hữu cơ, thu hoạch tại vườn đến khi đóng gói bảo quản giao tới tận tay bạn.
                 </p>
             </div>
         </div>
@@ -54,22 +55,22 @@
 </div>
 
 <!-- Tiêu đề danh sách lô hàng -->
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
-        <h4 class="fw-bold mb-1 text-dark">
-            <i class="bi bi-boxes text-success me-2"></i>Danh Sách Lô Hàng Đang Lưu Hành
+        <h4 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-boxes text-success"></i> Danh Sách Lô Hàng Đang Lưu Hành
         </h4>
         <p class="text-muted small mb-0">
             {% if query %}
                 Kết quả tìm kiếm cho: "<strong>{{ query }}</strong>" (Tìm thấy {{ batches|length }} lô hàng)
             {% else %}
-                Hiển thị <strong>{{ batches|length }}</strong> lô hàng nông sản sạch có tem kiểm định
+                Hiển thị <strong>{{ batches|length }}</strong> lô hàng nông sản sạch có tem kiểm định chính quy
             {% endif %}
         </p>
     </div>
     {% if query %}
-        <a href="{% url 'traceability:trace_index' %}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-counterclockwise me-1"></i>Xem tất cả
+        <a href="{% url 'traceability:trace_index' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Xem tất cả các lô
         </a>
     {% endif %}
 </div>
@@ -78,12 +79,12 @@
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
     {% for b in batches %}
         <div class="col">
-            <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden bg-white">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white card-hoverable">
                 <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center border-bottom">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace fw-bold">
                         #{{ b.batch_code }}
                     </span>
-                    <span class="badge bg-white text-secondary border">
+                    <span class="badge bg-white text-dark border shadow-sm">
                         <i class="bi bi-patch-check-fill text-success me-1"></i>{{ b.certification|default:"VietGAP" }}
                     </span>
                 </div>
@@ -93,22 +94,22 @@
                         {% if b.product.image %}
                             <img src="{{ b.product.image.url }}" alt="{{ b.product.name }}" class="rounded-3 border shadow-sm" style="width: 68px; height: 68px; object-fit: cover;">
                         {% else %}
-                            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-success fs-3" style="width: 68px; height: 68px;">
+                            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-success fs-3 border" style="width: 68px; height: 68px;">
                                 🥬
                             </div>
                         {% endif %}
                         <div class="flex-grow-1 overflow-hidden">
-                            <h5 class="fw-bold mb-1 text-truncate">
+                            <h5 class="fw-bold mb-1 text-truncate" style="font-size: 15px;">
                                 <a href="{% url 'products:detail' slug=b.product.slug %}" class="text-decoration-none text-dark hover-success">
                                     {{ b.product.name }}
                                 </a>
                             </h5>
-                            <span class="badge bg-light text-muted border">{{ b.product.category.name }}</span>
-                            <div class="fw-bold text-danger mt-1">{{ b.product.price|floatformat:0 }} đ <small class="text-muted fw-normal">/ {{ b.product.unit }}</small></div>
+                            <span class="badge bg-light text-muted border small">{{ b.product.category.name }}</span>
+                            <div class="fw-bold text-danger mt-1 small">{{ b.product.price|floatformat:0 }} đ <span class="text-muted fw-normal">/ {{ b.product.unit }}</span></div>
                         </div>
                     </div>
 
-                    <div class="bg-light p-2 rounded-2 small text-muted mb-3 flex-grow-1">
+                    <div class="bg-light p-3 rounded-3 small text-muted mb-3 flex-grow-1 border">
                         <div class="mb-1 text-truncate" title="{{ b.planting_location }}">
                             <i class="bi bi-geo-alt-fill text-danger me-1"></i><strong>Vùng trồng:</strong> {{ b.planting_location }}
                         </div>
@@ -122,11 +123,11 @@
 
                     <!-- Nút bấm hành động của khách -->
                     <div class="d-flex gap-2">
-                        <a href="{% url 'traceability:public_trace' batch_code=b.batch_code %}" class="btn btn-success btn-sm flex-grow-1 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center gap-1">
+                        <a href="{% url 'traceability:public_trace' batch_code=b.batch_code %}" class="btn btn-success btn-sm flex-grow-1 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center gap-1 rounded-pill py-2">
                             <i class="bi bi-shield-check"></i> Xem Hộ Chiếu Số
                         </a>
-                        <a href="{% url 'products:detail' slug=b.product.slug %}" class="btn btn-outline-secondary btn-sm" title="Đặt mua sản phẩm này">
-                            <i class="bi bi-cart-plus"></i> Mua
+                        <a href="{% url 'products:detail' slug=b.product.slug %}" class="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" title="Đặt mua sản phẩm này">
+                            <i class="bi bi-cart-plus"></i>
                         </a>
                     </div>
                 </div>
@@ -134,10 +135,16 @@
         </div>
     {% empty %}
         <div class="col-12 text-center py-5">
-            <div class="display-1 text-muted opacity-50 mb-3"><i class="bi bi-search"></i></div>
-            <h5 class="fw-bold text-dark">Không tìm thấy lô hàng nào phù hợp</h5>
-            <p class="text-muted small">Vui lòng kiểm tra lại mã lô hàng hoặc thử tìm với tên nông sản khác.</p>
-            <a href="{% url 'traceability:trace_index' %}" class="btn btn-outline-success">Xem tất cả các lô hàng</a>
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                <div class="display-1 text-muted opacity-50 mb-3"><i class="bi bi-search"></i></div>
+                <h5 class="fw-bold text-dark">Không tìm thấy lô hàng nào phù hợp</h5>
+                <p class="text-muted small mb-4">Vui lòng kiểm tra lại mã lô hàng hoặc thử tìm với tên nông sản khác.</p>
+                <div>
+                    <a href="{% url 'traceability:trace_index' %}" class="btn btn-agri-primary">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Xem Tất Cả Các Lô Hàng
+                    </a>
+                </div>
+            </div>
         </div>
     {% endfor %}
 </div>
@@ -147,14 +154,23 @@
     <nav class="mb-5">
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">« Trước</a></li>
+                <li class="page-item">
+                    <a class="page-link rounded-pill me-1 px-3" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        <i class="bi bi-chevron-left me-1"></i>Trước
+                    </a>
+                </li>
             {% endif %}
-            <li class="page-item disabled"><span class="page-link">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+            <li class="page-item active">
+                <span class="page-link rounded-pill px-3 bg-success border-success">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            </li>
             {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Sau »</a></li>
+                <li class="page-item">
+                    <a class="page-link rounded-pill ms-1 px-3" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        Sau <i class="bi bi-chevron-right ms-1"></i>
+                    </a>
+                </li>
             {% endif %}
         </ul>
     </nav>
 {% endif %}
-
 {% endblock %}

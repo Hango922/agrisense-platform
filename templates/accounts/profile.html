@@ -1,62 +1,103 @@
 <!-- File: templates/accounts/profile.html -->
 {% extends "base.html" %}
 
-{% block title %}Hồ sơ người dùng - Nông Sản Sạch{% endblock %}
+{% block title %}Hồ sơ cá nhân - AgriSense{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body text-center p-4">
-                <div class="display-4 text-success mb-2">👤</div>
-                <h4 class="fw-bold mb-1">{{ user.username }}</h4>
-                <p class="text-muted mb-2">{{ user.email }}</p>
-                <div class="mb-3">
-                    <span class="badge bg-success px-3 py-2">
-                        Nhóm: {{ user.get_segment_display }}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hồ sơ cá nhân</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <!-- Cột trái: Thẻ định danh người dùng -->
+    <div class="col-lg-4 col-md-5">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="p-4 text-center" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-bottom: 1px solid #d1fae5;">
+                <div class="nav-user-avatar mx-auto mb-3 shadow" style="width: 72px; height: 72px; font-size: 2rem;">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                <h4 class="fw-bold text-dark mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted small mb-2">{{ user.email|default:"Chưa cập nhật email" }}</p>
+                <div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold" style="font-size: 12px;">
+                        <i class="bi bi-person-badge-fill me-1"></i>Phân nhóm: {{ user.get_segment_display }}
                     </span>
                 </div>
-                <ul class="list-group list-group-flush text-start small">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>Số điện thoại:</span>
-                        <strong>{{ user.phone|default:"Chưa cập nhật" }}</strong>
+            </div>
+
+            <div class="p-4">
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted"><i class="bi bi-telephone me-2 text-success"></i>Số điện thoại:</span>
+                        <strong class="text-dark">{{ user.phone|default:"Chưa cập nhật" }}</strong>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>Ngày tham gia:</span>
-                        <strong>{{ user.date_joined|date:"d/m/Y" }}</strong>
+                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted"><i class="bi bi-calendar-event me-2 text-primary"></i>Ngày tham gia:</span>
+                        <strong class="text-dark">{{ user.date_joined|date:"d/m/Y" }}</strong>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted"><i class="bi bi-shield-check me-2 text-warning"></i>Vai trò:</span>
+                        <strong class="text-dark">
+                            {% if user.is_staff or user.is_superuser %}
+                                <span class="text-primary fw-bold">Quản trị viên</span>
+                            {% else %}
+                                <span>Khách hàng thành viên</span>
+                            {% endif %}
+                        </strong>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold text-success">Sổ Địa Chỉ Giao Hàng</h5>
+
+    <!-- Cột phải: Sổ địa chỉ & Lối tắt -->
+    <div class="col-lg-8 col-md-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-bookmark-fill text-success"></i> Sổ Địa Chỉ Giao Hàng
+                </h5>
+                <span class="badge bg-light text-muted border small">{{ addresses|length }} địa chỉ</span>
             </div>
-            <div class="card-body">
-                {% if addresses %}
-                    <div class="list-group">
-                        {% for addr in addresses %}
-                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+
+            {% if addresses %}
+                <div class="row g-3">
+                    {% for addr in addresses %}
+                        <div class="col-12">
+                            <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="mb-1 fw-bold">{{ addr.full_name }} ({{ addr.phone }})</h6>
-                                    <p class="mb-1 text-muted small">{{ addr.address }}</p>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h6 class="mb-0 fw-bold text-dark">{{ addr.full_name }}</h6>
+                                        <span class="badge bg-secondary-subtle text-secondary small">{{ addr.phone }}</span>
+                                        {% if addr.is_default %}
+                                            <span class="badge bg-success">Mặc định</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-muted small mb-0"><i class="bi bi-geo-alt text-danger me-1"></i>{{ addr.address }}</p>
                                 </div>
-                                {% if addr.is_default %}
-                                    <span class="badge bg-primary">Mặc định</span>
-                                {% endif %}
                             </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted mb-0">Bạn chưa lưu địa chỉ nào. Địa chỉ sẽ được lưu tự động khi bạn đặt hàng.</p>
-                {% endif %}
-            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-geo-alt fs-2 d-block mb-2 opacity-50"></i>
+                    <p class="small mb-0">Bạn chưa lưu địa chỉ nào. Địa chỉ nhận hàng sẽ được hệ thống tự động lưu trữ khi bạn hoàn tất đặt đơn hàng đầu tiên.</p>
+                </div>
+            {% endif %}
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'cart_orders:order_history' %}" class="btn btn-outline-success">Xem đơn hàng của tôi</a>
-            <a href="{% url 'home' %}" class="btn btn-success">Tiếp tục mua sắm</a>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'cart_orders:order_history' %}" class="btn btn-agri-outline-green">
+                <i class="bi bi-receipt me-1"></i> Xem lịch sử đơn hàng của tôi
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-agri-primary">
+                <i class="bi bi-bag-plus me-1"></i> Mua sắm nông sản ngay
+            </a>
         </div>
     </div>
 </div>
