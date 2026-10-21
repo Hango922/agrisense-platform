@@ -219,10 +219,10 @@ def format_payment_method_prompt(product, qty, name, phone, address, is_update=F
         f"• Tổng thanh toán: **{format_currency(final_amount)}**\n"
         f"• Người nhận: **{name}** - {phone}\n"
         f"• Địa chỉ: **{address}**\n\n"
-        f"👉 **Bạn muốn thanh toán theo hình thức nào ạ?**\n"
-        f"1️⃣ [button:💵 Thanh toán khi nhận hàng (COD)](COD) — Trả tiền mặt khi nhận hàng\n"
-        f"2️⃣ [button:💳 Chuyển khoản VietQR](Chuyển khoản VietQR) — Quét mã QR Napas 247\n\n"
-        f"*(Bạn hãy bấm nút ở trên hoặc nhắn **'COD'** / **'Chuyển khoản'** để hoàn tất đơn hàng nhé!)*"
+        f"👉 **Bạn muốn thanh toán theo hình thức nào ạ?**\n\n"
+        f"[choice:Thanh toán khi nhận hàng (COD)|Trả tiền mặt cho shipper khi nhận hàng|💵](COD)\n"
+        f"[choice:Chuyển khoản VietQR|Quét mã QR Napas 247 qua app ngân hàng|💳](Chuyển khoản VietQR)\n\n"
+        f"*(Bạn hãy bấm chọn một trong 2 hình thức ở trên hoặc nhắn tin **'COD'** / **'Chuyển khoản'** để hoàn tất đơn hàng nhé!)*"
     )
 
 
@@ -350,17 +350,17 @@ def handle_order_conversation(message, user=None, session_dict=None):
             # Khách nhắn "Đồng ý" / "Xác nhận" nhưng chưa chọn hình thức thanh toán cụ thể
             if any(re.search(pat, msg_lower, re.IGNORECASE) for pat in CONFIRM_TRIGGERS):
                 return True, (
-                    f"🌾 Cảm ơn bạn! Để hoàn tất đơn hàng **{qty} {product.unit} {product.name}**, bạn vui lòng chọn hình thức thanh toán:\n"
-                    f"1️⃣ [button:💵 Thanh toán khi nhận hàng (COD)](COD) — Trả tiền mặt cho shipper\n"
-                    f"2️⃣ [button:💳 Chuyển khoản VietQR](Chuyển khoản VietQR) — Quét mã QR Napas 247\n\n"
-                    f"*(Bạn chỉ cần bấm nút ở trên hoặc nhắn **'COD'** / **'Chuyển khoản'** nhé!)*"
+                    f"🌾 Cảm ơn bạn! Để hoàn tất đơn hàng **{qty} {product.unit} {product.name}**, bạn vui lòng chọn hình thức thanh toán:\n\n"
+                    f"[choice:Thanh toán khi nhận hàng (COD)|Trả tiền mặt cho shipper khi nhận hàng|💵](COD)\n"
+                    f"[choice:Chuyển khoản VietQR|Quét mã QR Napas 247 qua app ngân hàng|💳](Chuyển khoản VietQR)\n\n"
+                    f"*(Bạn chỉ cần bấm chọn một trong 2 hình thức ở trên hoặc nhắn tin nhé!)*"
                 )
 
             # Nhắc nhở người dùng chọn phương thức thanh toán
             return True, (
-                f"🌾 Bạn vui lòng chọn hình thức thanh toán để tôi hoàn tất đơn ngay nhé:\n"
-                f"1️⃣ [button:💵 Thanh toán khi nhận hàng (COD)](COD) — Trả tiền mặt cho shipper khi nhận hàng\n"
-                f"2️⃣ [button:💳 Chuyển khoản VietQR](Chuyển khoản VietQR) — Quét mã QR Napas 247\n\n"
+                f"🌾 Bạn vui lòng chọn hình thức thanh toán để tôi hoàn tất đơn ngay nhé:\n\n"
+                f"[choice:Thanh toán khi nhận hàng (COD)|Trả tiền mặt cho shipper khi nhận hàng|💵](COD)\n"
+                f"[choice:Chuyển khoản VietQR|Quét mã QR Napas 247 qua app ngân hàng|💳](Chuyển khoản VietQR)\n\n"
                 f"*(Hoặc nhắn 'Hủy' nếu bạn muốn đổi ý không mua nữa)*"
             )
 

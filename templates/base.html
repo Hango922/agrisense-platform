@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <!-- AgriSense Custom Stylesheet -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3.3">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={% now 'U' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -279,12 +279,22 @@
                     Xin chào! Tôi là Trợ lý AI của AgriSense. Tôi có thể tư vấn nông sản theo mùa, báo giá hoặc giúp bạn lên đơn hàng tự động ngay tại đây!
                 </div>
             </div>
-            <!-- Quick Suggestion Chips -->
-            <div class="chatbot-chips" id="chatbot-chips">
-                <button type="button" class="chip-btn" data-query="Hôm nay có rau củ gì tươi ngon?">🥦 Rau sạch tươi</button>
-                <button type="button" class="chip-btn" data-query="Giá bưởi da xanh bao nhiêu?">🍊 Bưởi da xanh</button>
-                <button type="button" class="chip-btn" data-query="Chính sách giao hàng và phí ship?">🚚 Phí ship</button>
-                <button type="button" class="chip-btn" data-query="Tôi muốn đặt mua 2kg cà chua bi">🛒 Lên đơn tự động</button>
+            <!-- Quick Suggestion Chips Container (Hỗ trợ kéo chuột, lăn chuột & nút điều hướng) -->
+            <div class="chatbot-chips-container">
+                <button type="button" class="chip-scroll-arrow left" id="chip-scroll-left" aria-label="Cuộn sang trái" title="Xem gợi ý trước">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="chatbot-chips" id="chatbot-chips" title="Nhấp và kéo chuột hoặc dùng con lăn để xem thêm gợi ý">
+                    <button type="button" class="chip-btn" data-query="Hôm nay có rau củ gì tươi ngon?">🥦 Rau sạch tươi</button>
+                    <button type="button" class="chip-btn" data-query="Giá bưởi da xanh bao nhiêu?">🍊 Bưởi da xanh</button>
+                    <button type="button" class="chip-btn" data-query="Chính sách giao hàng và phí ship?">🚚 Phí ship</button>
+                    <button type="button" class="chip-btn" data-query="Tôi muốn đặt mua 2kg cà chua bi">🛒 Lên đơn tự động</button>
+                    <button type="button" class="chip-btn" data-query="Tra cứu nguồn gốc lô hàng nông sản">🔍 Tra nguồn gốc</button>
+                    <button type="button" class="chip-btn" data-query="Các phương thức thanh toán có sẵn?">💳 Thanh toán</button>
+                </div>
+                <button type="button" class="chip-scroll-arrow right" id="chip-scroll-right" aria-label="Cuộn sang phải" title="Xem gợi ý tiếp theo">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
             <div class="chatbot-input-group">
                 <input type="text" id="chatbot-input" placeholder="Hỏi giá, nguồn gốc hoặc lên đơn nhanh..." autocomplete="off">
