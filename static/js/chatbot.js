@@ -30,10 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let escaped = escapeHtml(text);
         // Format markdown bold
         escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Format interactive quick action buttons [button:Label](query)
+        escaped = escaped.replace(/\[button:(.*?)\]\(([^\)]+)\)/g, '<button type="button" class="chat-quick-action" data-query="$2"><i class="bi bi-cursor-fill me-1"></i>$1</button>');
         // Format markdown image ![alt](url)
         escaped = escaped.replace(/!\[(.*?)\]\(([^\)]+)\)/g, '<div class="text-center my-2"><img src="$2" alt="$1" class="img-fluid rounded border shadow-sm" style="max-width: 180px; background: #fff;" /><div class="small text-muted mt-1">$1</div></div>');
-        // Format markdown link [title](url)
-        escaped = escaped.replace(/\[(.*?)\]\(((?:\/|[a-zA-Z0-9#_.-]+)[^\)]*)\)/g, '<a href="$2" class="fw-bold text-success text-decoration-underline">$1</a>');
+        // Format markdown link [title](url) - chỉ áp dụng cho URL hợp lệ bắt đầu bằng / hoặc http/https
+        escaped = escaped.replace(/\[(.*?)\]\(((?:https?:\/\/|\/(?:orders|products|cart|trace|accounts)[^\s\)]*)[^\)]*)\)/g, '<a href="$2" class="fw-bold text-success text-decoration-underline" target="_blank" rel="noopener noreferrer">$1</a>');
         // Format newlines
         escaped = escaped.replace(/\n/g, '<br>');
         return escaped;
@@ -119,6 +121,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 sendMessage();
             }
         });
+    });
+
+    // Xử lý khi nhấn vào các nút Quick Action bên trong tin nhắn bot (như Chọn hình thức thanh toán COD / VietQR)
+    messages.addEventListener('click', (e) => {
+        const btn = e.target.closest('.chat-quick-action');
+        if (btn) {
+            e.preventDefault();
+            const query = btn.getAttribute('data-query');
+            if (query && input) {
+                input.value = query;
+                sendMessage();
+            }
+            return;
+        }
+
+        // Đảm bảo không bao giờ điều hướng sang URL /COD hoặc /VietQR nếu lỡ click vào liên kết
+        const link = e.target.closest('a');
+        if (link) {
+            const href = (link.getAttribute('href') || '').trim();
+            const text = (link.textContent || '').trim();
+            if (href === 'COD' || href === '/COD' || href.toLowerCase() === 'cod' || href.toLowerCase() === '/cod') {
+                e.preventDefault();
+                if (input) {
+                    input.value = 'COD';
+                    sendMessage();
+                }
+                return;
+            }
+            if (href.includes('VietQR') || text.includes('VietQR')) {
+                e.preventDefault();
+                if (input) {
+                    input.value = 'Chuyển khoản VietQR';
+                    sendMessage();
+                }
+                return;
+            }
+        }
     });
 
     async function sendMessage() {

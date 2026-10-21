@@ -1038,6 +1038,37 @@ form input[type="number"]:focus {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
+/* Nút bấm hành động nhanh bên trong tin nhắn bot (như chọn phương thức thanh toán) */
+.chat-quick-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1.5px solid #86efac;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    margin: 5px 6px 5px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.chat-quick-action:hover {
+    background: #16a34a;
+    color: #ffffff;
+    border-color: #16a34a;
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 10px rgba(22, 163, 74, 0.28);
+}
+
+.chat-quick-action:active {
+    transform: translateY(0);
+}
+
 /* 3 Chấm Typing Wave Animation */
 .typing-wave {
     display: inline-flex;

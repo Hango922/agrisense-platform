@@ -2,10 +2,11 @@
 """
 Phân hệ Trợ lý Đặt hàng Thông minh (Conversational Ordering Assistant) cho Chatbot AI:
 - Nhận diện ý định mua hàng / lên đơn trực tiếp từ câu chat tự nhiên.
-- Trích xuất sản phẩm, số lượng, họ tên, số điện thoại và địa chỉ giao hàng.
+- Trích xuất sản phẩm, số lượng, họ tên, số điện thoại, địa chỉ giao hàng và phương thức thanh toán.
+- BẮT BUỘC hỏi và cho phép khách hàng lựa chọn hình thức thanh toán (COD hoặc chuyển khoản VietQR).
 - Hỗ trợ hội thoại đa lượt (multi-turn) lưu trạng thái qua session.
 - Tự động tận dụng sổ địa chỉ mặc định của tài khoản nếu có.
-- Tạo đơn hàng COD chuẩn hóa và giảm trừ tồn kho an toàn trong cơ sở dữ liệu.
+- Tạo đơn hàng chuẩn hóa và giảm trừ tồn kho an toàn trong cơ sở dữ liệu.
 """
 import re
 from decimal import Decimal
@@ -28,6 +29,9 @@ CONFIRM_TRIGGERS = [
 ]
 
 PHONE_PATTERN = r'(?:\b(?:\+84|0)[35789](?:[\s.-]?\d){8}\b)'
+
+PAYMENT_COD_PATTERN = r'\b(cod|tiền mặt|tien mat|trả sau|tra sau|khi nhận|khi nhan|nhận hàng mới trả|nhan hang moi tra|nhận hàng thanh toán|nhan hang thanh toan)\b'
+PAYMENT_VIETQR_PATTERN = r'\b(vietqr|qr|chuyển khoản|chuyen khoan|ck|ngân hàng|ngan hang|chuyển tiền|chuyen tien|banking|napas|quét mã|quet ma|bằng qr|bang qr)\b'
 
 
 def sanitize_name(name, default_name="Khách hàng"):
@@ -58,7 +62,6 @@ def extract_phone(text):
     Trích xuất số điện thoại di động Việt Nam:
     - Chấp nhận 10 chữ số bắt đầu bằng 03, 05, 07, 08, 09 (hoặc +843, +845, +847, +848, +849).
     - Hỗ trợ các định dạng phân cách như: 0912.345.678, 0912 345 678, 0912-345-678, +84912345678.
-    - KHÔNG gộp các con số rải rác từ giá tiền trong toàn câu.
     """
     # 1. Tìm chuỗi số điện thoại định dạng chuẩn có thể chứa khoảng trắng, dấu chấm hoặc gạch nối
     match = re.search(PHONE_PATTERN, text)
@@ -116,6 +119,39 @@ def extract_quantity(text, product_name=""):
     return 1
 
 
+def extract_payment_method(text):
+    """
+    Trích xuất hình thức thanh toán từ câu chat:
+    - 'cod': Thanh toán tiền mặt khi nhận hàng (COD)
+    - 'vietqr': Chuyển khoản VietQR qua ngân hàng (Napas 247)
+    - Trả về None nếu không phát hiện hoặc người dùng chưa chọn.
+    """
+    text_lower = text.lower().strip()
+    # Kiểm tra lựa chọn theo phím số ngắn gọn "1" hoặc "2"
+    stripped = text_lower.strip(' .!?,;:()[]{}')
+    if stripped in ('1', 'chọn 1', 'chon 1', 'phương thức 1', 'phuong thuc 1', 'hình thức 1', 'hinh thuc 1', 'số 1', 'so 1'):
+        return 'cod'
+    if stripped in ('2', 'chọn 2', 'chon 2', 'phương thức 2', 'phuong thuc 2', 'hình thức 2', 'hinh thuc 2', 'số 2', 'so 2'):
+        return 'vietqr'
+
+    has_vietqr = bool(re.search(PAYMENT_VIETQR_PATTERN, text_lower))
+    has_cod = bool(re.search(PAYMENT_COD_PATTERN, text_lower))
+
+    if has_vietqr and not has_cod:
+        return 'vietqr'
+    if has_cod and not has_vietqr:
+        return 'cod'
+
+    if has_vietqr and has_cod:
+        m_vqr = re.search(PAYMENT_VIETQR_PATTERN, text_lower)
+        m_cod = re.search(PAYMENT_COD_PATTERN, text_lower)
+        if m_vqr.start() > m_cod.start():
+            return 'vietqr'
+        return 'cod'
+
+    return None
+
+
 def extract_address_and_name(text, phone=None):
     """
     Trích xuất tên người nhận và địa chỉ từ văn bản.
@@ -126,7 +162,6 @@ def extract_address_and_name(text, phone=None):
         cleaned = re.sub(rf'(?:sđt|sdt|đt|dt|số đt|số điện thoại|so dien thoai|tel|phone)?\s*[:\s]*{phone}', '', cleaned, flags=re.IGNORECASE)
 
     # Tìm tên người nhận nếu có
-    # Sử dụng \b boundary để không bị nhầm lẫn với các từ kết thúc bằng "anh" (vd: "xanh", "chanh", "thanh long")
     name_match = re.search(
         r'\b(?:tên\s*(?:người\s*nhận|là)?|người\s*nhận|nguoi\s*nhan|anh|chị|chi|em|bác|bac|cô|co)\s*[:\s]+([^\n,.;]+?)(?=\s+(?:ở|tại|sđt|sdt|đt|dt|phone|số|so\b)|[,\n.;]|$)',
         cleaned,
@@ -135,7 +170,6 @@ def extract_address_and_name(text, phone=None):
     extracted_name = None
     if name_match:
         candidate = name_match.group(1).strip()
-        # Xác thực tên: độ dài từ 2 đến 40 ký tự, chỉ chứa chữ cái và khoảng trắng, không chứa từ khóa nông sản/giá tiền
         if 2 <= len(candidate) <= 40 and re.match(r'^[A-Za-zÀ-ỹ\s]+$', candidate):
             blacklist = {'đ', 'kg', 'vnd', 'vnđ', 'dong', 'giao', 'ship', 'mua', 'dat', 'xanh', 'do', 'trang', 'don', 'hang'}
             if not (set(candidate.lower().split()) & blacklist):
@@ -147,19 +181,18 @@ def extract_address_and_name(text, phone=None):
     if addr_match:
         extracted_addr = addr_match.group(1).strip()
     else:
-        # Nếu không có từ khóa địa chỉ, kiểm tra xem câu có chứa từ chỉ đường/phố/ngõ/huyện/quận/tỉnh/thành phố không
         addr_cues = ['đường', 'phố', 'ngõ', 'ngách', 'số', 'quận', 'huyện', 'phường', 'xã', 'thành phố', 'hà nội', 'hcm', 'đà nẵng', 'hải phòng', 'cần thơ']
         cleaned_lower = cleaned.lower()
         if any(cue in cleaned_lower for cue in addr_cues):
-            # Cắt các từ rác đầu câu
             junk_pattern = r'^(?:sđt|sdt|đt|dt|số điện thoại|so dien thoai|giao|gui|ship|đến|den|về|ve|cho)\s*[:\s]*'
             extracted_addr = re.sub(junk_pattern, '', cleaned.strip(), flags=re.IGNORECASE)
         else:
             extracted_addr = None
 
     if extracted_addr:
-        # Xóa từ rác cuối câu như ", sđt", ", sdt", dấu phẩy, chấm thừa
+        # Xóa từ rác cuối câu như ", sđt", ", sdt", dấu phẩy, chấm thừa, từ khóa thanh toán
         extracted_addr = re.sub(r'[,.\s]*(?:sđt|sdt|đt|dt|số đt|số điện thoại|phone|tel)?\s*$', '', extracted_addr, flags=re.IGNORECASE)
+        extracted_addr = re.sub(r'[,.\s]*(?:thanh toán|tt|pttt)?\s*(?:cod|tiền mặt|chuyển khoản|vietqr).*$', '', extracted_addr, flags=re.IGNORECASE)
         extracted_addr = extracted_addr.strip(',. ')
         if len(extracted_addr) > 255:
             extracted_addr = extracted_addr[:255]
@@ -167,16 +200,43 @@ def extract_address_and_name(text, phone=None):
     return extracted_name, extracted_addr
 
 
-def format_order_success_message(order, product, qty, extra_note=None):
-    """Định dạng câu trả lời hoàn tất đặt hàng kèm thông tin chuyển khoản VietQR Napas 247."""
+def format_payment_method_prompt(product, qty, name, phone, address, is_update=False):
+    """
+    Định dạng câu hỏi yêu cầu người dùng chọn hình thức thanh toán kèm tóm tắt đơn:
+    Cung cấp cả nút bấm nhanh [button:...] lẫn hướng dẫn gõ phím.
+    """
     subtotal = product.price * qty
-    ship_txt = "Miễn phí vận chuyển" if order.shipping_fee == 0 else f"{format_currency(order.shipping_fee)}"
-    qr_url = get_vietqr_url(order)
-    qr_info = get_vietqr_info(order)
+    shipping_fee = 0 if subtotal >= 500000 else 30000
+    final_amount = subtotal + shipping_fee
+    ship_txt = "Miễn phí vận chuyển" if shipping_fee == 0 else f"{format_currency(shipping_fee)}"
 
-    note_line = f"\n• Ghi chú: {extra_note}" if extra_note else ""
+    header = "🌾 **Đã cập nhật thông tin nhận hàng:**" if is_update else "🌾 **Xác nhận thông tin đặt hàng:**"
 
     return (
+        f"{header}\n"
+        f"• Sản phẩm: **{qty} {product.unit} {product.name}** ({format_currency(subtotal)})\n"
+        f"• Phí giao hàng: **{ship_txt}** (Miễn phí từ 500.000 đ)\n"
+        f"• Tổng thanh toán: **{format_currency(final_amount)}**\n"
+        f"• Người nhận: **{name}** - {phone}\n"
+        f"• Địa chỉ: **{address}**\n\n"
+        f"👉 **Bạn muốn thanh toán theo hình thức nào ạ?**\n"
+        f"1️⃣ [button:💵 Thanh toán khi nhận hàng (COD)](COD) — Trả tiền mặt khi nhận hàng\n"
+        f"2️⃣ [button:💳 Chuyển khoản VietQR](Chuyển khoản VietQR) — Quét mã QR Napas 247\n\n"
+        f"*(Bạn hãy bấm nút ở trên hoặc nhắn **'COD'** / **'Chuyển khoản'** để hoàn tất đơn hàng nhé!)*"
+    )
+
+
+def format_order_success_message(order, product, qty, extra_note=None):
+    """
+    Định dạng câu trả lời hoàn tất đặt hàng tùy theo hình thức thanh toán đã chọn:
+    - Nếu là VietQR: Hiển thị mã QR, thông tin ngân hàng Napas 247 và link tải bill.
+    - Nếu là COD: Hiển thị xác nhận giao hàng tiền mặt, lời nhắc chuẩn bị tiền, KHÔNG hiển thị mã QR.
+    """
+    subtotal = product.price * qty
+    ship_txt = "Miễn phí vận chuyển" if order.shipping_fee == 0 else f"{format_currency(order.shipping_fee)}"
+    note_line = f"\n• Ghi chú: {extra_note}" if extra_note else ""
+
+    base_info = (
         f"🎉 **ĐẶT HÀNG THÀNH CÔNG QUA CHATBOT AI!**\n\n"
         f"• Mã đơn hàng: **{order.order_code}**\n"
         f"• Sản phẩm: **{qty} {product.unit} {product.name}** ({format_currency(subtotal)})\n"
@@ -184,15 +244,33 @@ def format_order_success_message(order, product, qty, extra_note=None):
         f"• Tổng thanh toán: **{format_currency(order.final_amount)}**\n"
         f"• Người nhận: **{order.full_name}** - {order.phone}\n"
         f"• Địa chỉ: {order.address}{note_line}\n\n"
-        f"💳 **Thanh toán chuyển khoản VietQR (Napas 247):**\n"
-        f"![Mã VietQR thanh toán {order.order_code}]({qr_url})\n"
-        f"• Ngân hàng: **{qr_info['bank_name']}** ({qr_info['bank_id']})\n"
-        f"• Số tài khoản: **{qr_info['account_no']}** ({qr_info['account_name']})\n"
-        f"• Số tiền: **{format_currency(order.final_amount)}**\n"
-        f"• Nội dung CK: **{qr_info['memo']}**\n\n"
-        f"👉 [Bấm vào đây để xem chi tiết đơn hàng & quét mã QR](/orders/{order.order_code}/)\n\n"
-        f"Cảm ơn bạn đã tin chọn nông sản sạch tại AgriSense! Đơn hàng sẽ được nhân viên chuẩn bị và giao sớm nhất."
     )
+
+    if order.payment_method == 'vietqr':
+        qr_url = get_vietqr_url(order)
+        qr_info = get_vietqr_info(order)
+        payment_section = (
+            f"💳 **Hình thức thanh toán: Chuyển khoản VietQR (Napas 247)**\n\n"
+            f"![Mã VietQR thanh toán {order.order_code}]({qr_url})\n"
+            f"• Ngân hàng: **{qr_info['bank_name']}** ({qr_info['bank_id']})\n"
+            f"• Số tài khoản: **{qr_info['account_no']}** ({qr_info['account_name']})\n"
+            f"• Số tiền: **{format_currency(order.final_amount)}**\n"
+            f"• Nội dung CK: **{qr_info['memo']}**\n\n"
+            f"👉 [Bấm vào đây để xem chi tiết đơn hàng & quét mã QR](/orders/{order.order_code}/)\n\n"
+            f"*(Sau khi chuyển khoản, bạn có thể tải ảnh chụp bill lên trang chi tiết đơn hàng để được xác nhận nhanh nhất nhé!)*\n\n"
+            f"Cảm ơn bạn đã tin chọn nông sản sạch tại AgriSense! Đơn hàng sẽ được nhân viên chuẩn bị và giao sớm nhất."
+        )
+    else:  # COD
+        payment_section = (
+            f"💵 **Hình thức thanh toán: Thanh toán tiền mặt khi nhận hàng (COD)**\n"
+            f"• Trạng thái đơn: **Chờ xác nhận & chuẩn bị hàng**\n"
+            f"• Shipper sẽ liên hệ số điện thoại **{order.phone}** trước khi phát hàng.\n"
+            f"• Quý khách vui lòng chuẩn bị số tiền **{format_currency(order.final_amount)}** khi nhận nông sản nhé.\n\n"
+            f"👉 [Bấm vào đây để xem chi tiết đơn hàng](/orders/{order.order_code}/)\n\n"
+            f"Cảm ơn bạn đã tin chọn nông sản sạch tại AgriSense! Nông sản tươi ngon sẽ được giao đến bạn trong thời gian sớm nhất! 🌾"
+        )
+
+    return base_info + payment_section
 
 
 def handle_order_conversation(message, user=None, session_dict=None):
@@ -224,30 +302,33 @@ def handle_order_conversation(message, user=None, session_dict=None):
             session_dict.pop('chatbot_order_draft', None)
             return True, "Rất tiếc, sản phẩm bạn chọn hiện không còn khả dụng trên hệ thống. Bạn vui lòng chọn lại sản phẩm nhé!"
 
-        # A. Đang chờ XÁC NHẬN đơn với địa chỉ có sẵn
         user_default_name = (user.get_full_name() or user.username if user else 'Khách hàng')
 
-        if step == 'awaiting_confirm':
-            # Kiểm tra nếu khách xác nhận đồng ý
-            if any(re.search(pat, msg_lower, re.IGNORECASE) for pat in CONFIRM_TRIGGERS):
+        # A. Đang ở bước CHỜ CHỌN HÌNH THỨC THANH TOÁN (awaiting_payment_method hoặc awaiting_confirm)
+        if step in ('awaiting_payment_method', 'awaiting_confirm'):
+            # Kiểm tra xem khách có chọn hình thức thanh toán không (COD hoặc VietQR)
+            pm = extract_payment_method(msg)
+            if pm:
                 address_data = {
                     'full_name': sanitize_name(draft.get('full_name'), user_default_name),
                     'phone': draft.get('phone') or '0900000000',
                     'address': draft.get('address') or 'Địa chỉ giao hàng',
                 }
+                note_suffix = "COD" if pm == 'cod' else "VietQR"
                 try:
                     order = create_direct_order(
                         user=user,
                         items_data=[{'product': product, 'quantity': qty}],
                         address_data=address_data,
-                        note="Đặt hàng tự động qua Chatbot AI (Xác nhận địa chỉ mặc định)"
+                        note=f"Đặt hàng tự động qua Chatbot AI ({note_suffix})",
+                        payment_method=pm
                     )
                     session_dict.pop('chatbot_order_draft', None)
                     return True, format_order_success_message(order, product, qty)
                 except Exception as e:
                     return True, f"⚠️ Rất tiếc, có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
 
-            # Khách không bấm đồng ý mà cung cấp SĐT / Địa chỉ mới
+            # Khách có thể gửi SĐT hoặc Địa chỉ mới để đổi nơi nhận
             new_phone = extract_phone(msg)
             new_name, new_addr = extract_address_and_name(msg, new_phone)
             if new_phone:
@@ -257,23 +338,31 @@ def handle_order_conversation(message, user=None, session_dict=None):
             if new_name:
                 draft['full_name'] = sanitize_name(new_name, user_default_name)
 
-            if draft.get('phone') and draft.get('address'):
-                address_data = {
-                    'full_name': sanitize_name(draft.get('full_name'), user_default_name),
-                    'phone': draft.get('phone'),
-                    'address': draft.get('address'),
-                }
-                try:
-                    order = create_direct_order(
-                        user=user,
-                        items_data=[{'product': product, 'quantity': qty}],
-                        address_data=address_data,
-                        note="Đặt hàng tự động qua Chatbot AI (Địa chỉ chỉ định)"
-                    )
-                    session_dict.pop('chatbot_order_draft', None)
-                    return True, format_order_success_message(order, product, qty)
-                except Exception as e:
-                    return True, f"⚠️ Có lỗi khi tạo đơn: {str(e)}. Bạn vui lòng thử lại!"
+            if new_phone or new_addr:
+                return True, format_payment_method_prompt(
+                    product, qty,
+                    draft.get('full_name', user_default_name),
+                    draft.get('phone', ''),
+                    draft.get('address', ''),
+                    is_update=True
+                )
+
+            # Khách nhắn "Đồng ý" / "Xác nhận" nhưng chưa chọn hình thức thanh toán cụ thể
+            if any(re.search(pat, msg_lower, re.IGNORECASE) for pat in CONFIRM_TRIGGERS):
+                return True, (
+                    f"🌾 Cảm ơn bạn! Để hoàn tất đơn hàng **{qty} {product.unit} {product.name}**, bạn vui lòng chọn hình thức thanh toán:\n"
+                    f"1️⃣ [button:💵 Thanh toán khi nhận hàng (COD)](COD) — Trả tiền mặt cho shipper\n"
+                    f"2️⃣ [button:💳 Chuyển khoản VietQR](Chuyển khoản VietQR) — Quét mã QR Napas 247\n\n"
+                    f"*(Bạn chỉ cần bấm nút ở trên hoặc nhắn **'COD'** / **'Chuyển khoản'** nhé!)*"
+                )
+
+            # Nhắc nhở người dùng chọn phương thức thanh toán
+            return True, (
+                f"🌾 Bạn vui lòng chọn hình thức thanh toán để tôi hoàn tất đơn ngay nhé:\n"
+                f"1️⃣ [button:💵 Thanh toán khi nhận hàng (COD)](COD) — Trả tiền mặt cho shipper khi nhận hàng\n"
+                f"2️⃣ [button:💳 Chuyển khoản VietQR](Chuyển khoản VietQR) — Quét mã QR Napas 247\n\n"
+                f"*(Hoặc nhắn 'Hủy' nếu bạn muốn đổi ý không mua nữa)*"
+            )
 
         # B. Đang chờ BỔ SUNG thông tin người nhận (SĐT & Địa chỉ)
         if step == 'awaiting_info':
@@ -281,26 +370,37 @@ def handle_order_conversation(message, user=None, session_dict=None):
             name, addr = extract_address_and_name(msg, phone)
             addr = addr or draft.get('address')
             name = sanitize_name(name or draft.get('full_name'), user_default_name)
+            pm = extract_payment_method(msg) or draft.get('payment_method')
 
             if phone:
                 draft['phone'] = phone
             if addr:
                 draft['address'] = addr
             draft['full_name'] = name
+            if pm:
+                draft['payment_method'] = pm
 
             if phone and addr:
-                address_data = {'full_name': name, 'phone': phone, 'address': addr}
-                try:
-                    order = create_direct_order(
-                        user=user,
-                        items_data=[{'product': product, 'quantity': qty}],
-                        address_data=address_data,
-                        note="Đặt hàng tự động qua Chatbot AI"
-                    )
-                    session_dict.pop('chatbot_order_draft', None)
-                    return True, format_order_success_message(order, product, qty)
-                except Exception as e:
-                    return True, f"⚠️ Có lỗi khi tạo đơn: {str(e)}. Bạn vui lòng thử lại!"
+                # Nếu đã có cả phương thức thanh toán trong tin nhắn này (hoặc đã lưu từ trước)
+                if pm:
+                    address_data = {'full_name': name, 'phone': phone, 'address': addr}
+                    note_suffix = "COD" if pm == 'cod' else "VietQR"
+                    try:
+                        order = create_direct_order(
+                            user=user,
+                            items_data=[{'product': product, 'quantity': qty}],
+                            address_data=address_data,
+                            note=f"Đặt hàng tự động qua Chatbot AI ({note_suffix})",
+                            payment_method=pm
+                        )
+                        session_dict.pop('chatbot_order_draft', None)
+                        return True, format_order_success_message(order, product, qty)
+                    except Exception as e:
+                        return True, f"⚠️ Có lỗi khi tạo đơn: {str(e)}. Bạn vui lòng thử lại!"
+                else:
+                    # Đã có đủ phone & address, CHUYỂN BƯỚC HỎI HÌNH THỨC THANH TOÁN
+                    draft['step'] = 'awaiting_payment_method'
+                    return True, format_payment_method_prompt(product, qty, name, phone, addr)
             elif not phone:
                 return True, (
                     f"🌾 Tôi đã ghi nhận địa chỉ giao hàng: **{addr}**.\n"
@@ -320,9 +420,9 @@ def handle_order_conversation(message, user=None, session_dict=None):
     # Kiểm tra xác thực tài khoản
     if not user or not user.is_authenticated:
         return True, (
-            "🌾 Để lên đơn hàng tự động và theo dõi lộ trình giao hàng COD, bạn vui lòng "
+            "🌾 Để lên đơn hàng tự động và theo dõi lộ trình giao hàng, bạn vui lòng "
             "**[Đăng nhập tại đây](/accounts/login/)** hoặc **[Đăng ký tài khoản](/accounts/register/)** nhé!\n"
-            "Sau khi đăng nhập, bạn chỉ cần nhắn tên nông sản và số lượng, tôi sẽ tạo đơn ngay lập tức!"
+            "Sau khi đăng nhập, bạn chỉ cần nhắn tên nông sản và số lượng, tôi sẽ hỗ trợ tạo đơn ngay lập tức!"
         )
 
     # Tìm sản phẩm khách hàng muốn đặt
@@ -349,66 +449,100 @@ def handle_order_conversation(message, user=None, session_dict=None):
             f"Bạn có muốn đặt với số lượng **{product.stock} {product.unit}** không ạ?"
         )
 
-    # Trích xuất số điện thoại và địa chỉ nếu khách đã gõ sẵn trong câu lệnh (1-Turn Order)
+    # Trích xuất thông tin nếu khách đã gõ sẵn trong câu lệnh
     user_default_name = (user.get_full_name() or user.username if user else 'Khách hàng')
-    phone = extract_phone(msg) or getattr(user, 'phone', '')
+    phone = extract_phone(msg)
     name, addr = extract_address_and_name(msg, phone)
     name = sanitize_name(name, user_default_name)
+    pm = extract_payment_method(msg)
 
-    subtotal = product.price * qty
-
-    # Nếu khách đã cung cấp đầy đủ cả SĐT và Địa chỉ ngay trong 1 tin nhắn
-    if phone and addr:
+    # Trường hợp A: Khách cung cấp đầy đủ SĐT, Địa chỉ VÀ Phương thức thanh toán ngay trong 1 tin nhắn
+    if phone and addr and pm:
         address_data = {'full_name': name, 'phone': phone, 'address': addr}
+        note_suffix = "COD" if pm == 'cod' else "VietQR"
         try:
             order = create_direct_order(
                 user=user,
                 items_data=[{'product': product, 'quantity': qty}],
                 address_data=address_data,
-                note="Đặt hàng tự động qua Chatbot AI (Trực tiếp)"
+                note=f"Đặt hàng tự động qua Chatbot AI ({note_suffix})",
+                payment_method=pm
             )
             return True, format_order_success_message(order, product, qty)
         except Exception as e:
             return True, f"⚠️ Có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
 
-    # Nếu chưa có đủ SĐT hoặc Địa chỉ, kiểm tra xem user có địa chỉ mặc định trong sổ địa chỉ không
+    # Trường hợp B: Khách cung cấp đủ SĐT và Địa chỉ, nhưng CHƯA chọn phương thức thanh toán
+    if phone and addr and not pm:
+        session_dict['chatbot_order_draft'] = {
+            'product_id': product.id,
+            'quantity': qty,
+            'full_name': name,
+            'phone': phone,
+            'address': addr,
+            'step': 'awaiting_payment_method',
+        }
+        return True, format_payment_method_prompt(product, qty, name, phone, addr)
+
+    # Trường hợp C: Kiểm tra nếu khách có địa chỉ mặc định trong sổ địa chỉ
     def_addr = None
     if hasattr(user, 'addresses'):
         def_addr = user.addresses.filter(is_default=True).first() or user.addresses.first()
 
     if def_addr:
+        # Nếu khách có địa chỉ mặc định VÀ đã nói rõ phương thức thanh toán trong tin nhắn
+        if pm:
+            address_data = {
+                'full_name': sanitize_name(def_addr.full_name, user_default_name),
+                'phone': def_addr.phone,
+                'address': def_addr.address,
+            }
+            note_suffix = "COD" if pm == 'cod' else "VietQR"
+            try:
+                order = create_direct_order(
+                    user=user,
+                    items_data=[{'product': product, 'quantity': qty}],
+                    address_data=address_data,
+                    note=f"Đặt hàng tự động qua Chatbot AI ({note_suffix})",
+                    payment_method=pm
+                )
+                return True, format_order_success_message(order, product, qty)
+            except Exception as e:
+                return True, f"⚠️ Có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
+
+        # Có địa chỉ mặc định nhưng CHƯA chọn phương thức thanh toán -> HỎI PHƯƠNG THỨC THANH TOÁN
         session_dict['chatbot_order_draft'] = {
             'product_id': product.id,
             'quantity': qty,
             'full_name': sanitize_name(def_addr.full_name, user_default_name),
             'phone': def_addr.phone,
             'address': def_addr.address,
-            'step': 'awaiting_confirm',
+            'step': 'awaiting_payment_method',
         }
-        return True, (
-            f"🌾 Bạn muốn đặt mua: **{qty} {product.unit} {product.name}**\n"
-            f"• Đơn giá: **{format_currency(product.price)}/{product.unit}**\n"
-            f"• Tạm tính: **{format_currency(subtotal)}**\n\n"
-            f"📍 Tôi thấy bạn có địa chỉ giao hàng sẵn có:\n"
-            f"• Người nhận: **{def_addr.full_name}** ({def_addr.phone})\n"
-            f"• Địa chỉ: **{def_addr.address}**\n\n"
-            f"👉 Bạn hãy nhắn **'Đồng ý'** để tạo đơn ngay, hoặc nhắn SĐT và Địa chỉ mới để tôi giao đến nơi khác nhé!"
+        return True, format_payment_method_prompt(
+            product, qty,
+            sanitize_name(def_addr.full_name, user_default_name),
+            def_addr.phone,
+            def_addr.address
         )
     else:
+        # Chưa có địa chỉ mặc định và chưa đủ SĐT/Địa chỉ -> Yêu cầu người dùng cung cấp
         session_dict['chatbot_order_draft'] = {
             'product_id': product.id,
             'quantity': qty,
             'full_name': sanitize_name(name, user_default_name),
             'phone': phone,
             'address': addr,
+            'payment_method': pm,
             'step': 'awaiting_info',
         }
         phone_note = f" (SĐT: {phone})" if phone else ""
+        subtotal = product.price * qty
         return True, (
             f"🌾 Bạn muốn đặt mua: **{qty} {product.unit} {product.name}**\n"
             f"• Đơn giá: **{format_currency(product.price)}/{product.unit}**\n"
             f"• Tạm tính: **{format_currency(subtotal)}**\n\n"
-            f"📦 Để hoàn tất đơn hàng giao tận nơi thanh toán khi nhận (COD), bạn vui lòng cung cấp:\n"
+            f"📦 Để hoàn tất đơn hàng giao tận nơi, bạn vui lòng cung cấp:\n"
             f"• 📞 **Số điện thoại nhận hàng**{phone_note}\n"
             f"• 🏠 **Địa chỉ nhận hàng chi tiết**\n"
             f"*(Ví dụ: 0912345678, số 15 Hai Bà Trưng, Hà Nội)*"

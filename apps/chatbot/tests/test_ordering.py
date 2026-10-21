@@ -1,6 +1,9 @@
 # File: apps/chatbot/tests/test_ordering.py
 """
-Kiểm thử tính năng lên đơn hàng tự động qua Chatbot AI (Conversational Ordering).
+Kiểm thử tính năng lên đơn hàng tự động qua Chatbot AI (Conversational Ordering):
+- Bắt buộc hỏi phương thức thanh toán (COD hoặc chuyển khoản VietQR) để khách hàng lựa chọn.
+- Xử lý các luồng hội thoại 1-shot (đủ thông tin) và multi-turn (từng bước).
+- Định dạng tin nhắn thành công tách biệt giữa COD và VietQR.
 """
 import json
 from decimal import Decimal
@@ -42,14 +45,14 @@ class ChatbotOrderingTests(TestCase):
         data = resp.json()
         self.assertIn('Đăng nhập tại đây', data['reply'])
 
-    def test_authenticated_user_one_shot_ordering(self):
-        """Đặt hàng thành công ngay trong 1 tin nhắn khi cung cấp đủ SĐT và Địa chỉ."""
+    def test_authenticated_user_one_shot_with_payment_method(self):
+        """Đặt hàng thành công ngay trong 1 tin nhắn khi cung cấp đủ SĐT, Địa chỉ VÀ hình thức thanh toán."""
         self.client.force_login(self.user)
         initial_stock = self.product.stock
 
         resp = self.client.post(
             '/chatbot/send/',
-            json.dumps({'message': 'Tôi muốn mua 2kg cà rốt, giao về số 15 Hai Bà Trưng Hà Nội, sđt 0987654321'}),
+            json.dumps({'message': 'Tôi muốn mua 2kg cà rốt, giao về số 15 Hai Bà Trưng Hà Nội, sđt 0987654321, thanh toán VietQR'}),
             content_type='application/json'
         )
         self.assertEqual(resp.status_code, 200)
@@ -67,10 +70,48 @@ class ChatbotOrderingTests(TestCase):
         order = Order.objects.filter(user=self.user).latest('created_at')
         self.assertEqual(order.phone, '0987654321')
         self.assertIn('Hai Bà Trưng', order.address)
+        self.assertEqual(order.payment_method, 'vietqr')
         self.assertEqual(order.items.first().quantity, 2)
 
+    def test_authenticated_user_prompt_payment_method_and_choose_cod(self):
+        """Khách cung cấp đủ SĐT và Địa chỉ nhưng chưa chọn hình thức thanh toán -> Bot hỏi -> Khách chọn COD."""
+        self.client.force_login(self.user)
+        initial_stock = self.product.stock
+
+        # Lượt 1: Cung cấp sản phẩm + SĐT + Địa chỉ nhưng CHƯA chọn phương thức thanh toán
+        r1 = self.client.post(
+            '/chatbot/send/',
+            json.dumps({'message': 'Tôi muốn mua 2kg cà rốt, giao về số 15 Hai Bà Trưng Hà Nội, sđt 0987654321'}),
+            content_type='application/json'
+        )
+        self.assertEqual(r1.status_code, 200)
+        d1 = r1.json()
+        self.assertIn('Bạn muốn thanh toán theo hình thức nào', d1['reply'])
+        self.assertIn('COD', d1['reply'])
+        self.assertIn('VietQR', d1['reply'])
+        self.assertNotIn('ĐẶT HÀNG THÀNH CÔNG', d1['reply'])
+
+        # Lượt 2: Khách nhắn "COD" (hoặc chọn COD)
+        r2 = self.client.post(
+            '/chatbot/send/',
+            json.dumps({'message': 'COD'}),
+            content_type='application/json'
+        )
+        self.assertEqual(r2.status_code, 200)
+        d2 = r2.json()
+        self.assertIn('ĐẶT HÀNG THÀNH CÔNG', d2['reply'])
+        self.assertIn('Thanh toán tiền mặt khi nhận hàng (COD)', d2['reply'])
+        # Đơn COD không hiển thị ảnh QR VietQR
+        self.assertNotIn('img.vietqr.io', d2['reply'])
+
+        # Kiểm tra tồn kho và DB
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, initial_stock - 2)
+        order = Order.objects.filter(user=self.user).latest('created_at')
+        self.assertEqual(order.payment_method, 'cod')
+
     def test_multi_turn_ordering_flow(self):
-        """Đặt hàng qua 2 lượt hội thoại (Lượt 1: chọn sản phẩm, Lượt 2: cung cấp SĐT & địa chỉ)."""
+        """Đặt hàng qua 3 lượt: 1. Chọn sản phẩm -> 2. Cung cấp SĐT & Địa chỉ -> 3. Chọn Chuyển khoản VietQR."""
         self.client.force_login(self.user)
         initial_stock = self.product.stock
 
@@ -85,7 +126,7 @@ class ChatbotOrderingTests(TestCase):
         self.assertIn('Cà rốt Đà Lạt', d1['reply'])
         self.assertIn('Số điện thoại', d1['reply'])
 
-        # Lượt 2: Cung cấp thông tin nhận hàng
+        # Lượt 2: Cung cấp thông tin nhận hàng -> Chatbot ghi nhận và hỏi phương thức thanh toán
         r2 = self.client.post(
             '/chatbot/send/',
             json.dumps({'message': 'SĐT 0933445566, địa chỉ: Số 88 Cầu Giấy, Hà Nội'}),
@@ -93,14 +134,28 @@ class ChatbotOrderingTests(TestCase):
         )
         self.assertEqual(r2.status_code, 200)
         d2 = r2.json()
-        self.assertIn('ĐẶT HÀNG THÀNH CÔNG', d2['reply'])
+        self.assertIn('Bạn muốn thanh toán theo hình thức nào', d2['reply'])
+
+        # Lượt 3: Khách chọn Chuyển khoản VietQR
+        r3 = self.client.post(
+            '/chatbot/send/',
+            json.dumps({'message': 'Chuyển khoản VietQR'}),
+            content_type='application/json'
+        )
+        self.assertEqual(r3.status_code, 200)
+        d3 = r3.json()
+        self.assertIn('ĐẶT HÀNG THÀNH CÔNG', d3['reply'])
+        self.assertIn('Chuyển khoản VietQR', d3['reply'])
+        self.assertIn('img.vietqr.io', d3['reply'])
 
         # Kiểm tra tồn kho
         self.product.refresh_from_db()
         self.assertEqual(self.product.stock, initial_stock - 3)
+        order = Order.objects.filter(user=self.user).latest('created_at')
+        self.assertEqual(order.payment_method, 'vietqr')
 
     def test_ordering_with_default_address_confirmation(self):
-        """Khách có sẵn địa chỉ mặc định, chatbot hỏi xác nhận và khách đồng ý."""
+        """Khách có sẵn địa chỉ mặc định, chatbot hỏi hình thức thanh toán và khách chọn."""
         UserAddress.objects.create(
             user=self.user,
             full_name='Nguyen Van Mac Dinh',
@@ -110,7 +165,7 @@ class ChatbotOrderingTests(TestCase):
         )
         self.client.force_login(self.user)
 
-        # Lượt 1: Chatbot phát hiện địa chỉ mặc định
+        # Lượt 1: Chatbot phát hiện địa chỉ mặc định và hỏi chọn hình thức thanh toán
         r1 = self.client.post(
             '/chatbot/send/',
             json.dumps({'message': 'Mua 1kg cà rốt'}),
@@ -118,19 +173,20 @@ class ChatbotOrderingTests(TestCase):
         )
         self.assertEqual(r1.status_code, 200)
         d1 = r1.json()
-        self.assertIn('địa chỉ giao hàng sẵn có', d1['reply'])
         self.assertIn('Số 100 Nguyễn Trãi', d1['reply'])
+        self.assertIn('Bạn muốn thanh toán theo hình thức nào', d1['reply'])
 
-        # Lượt 2: Khách nhắn "Đồng ý"
+        # Lượt 2: Khách nhắn "1" (chọn COD)
         r2 = self.client.post(
             '/chatbot/send/',
-            json.dumps({'message': 'Đồng ý'}),
+            json.dumps({'message': '1'}),
             content_type='application/json'
         )
         self.assertEqual(r2.status_code, 200)
         d2 = r2.json()
         self.assertIn('ĐẶT HÀNG THÀNH CÔNG', d2['reply'])
         self.assertIn('Số 100 Nguyễn Trãi', d2['reply'])
+        self.assertIn('Thanh toán tiền mặt khi nhận hàng (COD)', d2['reply'])
 
     def test_cancel_order_draft(self):
         """Khách đang lên đơn dở dang nhưng nhắn 'Thôi hủy không mua nữa'."""
@@ -170,7 +226,7 @@ class ChatbotOrderingTests(TestCase):
         self.assertIn('5 kg', data['reply'])
 
     def test_order_with_complex_list_message_and_address(self):
-        """Khách paste danh sách giá sản phẩm rồi cung cấp SĐT + Địa chỉ không bị lỗi full_name quá dài."""
+        """Khách paste danh sách giá sản phẩm rồi cung cấp SĐT + Địa chỉ + hình thức thanh toán."""
         self.client.force_login(self.user)
 
         # Lượt 1: Khách paste tin nhắn có chứa nhiều giá tiền (vd: 45.000 đ/kg...)
@@ -184,10 +240,10 @@ class ChatbotOrderingTests(TestCase):
         self.assertIn('Bạn muốn đặt mua', d1['reply'])
         self.assertIn('Số điện thoại nhận hàng', d1['reply'])
 
-        # Lượt 2: Khách cung cấp SĐT và Địa chỉ
+        # Lượt 2: Khách cung cấp SĐT và Địa chỉ kèm phương thức thanh toán COD
         r2 = self.client.post(
             '/chatbot/send/',
-            json.dumps({'message': '0912345678, số 15 Hai Bà Trưng, Hà Nội'}),
+            json.dumps({'message': '0912345678, số 15 Hai Bà Trưng, Hà Nội, thanh toán COD'}),
             content_type='application/json'
         )
         self.assertEqual(r2.status_code, 200)
@@ -199,5 +255,5 @@ class ChatbotOrderingTests(TestCase):
         order = Order.objects.filter(user=self.user).latest('id')
         self.assertEqual(order.phone, '0912345678')
         self.assertIn('Hai Bà Trưng', order.address)
+        self.assertEqual(order.payment_method, 'cod')
         self.assertLessEqual(len(order.full_name), 100)
-

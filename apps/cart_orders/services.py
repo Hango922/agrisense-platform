@@ -88,12 +88,16 @@ def cancel_order(order):
 
 
 @transaction.atomic
-def create_direct_order(user, items_data, address_data, note="Đặt hàng qua Chatbot AI"):
+def create_direct_order(user, items_data, address_data, note="Đặt hàng qua Chatbot AI", payment_method="cod"):
     """
     Tạo đơn hàng trực tiếp (ví dụ qua Chatbot AI) mà không cần qua giỏ hàng:
     items_data: list of dicts [{'product': Product instance, 'quantity': int}]
     address_data: {'full_name': str, 'phone': str, 'address': str}
+    payment_method: 'cod' hoặc 'vietqr'
     """
+    if payment_method not in ('cod', 'vietqr'):
+        payment_method = 'cod'
+
     if not items_data:
         raise ValueError("Danh sách sản phẩm trống")
 
@@ -129,7 +133,7 @@ def create_direct_order(user, items_data, address_data, note="Đặt hàng qua C
         final_amount=final,
         note=note,
         status='pending',
-        payment_method='cod',
+        payment_method=payment_method,
     )
 
     for item in items_data:

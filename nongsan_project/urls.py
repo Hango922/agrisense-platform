@@ -3,12 +3,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 from apps.products.views import HomeView
 from apps.cart_orders.views import OrderHistoryView, OrderDetailView, CancelOrderView, UploadPaymentProofView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', HomeView.as_view(), name='home'),
+    path('COD/', RedirectView.as_view(pattern_name='home', permanent=False)),
+    path('COD', RedirectView.as_view(pattern_name='home', permanent=False)),
+    path('cod/', RedirectView.as_view(pattern_name='home', permanent=False)),
+    path('cod', RedirectView.as_view(pattern_name='home', permanent=False)),
     path('accounts/', include('apps.accounts.urls')),
     path('products/', include('apps.products.urls')),
     path('cart/', include('apps.cart_orders.urls')),
