@@ -145,3 +145,25 @@ class OrderTests(TestCase):
         order.save()
         self.assertEqual(order.status, 'confirmed')
 
+    def test_django_admin_order_changelist_and_display(self):
+        # Tạo đơn COD và đơn VietQR chưa có bill
+        order_cod = create_order_from_cart(self.user, self.cart, {
+            'full_name': 'Khách COD Admin', 'phone': '0900333444', 'address': 'HN',
+        }, payment_method='cod')
+
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=1)
+        order_vietqr = create_order_from_cart(self.user, self.cart, {
+            'full_name': 'Khách VietQR Admin', 'phone': '0900555666', 'address': 'HCM',
+        }, payment_method='vietqr')
+
+        admin_user = User.objects.create_superuser(username='admin_test', password='p', email='admin@test.com')
+        self.client.force_login(admin_user)
+
+        response = self.client.get('/admin/cart_orders/order/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, order_cod.order_code)
+        self.assertContains(response, order_vietqr.order_code)
+        self.assertContains(response, 'COD (Tiền mặt)')
+        self.assertContains(response, 'Chưa có bill')
+
+
