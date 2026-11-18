@@ -12,3 +12,6 @@ venv/
 *.log
 logs/
 tools/
+.coverage
+.coverage.*
+htmlcov/

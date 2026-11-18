@@ -28,7 +28,7 @@
 - **Duyệt & Tìm kiếm nông sản**: Tìm kiếm theo từ khóa tiếng Việt, lọc theo danh mục, mức giá và phân trang trực quan.
 - **Chi tiết nông sản**: Xem hình ảnh, mô tả, xuất xứ nông trại, mùa vụ, hướng dẫn chế biến, cách bảo quản và đánh giá sao từ khách hàng.
 - **Giỏ hàng & Đặt hàng COD / Chuyển khoản**: Thêm sản phẩm, cập nhật số lượng, kiểm tra tồn kho thời gian thực, tính phí giao hàng thông minh (30.000đ, miễn phí từ 500.000đ), trừ kho an toàn bằng `@transaction.atomic`.
-- **Thanh toán nhanh VietQR (Napas 247)**: Tự động nhúng số tài khoản ngân hàng MBBank, tên chủ tài khoản `NGUYEN HONG HOANG`, số tiền chính xác từng đồng và nội dung chuyển khoản là mã đơn hàng (`ORDxxxxxxxx`). Khách hàng quét mã qua mọi ứng dụng ngân hàng di động mà không lo nhập nhầm.
+- **Thanh toán nhanh VietQR (Napas 247)**: Sinh QR theo tài khoản nhận tiền cấu hình trong `VIETQR_*`, số tiền và mã đơn hàng (`ORDxxxxxxxx`). Nhân viên đối soát và xác nhận thủ công; hệ thống chưa tự xác minh giao dịch ngân hàng.
 - **Quản lý đơn hàng**: Theo dõi lịch sử đơn hàng, xem chi tiết tiến độ giao hàng và hỗ trợ hủy đơn hàng khi đang chờ xác nhận (tự động hoàn kho).
 
 ### 2. Phân hệ Trí tuệ Nhân tạo & Chatbot (AI & Conversational Ordering)
@@ -48,7 +48,7 @@
 
 ### 3. Phân hệ Truy xuất nguồn gốc (QR Traceability)
 - Tự động sinh mã QR định dạng PNG chuẩn ISO cho từng lô hàng nông sản (`ProductBatch`).
-- Mã QR trỏ trực tiếp đến URL tra cứu công khai: `http://127.0.0.1:8000/trace/<batch_code>/`.
+- Mã QR trỏ đến `<QR_BASE_URL>/trace/<batch_code>/`; cấu hình URL trước khi tạo lô hàng.
 - Cung cấp đầy đủ thông tin: Tên sản phẩm, nông trại / vùng trồng, ngày thu hoạch, ngày đóng gói, chứng nhận an toàn (VietGAP, GlobalGAP, Organic), sản lượng và nhật ký kiểm định.
 
 ### 4. Phân hệ Quản trị Dashboard (Admin Dashboard & Analytics)
@@ -67,7 +67,7 @@
 
 | Thành phần | Phiên bản / Công nghệ | Ghi chú |
 | :--- | :--- | :--- |
-| **Hệ điều hành** | Windows 11 / Linux / macOS | Khuyến nghị Windows 11 theo môi trường phát triển |
+| **Hệ điều hành** | Windows | Bộ dependency đã kiểm chứng trên Windows; Linux/macOS cần kiểm tra riêng |
 | **Ngôn ngữ** | Python 3.14.3 | Đã kiểm thử và chạy ổn định |
 | **Web Framework** | Django 6.1.2 | Kiến trúc MVT, ORM, CSRF protection |
 | **Cơ sở dữ liệu** | MySQL Server 26.7.0 | Port 3306, mã hóa `utf8mb4_0900_ai_ci` |
@@ -76,7 +76,7 @@
 | **Thư viện biểu đồ** | Chart.js 4.4 | Biểu đồ đường, tròn, cột tương tác |
 | **Báo cáo Excel** | openpyxl 3.1.5 | Xuất file báo cáo đơn hàng định dạng `.xlsx` |
 | **Xử lý dữ liệu** | Pandas, Scikit-learn, NumPy | Hỗ trợ phân tích hành vi và phân cụm |
-| **Mã QR & Hình ảnh**| qrcode 7.4.2, Pillow 11.0.0 | Sinh mã QR PNG tự động |
+| **Mã QR & Hình ảnh**| qrcode 8.2, Pillow 12.2.0 | Sinh mã QR PNG tự động |
 | **Cổng thanh toán** | VietQR Napas 247 | Sinh mã QR ngân hàng thanh toán tự động |
 | **Chatbot AI** | Google Gemini API / Groq API | Tích hợp fallback regex thông minh |
 
@@ -90,17 +90,23 @@ git clone https://github.com/Hango922/agrisense-platform.git
 cd agrisense-platform
 ```
 
-### Bước 2: Kích hoạt môi trường ảo Python
-```bash
-# Trên Windows PowerShell:
+### Bước 2: Tạo môi trường ảo Python 3.14
+```powershell
 python -m venv .venv
-.venv\Scripts\activate
+.\.venv\Scripts\Activate.ps1
 ```
 
+Nếu PowerShell không cho kích hoạt, dùng trực tiếp `.\.venv\Scripts\python.exe` thay cho `python` trong các lệnh bên dưới. Không cần thay đổi execution policy của máy.
+
 ### Bước 3: Cài đặt các thư viện cần thiết
-```bash
-pip install -r requirements.txt
+```powershell
+python -m pip install -r requirements.txt
+python -m pip check
 ```
+
+`requirements.in` ghi các dependency trực tiếp; `requirements.txt` khóa cả dependency gián tiếp cho Python 3.14 trên Windows. Cặp đã kiểm chứng là Django 6.1.2 và PyMySQL 1.2.3. Không dùng PyMySQL 1.1.1 với bộ Django này: backend MySQL từ chối phiên bản tương thích mà driver công bố.
+
+Khi chủ động cập nhật dependency: sửa `requirements.in`, tạo virtualenv trống, chạy `python -m pip install -r requirements.in`, rồi dùng `python -m pip freeze` để tạo lại `requirements.txt`. Chỉ cài `requirements-dev.txt` sau khi xuất lock để không đưa công cụ test vào dependency chạy ứng dụng. Kiểm tra diff và chạy lại các bước kiểm chứng trước khi dùng lock mới.
 
 ### Bước 4: Tạo cơ sở dữ liệu MySQL
 Mở MySQL Command Line Client hoặc MySQL Workbench và thực hiện:
@@ -110,41 +116,33 @@ CREATE DATABASE nongsan_db CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 ### Bước 5: Cấu hình biến môi trường `.env`
 > [!IMPORTANT]
-> **Lưu ý bảo mật**: File `.env` chứa mật khẩu cơ sở dữ liệu và API Key nhạy cảm nên **đã được cấu hình trong `.gitignore` để không bao giờ bị đẩy lên GitHub**. Trên máy tính cá nhân của bạn, hãy tạo file `.env` từ `.env.example`:
+> File `.env` chứa thông tin riêng và được `.gitignore` bỏ qua. Giữ nguyên file nếu đã cấu hình; chỉ sao chép mẫu khi cài mới.
 
-Sao chép `.env.example` thành `.env` và cập nhật thông tin cá nhân của bạn:
-```env
-DEBUG=True
-SECRET_KEY=django-insecure-agrisense-platform-secret-key-2026
-DB_NAME=nongsan_db
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_HOST=127.0.0.1
-DB_PORT=3306
-
-# API Key cho Chatbot AI (Tùy chọn: nếu không có, hệ thống tự kích hoạt Rule-based Fallback)
-AI_PROVIDER=gemini
-GEMINI_API_KEY=your_gemini_api_key_here
-GROQ_API_KEY=your_groq_api_key_here
-
-# Cấu hình thanh toán VietQR Napas 247
-VIETQR_BANK_ID=MB
-VIETQR_ACCOUNT_NO=0922334455
-VIETQR_ACCOUNT_NAME=NGUYEN HONG HOANG
-VIETQR_BANK_NAME=Ngân hàng Quân Đội (MBBank)
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
+
+Điền khóa vừa tạo vào `SECRET_KEY`; cấu hình `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` theo MySQL của bạn. Giữ `DEBUG=True` và `ALLOWED_HOSTS=127.0.0.1,localhost` cho chạy local.
+
+Hai API key AI trong mẫu để trống: chatbot sẽ dùng fallback, không cần tài khoản AI để khởi động. Điền các biến `VIETQR_*` bằng tài khoản nhận tiền phù hợp trước khi dùng thanh toán; mẫu chỉ có placeholder, không phải thông tin nhận tiền thật. `CHATBOT_TIMEOUT` là timeout từng lần gọi API, chưa phải giới hạn tổng thời gian.
+
+`QR_BASE_URL` mặc định là `http://127.0.0.1:8000`. Để quét từ điện thoại, đặt URL theo IP LAN của máy chủ và thêm IP đó vào `ALLOWED_HOSTS` **trước khi tạo lô/seed QR**, rồi chạy `python manage.py runserver 0.0.0.0:8000`. Điện thoại cần cùng mạng và máy chủ cần cho phép kết nối cổng này. QR đã lưu không tự đổi khi sửa URL cấu hình.
 
 ### Bước 6: Khởi tạo bảng dữ liệu (Migration)
 ```bash
-python manage.py makemigrations
 python manage.py migrate
+python manage.py check
+python manage.py makemigrations --check --dry-run
 ```
+
+Bản checkout đã có migration; không cần tạo migration mới khi cài đặt. Tài khoản MySQL dùng cho cài đặt cần quyền tạo/sửa bảng trong database đã chọn.
 
 ### Bước 7: Khởi tạo dữ liệu mẫu (Seed Data)
 ```bash
 python manage.py seed_data
 ```
-Lệnh sẽ tự động khởi tạo 6 danh mục, 7 nhà cung cấp, 32 sản phẩm, 24 người dùng mẫu, 52 đơn hàng, 11 lô hàng kèm mã QR và 2 tài khoản demo.
+Trên database trống, lệnh tạo 5 danh mục, 5 nhà cung cấp, 30 sản phẩm, 22 tài khoản (gồm 2 tài khoản demo bên dưới), 50 đơn hàng và 10 lô kèm QR. Sự kiện và một số dữ liệu mẫu được tạo ngẫu nhiên. Chỉ dùng lệnh cho database demo; chạy lại có thể thêm sự kiện hành vi.
 
 ### Bước 8: Cập nhật phân nhóm khách hàng AI
 ```bash
@@ -183,19 +181,38 @@ Truy cập ứng dụng tại: **http://127.0.0.1:8000/**
 
 ## 🧪 Kiểm thử tự động (Unit Tests)
 
-Chạy toàn bộ 43 bài kiểm thử tự động của hệ thống bao phủ tất cả các phân hệ:
-```bash
-python manage.py test
+Lệnh khuyến nghị cho toàn bộ bộ test:
+```powershell
+python manage.py test --settings=nongsan_project.test_settings --noinput
 ```
-**Kết quả kiểm thử:**
-```text
-Creating test database for alias 'default'...
-...........................................
-----------------------------------------------------------------------
-Ran 43 tests in 44.275s
 
-OK (100% PASS - 0 errors, 0 failures)
+Settings test giữ kết nối MySQL từ môi trường, nhưng tạo database `test_agrisense_<mã ngẫu nhiên>` riêng cho mỗi lần chạy và tự xóa khi kết thúc. Tài khoản MySQL cần quyền tạo/xóa database test. File upload/QR test nằm trong bộ nhớ; AI luôn dùng fallback dù `.env` có API key thật. Không dùng settings này để chạy website thường ngày hoặc với `--keepdb`.
+
+Kiểm tra nhanh bootstrap mà không cần database đã migrate:
+```powershell
+python -m unittest tests.test_environment tests.test_runtime -v
 ```
+
+Đo coverage (tùy chọn, không cần để chạy website):
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m coverage run --branch --source=apps,nongsan_project --omit="*/tests/*,*/migrations/*" manage.py test --settings=nongsan_project.test_settings --noinput
+python -m coverage report
+```
+
+Bộ test sau giai đoạn 1 gồm 60 test có sẵn và 5 test bootstrap/cô lập mới. Test đạt không đồng nghĩa các lỗi nghiệp vụ trong checklist bên dưới đã được sửa. Xem bằng chứng RED/GREEN, coverage và kiểm tra môi trường sạch tại [báo cáo giai đoạn 1](docs/PHASE_1_TDD.md).
+
+## Checklist hoàn thiện
+
+Phạm vi hiện tại: ổn định các luồng đã có, chưa mở rộng tính năng. Cập nhật ngày 18/11/2026.
+
+- [x] **Giai đoạn 1 — Cài/chạy tái lập được:** khóa dependency, đồng bộ cấu hình/tài liệu, bổ sung test cô lập. Đã cài trên virtualenv thứ hai sạch, migrate database test, seed, cập nhật phân nhóm; 65/65 test đạt và `runserver` trả HTTP 200.
+- [ ] **Giai đoạn 2 — Quyền và đầu vào:** sửa quyền tra đơn chatbot, CSRF, validation và file bill. Hoàn thành khi request sai không gây HTTP 500, không lưu dữ liệu sai và không lộ đơn tài khoản khác.
+- [ ] **Giai đoạn 3 — Đơn hàng/tồn kho:** thống nhất chuyển trạng thái, chống gửi lặp và tranh chấp tồn kho. Hoàn thành khi không bán vượt kho, không hoàn kho nhiều lần, không chuyển trạng thái ngoài quy trình.
+- [ ] **Giai đoạn 4 — Khép kín luồng hiện có:** QR, giới hạn thời gian AI, sự kiện mua hàng, Excel và định nghĩa KPI. Hoàn thành khi các kênh cho kết quả nhất quán theo quy tắc đã chốt.
+- [ ] **Giai đoạn 5 — Kiểm chứng/bàn giao:** regression cho các lỗi đã phát hiện, kiểm tra trình duyệt desktop/mobile và nâng coverage. Hoàn thành khi bộ kiểm tra đạt, luồng chính chạy trọn vẹn và tài liệu khớp hiện thực.
+
+Coverage sau giai đoạn 1: cấu hình test mới 100%; toàn ứng dụng 74,49% tính cả nhánh, sau khi loại test và migration. Mốc tổng thể 80% của ECC vẫn còn việc phải làm. Chưa kiểm chứng AI/ngân hàng thật hoặc triển khai production.
 
 ---
 
