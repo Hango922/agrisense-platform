@@ -207,12 +207,14 @@ Bộ test sau giai đoạn 1 gồm 60 test có sẵn và 5 test bootstrap/cô l�
 Phạm vi hiện tại: ổn định các luồng đã có, chưa mở rộng tính năng. Cập nhật ngày 18/11/2026.
 
 - [x] **Giai đoạn 1 — Cài/chạy tái lập được:** khóa dependency, đồng bộ cấu hình/tài liệu, bổ sung test cô lập. Đã cài trên virtualenv thứ hai sạch, migrate database test, seed, cập nhật phân nhóm; 65/65 test đạt và `runserver` trả HTTP 200.
-- [ ] **Giai đoạn 2 — Quyền và đầu vào:** sửa quyền tra đơn chatbot, CSRF, validation và file bill. Hoàn thành khi request sai không gây HTTP 500, không lưu dữ liệu sai và không lộ đơn tài khoản khác.
-- [ ] **Giai đoạn 3 — Đơn hàng/tồn kho:** thống nhất chuyển trạng thái, chống gửi lặp và tranh chấp tồn kho. Hoàn thành khi không bán vượt kho, không hoàn kho nhiều lần, không chuyển trạng thái ngoài quy trình.
-- [ ] **Giai đoạn 4 — Khép kín luồng hiện có:** QR, giới hạn thời gian AI, sự kiện mua hàng, Excel và định nghĩa KPI. Hoàn thành khi các kênh cho kết quả nhất quán theo quy tắc đã chốt.
+- [x] **Giai đoạn 2 — Quyền và đầu vào:** sửa quyền tra đơn chatbot, CSRF, validation và file bill. Hoàn thành khi request sai không gây HTTP 500, không lưu dữ liệu sai và không lộ đơn tài khoản khác.
+- [x] **Giai đoạn 3 — Đơn hàng/tồn kho:** thống nhất chuyển trạng thái, chống gửi lặp và tranh chấp tồn kho. Hoàn thành khi không bán vượt kho, không hoàn kho nhiều lần, không chuyển trạng thái ngoài quy trình.
+- [x] **Giai đoạn 4 — Khép kín luồng hiện có:** QR, giới hạn thời gian AI, sự kiện mua hàng, Excel và định nghĩa KPI. Hoàn thành khi các kênh cho kết quả nhất quán theo quy tắc đã chốt.
 - [ ] **Giai đoạn 5 — Kiểm chứng/bàn giao:** regression cho các lỗi đã phát hiện, kiểm tra trình duyệt desktop/mobile và nâng coverage. Hoàn thành khi bộ kiểm tra đạt, luồng chính chạy trọn vẹn và tài liệu khớp hiện thực.
 
-Coverage sau giai đoạn 1: cấu hình test mới 100%; toàn ứng dụng 74,49% tính cả nhánh, sau khi loại test và migration. Mốc tổng thể 80% của ECC vẫn còn việc phải làm. Chưa kiểm chứng AI/ngân hàng thật hoặc triển khai production.
+Báo cáo hiện tại và checklist nghiệm thu chi tiết: [ổn định luồng hiện có](docs/STABILIZATION.md). Giai đoạn 5 còn type check toàn dự án, E2E trình duyệt có đăng nhập và nghiệm thu môi trường triển khai.
+
+Kết quả hiện tại: **99/99 test PASS; coverage 82,89%**, tính cả nhánh và loại test/migration, vượt mốc 80% của ECC. Coverage lịch sử sau giai đoạn 1 là 74,49%. Chưa kiểm chứng AI/ngân hàng thật hoặc triển khai production.
 
 ---
 
