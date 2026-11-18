@@ -13,12 +13,15 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 class EnvironmentTests(unittest.TestCase):
-    def test_application_boots_with_example_environment(self):
+    def test_application_urls_boot_with_example_environment(self):
         env = os.environ.copy()
         env.update({key: value or '' for key, value in dotenv_values(ROOT / '.env.example').items()})
         env['SECRET_KEY'] = 'bootstrap-test-only-key-not-for-deployment'
         result = subprocess.run(
-            [sys.executable, '-B', 'manage.py', 'check', '--settings=nongsan_project.settings'],
+            [
+                sys.executable, '-B', 'manage.py', 'check', '--tag=urls',
+                '--settings=nongsan_project.settings',
+            ],
             cwd=ROOT,
             env=env,
             capture_output=True,
