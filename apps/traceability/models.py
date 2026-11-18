@@ -2,8 +2,8 @@
 """
 Quản lý lô hàng nông sản, mã QR truy xuất và lịch sử cập nhật nguồn gốc.
 """
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class ProductBatch(models.Model):

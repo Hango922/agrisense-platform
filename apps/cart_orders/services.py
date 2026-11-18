@@ -5,6 +5,7 @@ from django.utils.crypto import get_random_string
 
 from apps.behavior.models import UserEvent
 from apps.products.models import Product
+
 from .forms import CheckoutForm
 from .models import Cart, Order, OrderItem
 
@@ -31,7 +32,7 @@ def validate_transition(current, target):
 @transaction.atomic
 def create_order_from_cart(user, cart, address_data, note='', payment_method='cod'):
     cart = Cart.objects.select_for_update().get(pk=cart.pk, user=user)
-    items = list(cart.items.select_for_update().select_related('product').order_by('product_id'))
+    items = list(cart.items.select_for_update().order_by('product_id'))
     order = create_direct_order(user, [{'product': i.product, 'quantity': i.quantity} for i in items],
                                 address_data, note=note, payment_method=payment_method)
     cart.items.filter(pk__in=[i.pk for i in items]).delete()
@@ -104,13 +105,15 @@ def transition_order(order, target, proof=None, admin_verified=False, actor=None
             raise ValueError('Bill phải là ảnh PNG, JPEG hoặc WebP hợp lệ, tối đa 5 MB.')
         locked.payment_proof = form.cleaned_data['payment_proof']
         locked.payment_proof_uploaded_at = timezone.now()
+        username = actor.username if actor else 'Admin'
+        locked.note += f'\n[{username} đã tải lên bill đối soát: {timezone.now().isoformat()}]'
     if locked.payment_method == 'vietqr' and not locked.payment_proof:
         if not admin_verified:
-            raise ValueError('Cần bill hoặc xác nhận đối soát ngân hàng.')
+            raise ValueError('KHÔNG THỂ XÁC NHẬN: Cần bill hoặc xác nhận đối soát ngân hàng.')
         username = actor.username if actor else 'Admin'
         locked.payment_proof = generate_admin_verification_bill(locked.order_code, username)
         locked.payment_proof_uploaded_at = timezone.now()
-        locked.note += f'\n[Đối soát thủ công: {username}, {timezone.now().isoformat()}]'
+        locked.note += f'\n[{username} đã đối soát ngân hàng thủ công: {timezone.now().isoformat()}]'
     locked.status = target
     locked.save()
     return locked
@@ -122,9 +125,10 @@ def generate_admin_verification_bill(order_code, admin_username=None):
     Admin xác nhận đã nhận tiền chuyển khoản trực tiếp qua ngân hàng.
     """
     import io
-    from PIL import Image, ImageDraw
+
     from django.core.files.base import ContentFile
     from django.utils import timezone
+    from PIL import Image, ImageDraw
 
     width, height = 650, 400
     img = Image.new('RGB', (width, height), color='#f8fafc')

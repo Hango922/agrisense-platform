@@ -2,15 +2,18 @@
 """
 Views xử lý trang chủ, danh sách sản phẩm, bộ lọc, tìm kiếm và đánh giá chất lượng.
 """
-from django.views.generic import ListView, DetailView, TemplateView, View
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q, Avg
-from django.http import HttpResponseBadRequest
 from decimal import Decimal, InvalidOperation
-from .models import Product, Category, ProductReview
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Avg, Q
+from django.http import HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import DetailView, ListView, TemplateView, View
+
 from apps.behavior.models import UserEvent
 from apps.recommendation.engine import recommend_for_user
+
+from .models import Category, Product, ProductReview
 
 
 class HomeView(TemplateView):

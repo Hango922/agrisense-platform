@@ -2,7 +2,11 @@
 """
 Đăng ký giao diện quản trị Django Admin cho phân hệ Giỏ hàng & Đơn hàng.
 """
+from django import forms
 from django.contrib import admin
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+
 from .models import Cart, CartItem, Order, OrderItem
 
 
@@ -31,14 +35,16 @@ class CartAdmin(admin.ModelAdmin):
 
 
 class OrderItemInline(admin.TabularInline):
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
     model = OrderItem
     extra = 0
     readonly_fields = ('product', 'product_name', 'price', 'quantity', 'subtotal')
 
 
-from django import forms
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 
 
 class OrderAdminForm(forms.ModelForm):
@@ -46,31 +52,20 @@ class OrderAdminForm(forms.ModelForm):
         model = Order
         fields = '__all__'
 
-    def clean(self):
-        cleaned_data = super().clean()
-        status = cleaned_data.get('status')
-        payment_method = cleaned_data.get('payment_method')
-        payment_proof = cleaned_data.get('payment_proof')
+    def clean_payment_proof(self):
+        from django.core.files.uploadedfile import UploadedFile
 
-        # Nếu admin duyệt đơn VietQR trong form nhưng chưa có bill, tự động sinh bill đối soát nội bộ hợp lệ
-        if (
-            payment_method == 'vietqr'
-            and status in ('confirmed', 'shipping', 'delivered')
-            and not payment_proof
-            and not self.instance.payment_proof
-        ):
-            from .services import generate_admin_verification_bill
-            from django.utils import timezone
-            proof_file = generate_admin_verification_bill(self.instance.order_code, admin_username="Admin")
-            self.instance.payment_proof.save(f"admin_verified_{self.instance.order_code}.png", proof_file, save=False)
-            self.instance.payment_proof_uploaded_at = timezone.now()
-            note_line = f"[Admin đã đối soát ngân hàng qua Django Admin lúc {timezone.now().strftime('%d/%m/%Y %H:%M')}]"
-            self.instance.note = (self.instance.note + "\n" + note_line).strip() if self.instance.note else note_line
-            # Xóa lỗi 'status' nếu Model.clean() thêm vào
-            if 'status' in self._errors:
-                del self._errors['status']
-
-        return cleaned_data
+        from .forms import PaymentProofForm
+        proof = self.cleaned_data.get('payment_proof')
+        if isinstance(proof, UploadedFile):
+            if self.instance.status != 'pending' or self.instance.payment_method != 'vietqr':
+                raise forms.ValidationError('Chỉ tải bill cho đơn VietQR đang chờ xác nhận.')
+            check = PaymentProofForm(files={'payment_proof': proof})
+            if not check.is_valid():
+                raise forms.ValidationError('Ảnh bill không hợp lệ.')
+        elif proof is False and self.instance.status != 'pending':
+            raise forms.ValidationError('Không thể xóa bill của đơn đã duyệt.')
+        return proof
 
 
 @admin.register(Order)
@@ -83,7 +78,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', 'payment_method', 'created_at')
     search_fields = ('order_code', 'full_name', 'phone', 'user__username')
     inlines = [OrderItemInline]
-    readonly_fields = ('order_code', 'payment_proof_preview', 'payment_proof_uploaded_at', 'created_at', 'updated_at')
+    readonly_fields = ('user', 'order_code', 'full_name', 'phone', 'address', 'total_amount', 'discount_amount', 'shipping_fee', 'final_amount', 'payment_method', 'status', 'payment_proof_preview', 'payment_proof_uploaded_at', 'created_at', 'updated_at')
     actions = ['approve_orders_action']
 
     def final_amount_formatted(self, obj):
@@ -121,40 +116,37 @@ class OrderAdmin(admin.ModelAdmin):
         return "Chưa có ảnh bill chuyển khoản"
     payment_proof_preview.short_description = 'Xem trước bill chuyển khoản'
 
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_object(self, request, object_id, from_field=None):
+        obj = super().get_object(request, object_id, from_field)
+        if obj is not None and request.method == 'POST':
+            return Order.objects.select_for_update().get(pk=obj.pk)
+        return obj
+
     def save_model(self, request, obj, form, change):
         from django.utils import timezone
-        # Hoàn lại tồn kho nếu Admin đổi trạng thái từ pending sang cancelled
-        if change and 'status' in form.changed_data:
-            old_status = form.initial.get('status')
-            if obj.status == 'cancelled' and old_status == 'pending':
-                for item in obj.items.select_related('product'):
-                    item.product.stock += item.quantity
-                    item.product.save(update_fields=['stock'])
-
-        if obj.payment_method == 'vietqr' and obj.status in ('confirmed', 'shipping', 'delivered') and not obj.payment_proof:
-            from .services import generate_admin_verification_bill
-            proof_file = generate_admin_verification_bill(obj.order_code, admin_username=request.user.username)
-            obj.payment_proof.save(f"admin_verified_{obj.order_code}.png", proof_file, save=False)
-            obj.payment_proof_uploaded_at = timezone.now()
-            note_line = f"[Admin {request.user.username} đã đối soát ngân hàng qua Django Admin lúc {timezone.now().strftime('%d/%m/%Y %H:%M')}]"
-            obj.note = (obj.note + "\n" + note_line).strip() if obj.note else note_line
+        if 'payment_proof' in form.changed_data:
+            obj.payment_proof_uploaded_at = timezone.now() if obj.payment_proof else None
         super().save_model(request, obj, form, change)
 
-    @admin.action(description="Duyệt các đơn hàng đã chọn (Admin đối soát thành công)")
+    @admin.action(description='Duyệt đơn đã đối soát ngân hàng (hoặc COD)')
     def approve_orders_action(self, request, queryset):
-        from django.utils import timezone
-        from .services import generate_admin_verification_bill
-        count = 0
-        for order in queryset:
-            if order.status == 'pending':
-                if order.payment_method == 'vietqr' and not order.payment_proof:
-                    proof_file = generate_admin_verification_bill(order.order_code, admin_username=request.user.username)
-                    order.payment_proof.save(f"admin_verified_{order.order_code}.png", proof_file, save=False)
-                    order.payment_proof_uploaded_at = timezone.now()
-                    note_line = f"[Admin {request.user.username} duyệt hàng loạt lúc {timezone.now().strftime('%d/%m/%Y %H:%M')}]"
-                    order.note = (order.note + "\n" + note_line).strip() if order.note else note_line
-                order.status = 'confirmed'
-                order.save()
-                count += 1
-        self.message_user(request, f"✅ Đã duyệt thành công {count} đơn hàng!")
+        from django.db import transaction
 
+        from .services import transition_order
+        count = 0
+        with transaction.atomic():
+            for order in queryset.order_by('pk'):
+                if order.status != 'pending':
+                    continue
+                try:
+                    transition_order(order, 'confirmed', admin_verified=True, actor=request.user)
+                    count += 1
+                except ValueError as error:
+                    self.message_user(request, str(error), level='ERROR')
+        self.message_user(request, f'Đã duyệt {count} đơn hàng.')

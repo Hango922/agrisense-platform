@@ -5,10 +5,12 @@ Kiểm thử toàn diện Dashboard Admin Phase 5:
 2. Số liệu thống kê Dashboard (doanh thu, đơn hàng, khách hàng, sản phẩm, phân nhóm)
 3. Các trang phân hệ con của Dashboard
 """
-from django.test import TestCase, Client
+from django.test import Client, TestCase
+
 from apps.accounts.models import User
-from apps.products.models import Product, Category, Supplier
 from apps.cart_orders.models import Order
+from apps.products.models import Category, Product, Supplier
+from tests.image_fixtures import png_upload
 
 
 class Phase5ComprehensiveTests(TestCase):
@@ -101,6 +103,7 @@ class Phase5ComprehensiveTests(TestCase):
     def test_export_orders_excel_success(self):
         """Quản trị viên xuất file Excel báo cáo đơn hàng định dạng chuẩn .xlsx thành công."""
         import io
+
         import openpyxl
         self.client.force_login(self.admin_user)
         response = self.client.get('/dashboard/orders/export-excel/')
@@ -153,8 +156,7 @@ class Phase5ComprehensiveTests(TestCase):
 
     def test_dashboard_update_vietqr_order_succeeds_with_proof(self):
         """Admin xác nhận thành công đơn hàng VietQR khi khách đã tải bill chuyển khoản."""
-        from django.core.files.uploadedfile import SimpleUploadedFile
-        fake_bill = SimpleUploadedFile("bill.png", b"\x89PNG\r\n\x1a\ncontent", content_type="image/png")
+        fake_bill = png_upload("bill.png")
         vietqr_order = Order.objects.create(
             order_code='ORD-TEST-VQ-BILL',
             user=self.normal_user,

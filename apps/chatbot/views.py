@@ -3,11 +3,16 @@
 Views xử lý endpoint API Chatbot và giao diện xem lịch sử hội thoại.
 """
 import json
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.sessions.backends.db import SessionStore
+from django.db import transaction
 from django.http import JsonResponse
 from django.views import View
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import ChatSession, ChatMessage
+
+from .models import ChatMessage, ChatSession
 from .services import call_ai
 
 
@@ -16,6 +21,16 @@ class ChatbotAPIView(View):
     API tiếp nhận tin nhắn từ widget chat, gọi AI/fallback và phản hồi định dạng JSON.
     """
     def post(self, request):
+        if request.user.is_authenticated:
+            with transaction.atomic():
+                get_user_model().objects.select_for_update().get(pk=request.user.pk)
+                request.session = SessionStore(session_key=request.session.session_key)
+                response = self.handle_message(request)
+                request.session.save()
+                return response
+        return self.handle_message(request)
+
+    def handle_message(self, request):
         try:
             data = json.loads(request.body)
             message = data.get('message', '').strip()
@@ -25,6 +40,17 @@ class ChatbotAPIView(View):
         if not message or len(message) > 4000:
             return JsonResponse({'error': 'Empty message'}, status=400)
 
+        request_id = data.get('request_id')
+        if request_id is not None and (not isinstance(request_id, str) or not 1 <= len(request_id) <= 64):
+            return JsonResponse({'error': 'Invalid request_id'}, status=400)
+        if request_id and request.user.is_authenticated:
+            from .models import ChatRequest
+            previous = ChatRequest.objects.filter(user=request.user, request_id=request_id).first()
+            if previous:
+                if previous.message != message:
+                    return JsonResponse({'error': 'request_id already used'}, status=409)
+                return JsonResponse(previous.response)
+
         # Đảm bảo session key luôn tồn tại cho cả khách vãng lai và user đăng nhập
         if not request.session.session_key:
             request.session.create()
@@ -33,10 +59,9 @@ class ChatbotAPIView(View):
 
         # Lấy hoặc tạo ChatSession tách biệt cho user vs anonymous
         if user:
-            session, _ = ChatSession.objects.get_or_create(
-                user=user,
-                defaults={'session_key': session_key}
-            )
+            session = ChatSession.objects.filter(user=user).order_by('-updated_at', '-pk').first()
+            if session is None:
+                session = ChatSession.objects.create(user=user, session_key=session_key)
         else:
             session, _ = ChatSession.objects.get_or_create(
                 session_key=session_key,
@@ -44,6 +69,8 @@ class ChatbotAPIView(View):
             )
 
         # Lưu tin nhắn người dùng
+        from apps.behavior.models import UserEvent
+        UserEvent.objects.create(user=user, session_key=session_key, event_type='chat')
         user_tokens = max(1, len(message) // 4)
         ChatMessage.objects.create(session=session, role='user', content=message, tokens_used=user_tokens)
 
@@ -71,12 +98,16 @@ class ChatbotAPIView(View):
             response_time_ms=elapsed,
         )
 
-        return JsonResponse({
+        payload = {
             'reply': text,
             'is_fallback': is_fallback,
             'response_time_ms': elapsed,
             'tokens_used': tokens_used,
-        })
+        }
+        if request_id and user:
+            from .models import ChatRequest
+            ChatRequest.objects.create(user=user, request_id=request_id, message=message, response=payload)
+        return JsonResponse(payload)
 
 
 class ChatHistoryView(LoginRequiredMixin, TemplateView):
@@ -122,7 +153,11 @@ class ChatSessionClearAPIView(View):
     """
     API xóa lịch sử chat của phiên hiện tại để bắt đầu cuộc trò chuyện mới.
     """
+    @transaction.atomic
     def post(self, request):
+        if request.user.is_authenticated:
+            get_user_model().objects.select_for_update().get(pk=request.user.pk)
+            request.session = SessionStore(session_key=request.session.session_key)
         user = request.user if request.user.is_authenticated else None
         if user:
             ChatSession.objects.filter(user=user).delete()
@@ -132,5 +167,6 @@ class ChatSessionClearAPIView(View):
         # Xóa cả dữ liệu đơn hàng nháp dở dang nếu có
         request.session.pop('chatbot_order_draft', None)
         request.session.modified = True
+        request.session.save()
 
         return JsonResponse({'success': True})

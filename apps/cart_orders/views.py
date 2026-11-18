@@ -2,17 +2,19 @@
 """
 Views xử lý xem giỏ hàng, thêm/sửa/xóa sản phẩm, thanh toán COD và lịch sử đơn hàng.
 """
-from django.views.generic import View, TemplateView
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.http import HttpResponseBadRequest
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.http import HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import TemplateView, View
+
+from apps.behavior.models import UserEvent
+from apps.products.models import Product
+
 from .forms import CheckoutForm, PaymentProofForm
 from .models import Cart, CartItem, Order
-from .services import create_order_from_cart, cancel_order
-from apps.products.models import Product
-from apps.behavior.models import UserEvent
+from .services import cancel_order, create_order_from_cart
 
 
 class CartView(LoginRequiredMixin, TemplateView):
@@ -209,3 +211,16 @@ class UploadPaymentProofView(LoginRequiredMixin, View):
         order.save()
         messages.success(request, "Đã tải lên bill chuyển khoản thành công! Admin sẽ đối soát và xác nhận đơn hàng cho bạn.")
         return redirect('cart_orders:order_detail', order_code=order_code)
+
+
+class PaymentProofView(LoginRequiredMixin, View):
+    def get(self, request, filename):
+        from django.http import FileResponse, Http404
+        orders = Order.objects.all() if request.user.is_staff else Order.objects.filter(user=request.user)
+        order = get_object_or_404(orders, payment_proof='payment_proofs/' + filename)
+        try:
+            response = FileResponse(order.payment_proof.open('rb'), as_attachment=True)
+        except FileNotFoundError as error:
+            raise Http404 from error
+        response['Cache-Control'] = 'private, no-store'
+        return response

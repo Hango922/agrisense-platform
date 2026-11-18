@@ -27,12 +27,12 @@
 
 <!-- 4 Premium KPI Metric Cards -->
 <div class="row g-4 mb-4">
-    <!-- KPI 1: Doanh Thu -->
+    <!-- KPI 1: Giá Trị Đơn -->
     <div class="col-xl-3 col-md-6">
         <div class="kpi-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <span class="kpi-label">Doanh Thu (30 Ngày)</span>
+                    <span class="kpi-label">Giá Trị Đơn (30 Ngày)</span>
                     <div class="kpi-value text-success">{{ total_revenue|floatformat:0 }} <small style="font-size: 1.1rem; font-weight: 600;">đ</small></div>
                 </div>
                 <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
@@ -120,7 +120,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
-                        <i class="bi bi-graph-up-arrow text-success"></i> Xu Hướng Doanh Thu 30 Ngày Gần Nhất
+                        <i class="bi bi-graph-up-arrow text-success"></i> Xu Hướng Giá Trị Đơn 30 Ngày Gần Nhất
                     </h5>
                     <small class="text-muted">Biểu đồ đường biểu diễn biến động doanh số thu về theo từng ngày (đơn vị: VNĐ)</small>
                 </div>
@@ -294,7 +294,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Biểu đồ Đường Doanh Thu 30 Ngày
+    // 1. Biểu đồ Đường Giá Trị Đơn 30 Ngày
     const revLabels = {{ chart_revenue_labels|safe }};
     const revData = {{ chart_revenue_data|safe }};
     const revCtx = document.getElementById('revenueChart');
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: revLabels,
                 datasets: [{
-                    label: 'Doanh thu (VNĐ)',
+                    label: 'Giá trị đơn (VNĐ)',
                     data: revData,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.12)',
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         callbacks: {
                             label: function(context) {
                                 const val = context.parsed.y || 0;
-                                return 'Doanh thu: ' + val.toLocaleString('vi-VN') + ' đ';
+                                return 'Giá trị đơn: ' + val.toLocaleString('vi-VN') + ' đ';
                             }
                         }
                     }

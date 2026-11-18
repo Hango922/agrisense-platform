@@ -10,13 +10,15 @@ Bộ kiểm thử tự động toàn diện cho quy trình Quản lý và Duyệ
 - Kiểm tra phân quyền nhân viên / Admin (staff_member_required).
 """
 from decimal import Decimal
-from django.test import TestCase, Client
-from django.core.files.uploadedfile import SimpleUploadedFile
+
+from django.test import Client, TestCase
 from django.urls import reverse
+
 from apps.accounts.models import User
-from apps.products.models import Category, Supplier, Product
-from apps.cart_orders.models import Cart, CartItem, Order
+from apps.cart_orders.models import Cart, CartItem
 from apps.cart_orders.services import create_order_from_cart
+from apps.products.models import Category, Product, Supplier
+from tests.image_fixtures import png_upload
 
 
 class DashboardOrderWorkflowTests(TestCase):
@@ -86,7 +88,7 @@ class DashboardOrderWorkflowTests(TestCase):
     def test_admin_approves_vietqr_order_with_existing_proof(self):
         """Admin duyệt đơn VietQR đã có bill chuyển khoản -> chuyển sang 'confirmed'."""
         order = self._create_test_order(payment_method='vietqr')
-        fake_bill = SimpleUploadedFile("bill_vietqr.png", b"\x89PNG\r\n\x1a\nfakeimagecontent", content_type="image/png")
+        fake_bill = png_upload("bill_vietqr.png")
         order.payment_proof = fake_bill
         order.save()
 
@@ -136,7 +138,7 @@ class DashboardOrderWorkflowTests(TestCase):
         order = self._create_test_order(payment_method='vietqr')
         self.client.force_login(self.admin_user)
 
-        admin_bill = SimpleUploadedFile("admin_bill.png", b"\x89PNG\r\n\x1a\nadminbillcontent", content_type="image/png")
+        admin_bill = png_upload("admin_bill.png")
         response = self.client.post(
             reverse('dashboard:update_order_status', kwargs={'order_id': order.id}),
             {'status': 'confirmed', 'payment_proof': admin_bill},

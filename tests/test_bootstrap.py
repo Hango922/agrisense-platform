@@ -19,6 +19,8 @@ class DemoBootstrapTests(TestCase):
         self.assertTrue(Product.objects.filter(is_active=True, stock__gt=0).exists())
         batch = ProductBatch.objects.first()
         self.assertIsNotNone(batch)
+        assert batch is not None
+        assert batch.qr_code.name is not None
         self.assertTrue(batch.qr_code.storage.exists(batch.qr_code.name))
         self.assertEqual(self.client.get('/').status_code, 200)
         self.assertEqual(self.client.get(f'/trace/{batch.batch_code}/').status_code, 200)

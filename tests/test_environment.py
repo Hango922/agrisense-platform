@@ -1,13 +1,12 @@
 """Bootstrap checks that also run before Django can initialize."""
 
 import os
-from pathlib import Path
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
 from dotenv import dotenv_values
-
 
 ROOT = Path(__file__).resolve().parent.parent
 

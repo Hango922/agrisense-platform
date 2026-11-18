@@ -6,6 +6,7 @@ khi API AI gặp sự cố, timeout hoặc chưa có API key.
 """
 import re
 import unicodedata
+
 from .prompts import FALLBACK_RESPONSES
 
 FALLBACK_RULES = [

@@ -2,8 +2,19 @@
 """
 Quản lý phiên hội thoại và lịch sử tin nhắn Chatbot AI tư vấn nông sản.
 """
-from django.db import models
 from django.conf import settings
+from django.db import models
+
+
+class ChatRequest(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    request_id = models.CharField(max_length=64)
+    message = models.TextField()
+    response = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'request_id'], name='unique_chat_request_user')]
 
 
 class ChatSession(models.Model):

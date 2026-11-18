@@ -1,13 +1,21 @@
 # File: nongsan_project/urls.py
-from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
 from django.views.generic import RedirectView
+
+from apps.cart_orders.views import (
+    CancelOrderView,
+    OrderDetailView,
+    OrderHistoryView,
+    PaymentProofView,
+    UploadPaymentProofView,
+)
 from apps.products.views import HomeView
-from apps.cart_orders.views import OrderHistoryView, OrderDetailView, CancelOrderView, UploadPaymentProofView
 
 urlpatterns = [
+    path('media/payment_proofs/<path:filename>', PaymentProofView.as_view(), name='payment_proof'),
     path('admin/', admin.site.urls),
     path('', HomeView.as_view(), name='home'),
     path('COD/', RedirectView.as_view(pattern_name='home', permanent=False)),

@@ -4,8 +4,10 @@ Thuật toán gợi ý nông sản cá nhân hóa (Content-based filtering)
 dựa trên vector sở thích danh mục từ UserEvent và fallback sang sản phẩm bán chạy nhất.
 """
 from datetime import timedelta
-from django.utils import timezone
+
 from django.db.models import Sum
+from django.utils import timezone
+
 from apps.behavior.models import UserEvent
 from apps.products.models import Product
 
@@ -45,7 +47,7 @@ def recommend_for_user(user, limit=10):
         return _fallback_bestsellers(limit)
 
     from apps.cart_orders.models import OrderItem
-    purchased_ids = set(OrderItem.objects.filter(order__user=user).values_list('product_id', flat=True))
+    purchased_ids = set(OrderItem.objects.filter(order__user=user).exclude(order__status='cancelled').values_list('product_id', flat=True))
     results = []
     top_cats = sorted(scores.items(), key=lambda x: -x[1])[:3]
 
@@ -64,6 +66,14 @@ def recommend_for_user(user, limit=10):
             })
 
     results.sort(key=lambda x: -x['score'])
+    selected = {item['product'].pk for item in results}
+    if len(results) < limit:
+        for item in _fallback_bestsellers(limit + len(selected) + len(purchased_ids)):
+            if item['product'].pk not in selected | purchased_ids:
+                results.append(item)
+                selected.add(item['product'].pk)
+            if len(results) >= limit:
+                break
     return results[:limit]
 
 

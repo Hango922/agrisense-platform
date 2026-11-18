@@ -2,12 +2,19 @@
 """
 Kiểm thử chức năng đặt hàng, kiểm tra tồn kho và hủy đơn hàng.
 """
-from django.test import TestCase
 from decimal import Decimal
+
+from django.test import TestCase
+
 from apps.accounts.models import User
-from apps.products.models import Category, Supplier, Product
 from apps.cart_orders.models import Cart, CartItem
-from apps.cart_orders.services import create_order_from_cart, cancel_order, calculate_shipping_fee
+from apps.cart_orders.services import (
+    calculate_shipping_fee,
+    cancel_order,
+    create_order_from_cart,
+)
+from apps.products.models import Category, Product, Supplier
+from tests.image_fixtures import png_upload
 
 
 class OrderTests(TestCase):
@@ -62,7 +69,7 @@ class OrderTests(TestCase):
             cancel_order(order)
 
     def test_vietqr_generation(self):
-        from apps.cart_orders.vietqr import get_vietqr_url, get_vietqr_info
+        from apps.cart_orders.vietqr import get_vietqr_info, get_vietqr_url
         order = create_order_from_cart(self.user, self.cart, {
             'full_name': 'Test', 'phone': '0900', 'address': 'HN',
         })
@@ -104,14 +111,13 @@ class OrderTests(TestCase):
             order.save()
 
     def test_upload_payment_proof_and_confirm_success(self):
-        from django.core.files.uploadedfile import SimpleUploadedFile
         order = create_order_from_cart(self.user, self.cart, {
             'full_name': 'Khách VietQR', 'phone': '0900111222', 'address': 'HN',
         }, payment_method='vietqr')
 
         # Upload bill chuyển khoản
         self.client.force_login(self.user)
-        fake_bill = SimpleUploadedFile("bill.png", b"\x89PNG\r\n\x1a\nfakeimagecontent", content_type="image/png")
+        fake_bill = png_upload("bill.png")
         response = self.client.post(
             f'/orders/{order.order_code}/upload-proof/',
             {'payment_proof': fake_bill},

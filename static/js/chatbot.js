@@ -320,9 +320,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    let pendingRequest = null;
     async function sendMessage() {
+        if (input.disabled) return;
         const text = input.value.trim();
         if (!text) return;
+        if (!pendingRequest || pendingRequest.message !== text) {
+            pendingRequest = { message: text, request_id: globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2) };
+        }
 
         // 1. Hiển thị tin nhắn người dùng ngay lập tức
         messages.innerHTML += `<div class="chat-msg user">${escapeHtml(text)}</div>`;
@@ -357,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCsrfToken(),
                 },
-                body: JSON.stringify({ message: text }),
+                body: JSON.stringify(pendingRequest),
             });
 
             const typingEl = document.getElementById(typingId);
@@ -365,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (resp.ok) {
                 const data = await resp.json();
+                pendingRequest = null;
                 messages.innerHTML += `<div class="chat-msg bot">${formatBotMessage(data.reply)}</div>`;
             } else {
                 messages.innerHTML += `<div class="chat-msg bot text-danger">Xin lỗi, máy chủ chưa phản hồi. Bạn vui lòng thử lại!</div>`;

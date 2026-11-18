@@ -4,10 +4,12 @@ Dịch vụ gọi API trí tuệ nhân tạo (Gemini / Groq) và tự động fa
 hỗ trợ trích xuất số lượng token tiêu thụ thực tế (tokens_used) và thời gian phản hồi (response_time_ms).
 """
 import time
+
 import requests
 from django.conf import settings
-from .prompts import SYSTEM_PROMPT, CONTEXT_TEMPLATE
+
 from .fallback import get_fallback_response
+from .prompts import CONTEXT_TEMPLATE, SYSTEM_PROMPT
 
 
 def build_product_context():
@@ -49,14 +51,7 @@ def call_ai(user_message, product_context="", user=None):
             timeout_sec = getattr(settings, 'CHATBOT_TIMEOUT', 10)
 
             # Danh sách các mô hình Gemini được ưu tiên thử nghiệm tuần tự (fallback theo độ khả dụng)
-            model_candidates = [
-                'gemini-flash-lite-latest',
-                'gemini-3.1-flash-lite',
-                'gemini-3.1-flash-lite-preview',
-                'gemini-3.5-flash-lite',
-                'gemini-flash-latest',
-                'gemini-3.8-flash'
-            ]
+            model_candidates = [getattr(settings, 'GEMINI_MODEL', 'gemini-flash-lite-latest')]
             text = None
             tokens_used = 0
 
@@ -85,7 +80,7 @@ def call_ai(user_message, product_context="", user=None):
             api_key = getattr(settings, 'GROQ_API_KEY', None)
             if not api_key or api_key in ('your-groq-api-key', 'your-groq-key', ''):
                 raise ValueError("Chưa thiết lập GROQ_API_KEY hợp lệ, chuyển sang fallback rule-based.")
-            client = Groq(api_key=api_key)
+            client = Groq(api_key=api_key, max_retries=0)
             full_system_prompt = f"{SYSTEM_PROMPT}\n\nDữ liệu sản phẩm thực tế trong cửa hàng:\n{product_context}"
             completion = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
@@ -110,7 +105,7 @@ def call_ai(user_message, product_context="", user=None):
         elapsed = int((time.time() - start) * 1000)
         return text, False, elapsed, tokens_used
 
-    except Exception as e:
+    except Exception:
         text, _ = get_fallback_response(user_message, user=user)
         elapsed = int((time.time() - start) * 1000)
         tokens_used = max(1, (len(user_message) + len(text)) // 4)

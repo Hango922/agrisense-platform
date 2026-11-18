@@ -6,23 +6,25 @@ Sử dụng staff_member_required để phân quyền quản trị viên / nhân
 """
 import io
 import json
-import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.views.generic import TemplateView
-from django.views import View
-from django.http import HttpResponse
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils.decorators import method_decorator
-from django.db.models import Sum, Count, Q
-from django.db import models
 from datetime import timedelta
+
+import openpyxl
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db import models
+from django.db.models import Count, Q, Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.generic import TemplateView
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
 from apps.accounts.models import User
-from apps.products.models import Product, Category, Supplier
-from apps.cart_orders.models import Order, OrderItem
 from apps.behavior.models import UserEvent
+from apps.cart_orders.models import Order, OrderItem
+from apps.products.models import Category, Product
 from apps.traceability.models import ProductBatch
 
 
@@ -43,12 +45,12 @@ class DashboardHomeView(TemplateView):
         ctx['total_customers'] = User.objects.filter(is_staff=False).count()
         ctx['total_products'] = Product.objects.filter(is_active=True).count()
         ctx['top_products'] = (
-            OrderItem.objects.filter(order__created_at__gte=d30)
+            OrderItem.objects.filter(order__created_at__gte=d30).exclude(order__status='cancelled')
             .values('product_name').annotate(total=Sum('quantity')).order_by('-total')[:10]
         )
 
         # 1. Dữ liệu biểu đồ doanh thu 30 ngày (sử dụng Python timezone để tương thích tuyệt đối MySQL trên Windows)
-        today = timezone.now().date()
+        today = timezone.localdate()
         daily_revenue_map = {today - timedelta(days=i): 0.0 for i in range(29, -1, -1)}
         recent_orders = (
             Order.objects.filter(created_at__gte=timezone.now() - timedelta(days=30))
@@ -86,12 +88,12 @@ class DashboardHomeView(TemplateView):
         chart_top_data = [int(item['total'] or 0) for item in top_items]
 
         # Truyền dạng chuỗi JSON an toàn cho JavaScript
-        ctx['chart_revenue_labels'] = json.dumps(chart_revenue_labels)
-        ctx['chart_revenue_data'] = json.dumps(chart_revenue_data)
-        ctx['chart_segment_labels'] = json.dumps(chart_segment_labels)
-        ctx['chart_segment_data'] = json.dumps(chart_segment_data)
-        ctx['chart_top_labels'] = json.dumps(chart_top_labels)
-        ctx['chart_top_data'] = json.dumps(chart_top_data)
+        ctx['chart_revenue_labels'] = json.dumps(chart_revenue_labels).replace('<', '\\u003c')
+        ctx['chart_revenue_data'] = json.dumps(chart_revenue_data).replace('<', '\\u003c')
+        ctx['chart_segment_labels'] = json.dumps(chart_segment_labels).replace('<', '\\u003c')
+        ctx['chart_segment_data'] = json.dumps(chart_segment_data).replace('<', '\\u003c')
+        ctx['chart_top_labels'] = json.dumps(chart_top_labels).replace('<', '\\u003c')
+        ctx['chart_top_data'] = json.dumps(chart_top_data).replace('<', '\\u003c')
 
         return ctx
 
@@ -418,7 +420,11 @@ class ExportOrdersExcelView(View):
                 pay_map.get(ord.payment_method, ord.payment_method),
                 ord.note or ''
             ]
+            row = [''.join(ch for ch in value if ch >= ' ' or ch in '\t\n\r') if isinstance(value, str) else value for value in row]
             ws.append(row)
+            for column, value in enumerate(row, 1):
+                if isinstance(value, str):
+                    ws.cell(row=idx + 1, column=column).data_type = 's'
             row_idx = idx + 1
             for col_idx in range(1, len(row) + 1):
                 cell = ws.cell(row=row_idx, column=col_idx)

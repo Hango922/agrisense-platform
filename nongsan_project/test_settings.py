@@ -5,7 +5,6 @@ from uuid import uuid4
 
 from .settings import *  # noqa: F403
 
-
 # Preserve configured MySQL credentials while isolating each test invocation.
 DATABASES = deepcopy(DATABASES)  # noqa: F405
 DATABASES['default']['TEST'] = {'NAME': 'test_agrisense_' + uuid4().hex[:12]}
