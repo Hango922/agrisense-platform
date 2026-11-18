@@ -1,157 +1,119 @@
-# File: apps/cart_orders/services.py
-"""
-Các dịch vụ xử lý nghiệp vụ giỏ hàng, đặt hàng COD và tính phí vận chuyển.
-"""
+"""Transactional order services shared by storefront, chatbot and staff."""
 from django.db import transaction
+from django.db.models import F
 from django.utils.crypto import get_random_string
-from .models import Order, OrderItem
 
-# Cấu hình phí ship: 30.000đ, miễn phí từ 500.000đ
+from apps.behavior.models import UserEvent
+from apps.products.models import Product
+from .forms import CheckoutForm
+from .models import Cart, Order, OrderItem
+
 SHIPPING_FEE = 30000
 FREE_SHIPPING_THRESHOLD = 500000
+TRANSITIONS = {
+    'pending': {'confirmed', 'cancelled'},
+    'confirmed': {'shipping'},
+    'shipping': {'delivered'},
+    'delivered': set(),
+    'cancelled': set(),
+}
 
 
 def calculate_shipping_fee(total):
-    """
-    Tính phí vận chuyển: Miễn phí nếu đơn hàng >= 500.000đ, ngược lại 30.000đ.
-    """
     return 0 if total >= FREE_SHIPPING_THRESHOLD else SHIPPING_FEE
 
 
+def validate_transition(current, target):
+    if target not in TRANSITIONS or (current != target and target not in TRANSITIONS.get(current, set())):
+        raise ValueError('Không thể chuyển trạng thái đơn hàng theo yêu cầu.')
+
+
 @transaction.atomic
-def create_order_from_cart(user, cart, address_data, note="", payment_method="cod"):
-    """
-    Tạo đơn hàng từ giỏ hàng trong một transaction an toàn:
-    - Kiểm tra giỏ hàng không rỗng.
-    - Kiểm tra tồn kho từng mặt hàng.
-    - Tính toán tổng tiền, phí vận chuyển và giảm trừ tồn kho sản phẩm.
-    - Hỗ trợ phương thức thanh toán: COD hoặc Chuyển khoản VietQR.
-    - Xóa các mặt hàng trong giỏ sau khi đặt thành công.
-    """
-    if not cart.items.exists():
-        raise ValueError("Giỏ hàng trống")
+def create_order_from_cart(user, cart, address_data, note='', payment_method='cod'):
+    cart = Cart.objects.select_for_update().get(pk=cart.pk, user=user)
+    items = list(cart.items.select_for_update().select_related('product').order_by('product_id'))
+    order = create_direct_order(user, [{'product': i.product, 'quantity': i.quantity} for i in items],
+                                address_data, note=note, payment_method=payment_method)
+    cart.items.filter(pk__in=[i.pk for i in items]).delete()
+    return order
 
-    for item in cart.items.select_related('product'):
-        if item.quantity > item.product.stock:
-            raise ValueError(f"Sản phẩm '{item.product.name}' chỉ còn {item.product.stock} {item.product.unit}")
 
-    total = sum(item.subtotal() for item in cart.items.all())
-    shipping_fee = calculate_shipping_fee(total)
-    final = total + shipping_fee
-
-    order = Order.objects.create(
-        user=user,
-        order_code='ORD' + get_random_string(8, '0123456789'),
-        full_name=address_data['full_name'],
-        phone=address_data['phone'],
-        address=address_data['address'],
-        total_amount=total,
-        shipping_fee=shipping_fee,
-        final_amount=final,
-        note=note,
-        status='pending',
-        payment_method=payment_method,
-    )
-
-    for item in cart.items.select_related('product'):
-        OrderItem.objects.create(
-            order=order,
-            product=item.product,
-            product_name=item.product.name,
-            price=item.product.price,
-            quantity=item.quantity,
-            subtotal=item.subtotal(),
-        )
-        item.product.stock -= item.quantity
-        item.product.save(update_fields=['stock'])
-
-    cart.items.all().delete()
+@transaction.atomic
+def create_direct_order(user, items_data, address_data, note='Đặt hàng qua Chatbot AI', payment_method='cod'):
+    form = CheckoutForm({**address_data, 'payment_method': payment_method, 'note': note})
+    if not form.is_valid():
+        raise ValueError('Thông tin nhận hàng hoặc phương thức thanh toán không hợp lệ.')
+    if not items_data:
+        raise ValueError('Giỏ hàng trống.')
+    quantities = {}
+    for item in items_data:
+        qty = item['quantity']
+        if not isinstance(qty, int) or isinstance(qty, bool) or qty <= 0:
+            raise ValueError('Số lượng phải là số nguyên dương.')
+        key = item['product'].pk
+        quantities[key] = quantities.get(key, 0) + qty
+    # Lock in a stable order and read current stock, never caller snapshots.
+    products = list(Product.objects.select_for_update().filter(pk__in=quantities).order_by('pk'))
+    if len(products) != len(quantities):
+        raise ValueError('Sản phẩm không tồn tại.')
+    for product in products:
+        if not product.is_active or quantities[product.pk] > product.stock:
+            raise ValueError(f"Sản phẩm '{product.name}' không đủ tồn kho hoặc đã ngừng bán.")
+    total = sum(p.price * quantities[p.pk] for p in products)
+    shipping = calculate_shipping_fee(total)
+    data = form.cleaned_data
+    order = Order.objects.create(user=user, order_code='ORD' + get_random_string(12, '0123456789'),
+        full_name=data['full_name'], phone=data['phone'], address=data['address'],
+        total_amount=total, shipping_fee=shipping, final_amount=total + shipping,
+        note=data['note'], payment_method=payment_method, status='pending')
+    for product in products:
+        quantity = quantities[product.pk]
+        OrderItem.objects.create(order=order, product=product, product_name=product.name,
+            price=product.price, quantity=quantity, subtotal=product.price * quantity)
+        Product.objects.filter(pk=product.pk).update(stock=F('stock') - quantity)
+        UserEvent.objects.create(user=user, event_type='purchase', product=product, category=product.category)
     return order
 
 
 @transaction.atomic
 def cancel_order(order):
-    """
-    Hủy đơn hàng: Chỉ cho phép khi đơn ở trạng thái 'pending' (Chờ xác nhận).
-    Tự động hoàn lại số lượng tồn kho cho các sản phẩm.
-    """
-    if order.status not in ('pending',):
-        raise ValueError("Chỉ có thể hủy đơn ở trạng thái 'Chờ xác nhận'")
-
-    for item in order.items.select_related('product'):
-        item.product.stock += item.quantity
-        item.product.save(update_fields=['stock'])
-
-    order.status = 'cancelled'
-    order.save(update_fields=['status'])
-    return order
+    locked = Order.objects.select_for_update().get(pk=order.pk)
+    if locked.status != 'pending':
+        raise ValueError('Chỉ có thể hủy đơn đang chờ xác nhận.')
+    for item in locked.items.order_by('product_id'):
+        Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
+    locked.status = 'cancelled'
+    locked.save(update_fields=['status', 'updated_at'])
+    order.status = locked.status
+    return locked
 
 
 @transaction.atomic
-def create_direct_order(user, items_data, address_data, note="Đặt hàng qua Chatbot AI", payment_method="cod"):
-    """
-    Tạo đơn hàng trực tiếp (ví dụ qua Chatbot AI) mà không cần qua giỏ hàng:
-    items_data: list of dicts [{'product': Product instance, 'quantity': int}]
-    address_data: {'full_name': str, 'phone': str, 'address': str}
-    payment_method: 'cod' hoặc 'vietqr'
-    """
-    if payment_method not in ('cod', 'vietqr'):
-        payment_method = 'cod'
-
-    if not items_data:
-        raise ValueError("Danh sách sản phẩm trống")
-
-    for item in items_data:
-        prod = item['product']
-        qty = item['quantity']
-        if qty <= 0:
-            raise ValueError(f"Số lượng sản phẩm '{prod.name}' không hợp lệ")
-        if qty > prod.stock:
-            raise ValueError(f"Sản phẩm '{prod.name}' chỉ còn {prod.stock} {prod.unit}")
-
-    total = sum(item['product'].price * item['quantity'] for item in items_data)
-    shipping_fee = calculate_shipping_fee(total)
-    final = total + shipping_fee
-
-    # Đảm bảo độ dài các trường khớp với ràng buộc cơ sở dữ liệu
-    raw_name = str(address_data.get('full_name') or (user.get_full_name() or user.username if user else 'Khách hàng')).strip()
-    full_name = raw_name[:100] if raw_name else 'Khách hàng'
-
-    raw_phone = str(address_data.get('phone') or getattr(user, 'phone', '') or '0900000000').strip()
-    phone = raw_phone[:15] if raw_phone else '0900000000'
-
-    raw_address = str(address_data.get('address') or 'Địa chỉ giao hàng').strip()
-
-    order = Order.objects.create(
-        user=user,
-        order_code='ORD' + get_random_string(8, '0123456789'),
-        full_name=full_name,
-        phone=phone,
-        address=raw_address,
-        total_amount=total,
-        shipping_fee=shipping_fee,
-        final_amount=final,
-        note=note,
-        status='pending',
-        payment_method=payment_method,
-    )
-
-    for item in items_data:
-        prod = item['product']
-        qty = item['quantity']
-        subtotal = prod.price * qty
-        OrderItem.objects.create(
-            order=order,
-            product=prod,
-            product_name=prod.name,
-            price=prod.price,
-            quantity=qty,
-            subtotal=subtotal,
-        )
-        prod.stock -= qty
-        prod.save(update_fields=['stock'])
-
-    return order
+def transition_order(order, target, proof=None, admin_verified=False, actor=None):
+    from django.utils import timezone
+    locked = Order.objects.select_for_update().get(pk=order.pk)
+    validate_transition(locked.status, target)
+    if locked.status == target:
+        return locked
+    if target == 'cancelled':
+        return cancel_order(locked)
+    if proof is not None:
+        from .forms import PaymentProofForm
+        form = PaymentProofForm(files={'payment_proof': proof})
+        if not form.is_valid():
+            raise ValueError('Bill phải là ảnh PNG, JPEG hoặc WebP hợp lệ, tối đa 5 MB.')
+        locked.payment_proof = form.cleaned_data['payment_proof']
+        locked.payment_proof_uploaded_at = timezone.now()
+    if locked.payment_method == 'vietqr' and not locked.payment_proof:
+        if not admin_verified:
+            raise ValueError('Cần bill hoặc xác nhận đối soát ngân hàng.')
+        username = actor.username if actor else 'Admin'
+        locked.payment_proof = generate_admin_verification_bill(locked.order_code, username)
+        locked.payment_proof_uploaded_at = timezone.now()
+        locked.note += f'\n[Đối soát thủ công: {username}, {timezone.now().isoformat()}]'
+    locked.status = target
+    locked.save()
+    return locked
 
 
 def generate_admin_verification_bill(order_code, admin_username=None):

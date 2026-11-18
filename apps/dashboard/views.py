@@ -215,53 +215,18 @@ class DashboardUpdateOrderStatusView(View):
     - Hủy đơn 'pending': Tự động hoàn lại số lượng tồn kho sản phẩm.
     """
     def post(self, request, order_id):
+        from apps.cart_orders.services import transition_order
         order = get_object_or_404(Order, id=order_id)
-        target_status = request.POST.get('status')
-        if not target_status:
-            messages.error(request, "Thiếu trạng thái cần cập nhật.")
-            return redirect('dashboard:orders')
-
-        # Xử lý hủy đơn: hoàn lại tồn kho nếu đơn đang chờ duyệt
-        if target_status == 'cancelled' and order.status == 'pending':
-            from apps.cart_orders.services import cancel_order
-            cancel_order(order)
-            messages.success(request, f"✅ Đã hủy đơn hàng #{order.order_code} và hoàn trả số lượng tồn kho thành công!")
-            return redirect('dashboard:orders')
-
-        # Xử lý đơn VietQR khi xác nhận hoặc chuyển tiếp vận chuyển
-        if target_status in ('confirmed', 'shipping', 'delivered') and order.payment_method == 'vietqr':
-            # Trường hợp 1: Admin tải trực tiếp file bill đính kèm
-            if 'payment_proof' in request.FILES:
-                order.payment_proof = request.FILES['payment_proof']
-                order.payment_proof_uploaded_at = timezone.now()
-                admin_name = request.user.username if request.user.is_authenticated else 'Admin'
-                note_line = f"[Admin {admin_name} đã tải lên bill đối soát lúc {timezone.now().strftime('%d/%m/%Y %H:%M')}]"
-                order.note = (order.note + "\n" + note_line).strip() if order.note else note_line
-
-            # Trường hợp 2: Chưa có bill -> kiểm tra cờ xác nhận đối soát từ Admin
-            elif not order.payment_proof:
-                admin_verified = request.POST.get('admin_verified') in ('1', 'true', 'True')
-                if admin_verified:
-                    from apps.cart_orders.services import generate_admin_verification_bill
-                    admin_name = request.user.username if request.user.is_authenticated else 'Admin'
-                    proof_file = generate_admin_verification_bill(order.order_code, admin_username=admin_name)
-                    order.payment_proof.save(f"admin_verified_{order.order_code}.png", proof_file, save=False)
-                    order.payment_proof_uploaded_at = timezone.now()
-                    note_line = f"[Admin {admin_name} đã đối soát ngân hàng thành công lúc {timezone.now().strftime('%d/%m/%Y %H:%M')}]"
-                    order.note = (order.note + "\n" + note_line).strip() if order.note else note_line
-                else:
-                    messages.error(
-                        request,
-                        f"❌ KHÔNG THỂ XÁC NHẬN: Đơn hàng #{order.order_code} thanh toán qua VietQR nhưng KHÁCH HÀNG CHƯA TẢI LÊN BILL CHUYỂN KHOẢN! Vui lòng chờ khách tải bill đối soát."
-                    )
-                    return redirect('dashboard:orders')
-
-
-        order.status = target_status
-        order.save()
-        messages.success(request, f"✅ Đã cập nhật đơn hàng #{order.order_code} sang trạng thái: {order.get_status_display()} thành công!")
+        try:
+            transition_order(order, request.POST.get('status'),
+                proof=request.FILES.get('payment_proof'),
+                admin_verified=request.POST.get('admin_verified') in ('1', 'true', 'True'),
+                actor=request.user)
+        except ValueError as error:
+            messages.error(request, str(error))
+        else:
+            messages.success(request, 'Đã cập nhật đơn hàng.')
         return redirect('dashboard:orders')
-
 
 
 @method_decorator(staff_member_required, name='dispatch')

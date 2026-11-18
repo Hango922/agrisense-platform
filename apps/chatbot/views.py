@@ -7,13 +7,10 @@ from django.http import JsonResponse
 from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from .models import ChatSession, ChatMessage
 from .services import call_ai
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ChatbotAPIView(View):
     """
     API tiếp nhận tin nhắn từ widget chat, gọi AI/fallback và phản hồi định dạng JSON.
@@ -25,7 +22,7 @@ class ChatbotAPIView(View):
         except (json.JSONDecodeError, AttributeError):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-        if not message:
+        if not message or len(message) > 4000:
             return JsonResponse({'error': 'Empty message'}, status=400)
 
         # Đảm bảo session key luôn tồn tại cho cả khách vãng lai và user đăng nhập
@@ -121,7 +118,6 @@ class ChatSessionMessagesAPIView(View):
         return JsonResponse({'messages': data})
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ChatSessionClearAPIView(View):
     """
     API xóa lịch sử chat của phiên hiện tại để bắt đầu cuộc trò chuyện mới.

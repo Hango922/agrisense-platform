@@ -194,9 +194,9 @@ def get_fallback_response(message, user=None):
         try:
             from apps.cart_orders.models import Order
             code_match = re.search(r'\b(ORD[A-Za-z0-9_-]+)\b', msg, re.IGNORECASE)
-            if code_match:
+            if code_match and user and user.is_authenticated:
                 code = code_match.group(1)
-                order = Order.objects.filter(order_code__iexact=code).first()
+                order = Order.objects.filter(order_code__iexact=code, user=user).first()
                 if order:
                     status_dict = {
                         'pending': 'Chờ xác nhận',

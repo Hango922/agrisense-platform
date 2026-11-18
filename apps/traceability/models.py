@@ -35,9 +35,10 @@ class ProductBatch(models.Model):
         verbose_name_plural = 'Danh sách lô hàng'
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
+        old_code = type(self).objects.filter(pk=self.pk).values_list('batch_code', flat=True).first() if self.pk else None
         super().save(*args, **kwargs)
-        if not self.qr_code:
+        persisted_code = type(self).objects.values_list('batch_code', flat=True).get(pk=self.pk)
+        if not self.qr_code or (old_code is not None and old_code != persisted_code):
             from .qr_generator import generate_qr_code
             qr_file = generate_qr_code(self)
             self.qr_code.save(qr_file.name, qr_file, save=False)

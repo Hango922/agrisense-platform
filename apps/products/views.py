@@ -6,6 +6,8 @@ from django.views.generic import ListView, DetailView, TemplateView, View
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q, Avg
+from django.http import HttpResponseBadRequest
+from decimal import Decimal, InvalidOperation
 from .models import Product, Category, ProductReview
 from apps.behavior.models import UserEvent
 from apps.recommendation.engine import recommend_for_user
@@ -37,6 +39,17 @@ class ProductListView(ListView):
     template_name = 'products/list.html'
     context_object_name = 'products'
     paginate_by = 12
+
+    def get(self, request, *args, **kwargs):
+        try:
+            prices = [Decimal(request.GET[key]) for key in ('min_price', 'max_price') if request.GET.get(key)]
+            if any(not value.is_finite() or value < 0 or value > 999999999999 for value in prices):
+                raise ValueError
+            if len(prices) == 2 and prices[0] > prices[1]:
+                raise ValueError
+        except (InvalidOperation, ValueError):
+            return HttpResponseBadRequest('Khoảng giá không hợp lệ.')
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = Product.objects.filter(is_active=True, stock__gt=0)
@@ -118,7 +131,12 @@ class AddReviewView(LoginRequiredMixin, View):
     """
     def post(self, request, slug):
         product = get_object_or_404(Product, slug=slug)
-        rating = int(request.POST.get('rating', 5))
+        try:
+            rating = int(request.POST.get('rating', 5))
+            if not 1 <= rating <= 5:
+                raise ValueError
+        except (ValueError, TypeError):
+            return HttpResponseBadRequest('Điểm đánh giá phải từ 1 đến 5.')
         comment = request.POST.get('comment', '')
         ProductReview.objects.update_or_create(
             product=product, user=request.user,

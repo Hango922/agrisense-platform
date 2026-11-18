@@ -4,6 +4,7 @@
 {% block title %}Thanh toán đơn hàng - AgriSense{% endblock %}
 
 {% block content %}
+{% if form_errors %}<div class="alert alert-danger" role="alert">Vui lòng kiểm tra thông tin nhận hàng. {{ form_errors }}</div>{% endif %}
 <!-- Checkout Steps Progress Bar -->
 <div class="row justify-content-center mb-4">
     <div class="col-lg-8">
