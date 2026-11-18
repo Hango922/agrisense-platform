@@ -2,12 +2,14 @@
 """
 Views xử lý đăng ký, đăng nhập, đăng xuất và xem hồ sơ người dùng.
 """
-from django.shortcuts import redirect
 from django.contrib.auth import login, logout
-from django.contrib.auth.views import LoginView as DjangoLoginView
-from django.views.generic import CreateView, TemplateView
-from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView as DjangoLoginView
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, TemplateView
+
 from .forms import RegisterForm
 
 
@@ -20,9 +22,9 @@ class RegisterView(CreateView):
     success_url = reverse_lazy('home')
 
     def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
-        return super().form_valid(form)
+        self.object = form.save()
+        login(self.request, self.object)
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class LoginView(DjangoLoginView):

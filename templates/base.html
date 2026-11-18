@@ -28,7 +28,7 @@
     </div>
 
     <!-- Main Navigation Bar -->
-    <nav class="navbar navbar-expand-lg sticky-top agri-navbar shadow-sm">
+    <nav class="navbar navbar-expand-xl sticky-top agri-navbar shadow-sm">
         <div class="container">
             <!-- Brand Logo -->
             <a class="agri-brand" href="{% url 'home' %}">
@@ -48,7 +48,7 @@
 
             <!-- Nav Content -->
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto ms-lg-4 gap-1">
+                <ul class="navbar-nav me-auto ms-xl-4 gap-1">
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
                             <i class="bi bi-house-door"></i> Trang chủ
@@ -60,20 +60,20 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-trace-pill ms-lg-1" href="{% url 'traceability:trace_index' %}">
+                        <a class="nav-link nav-trace-pill ms-xl-1" href="{% url 'traceability:trace_index' %}">
                             <i class="bi bi-qr-code-scan"></i> Hộ chiếu nguồn gốc
                         </a>
                     </li>
                 </ul>
 
                 <!-- Search Input Form -->
-                <form class="nav-search-form me-lg-3 my-2 my-lg-0" action="{% url 'products:search' %}" method="get">
+                <form class="nav-search-form me-xl-3 my-2 my-xl-0" action="{% url 'products:search' %}" method="get">
                     <i class="bi bi-search nav-search-icon"></i>
                     <input class="form-control nav-search-input" type="search" name="q" placeholder="Tìm rau củ, trái cây, bưởi..." value="{{ request.GET.q|default:'' }}" autocomplete="off">
                 </form>
 
                 <!-- Right Action Icons & User Menu -->
-                <ul class="navbar-nav align-items-lg-center gap-2">
+                <ul class="navbar-nav align-items-xl-center gap-2">
                     <!-- Cart Button -->
                     <li class="nav-item">
                         <a class="nav-cart-btn" href="{% url 'cart_orders:cart' %}" title="Xem giỏ hàng">
