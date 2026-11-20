@@ -11,6 +11,7 @@ from django.views.generic import TemplateView, View
 
 from apps.behavior.models import UserEvent
 from apps.products.models import Product
+from apps.traceability.inventory import available_stock
 
 from .forms import CheckoutForm, PaymentProofForm
 from .models import Cart, CartItem, Order
@@ -45,16 +46,16 @@ class AddToCartView(LoginRequiredMixin, View):
             return HttpResponseBadRequest('Số lượng không hợp lệ.')
         if qty == 0:
             return HttpResponseBadRequest('Số lượng phải lớn hơn 0.')
-        if qty > product.stock:
-            messages.error(request, f"Chỉ còn {product.stock} {product.unit}")
+        if qty > available_stock(product):
+            messages.error(request, f"Chỉ còn {available_stock(product)} {product.unit}")
             return redirect('products:detail', slug=product.slug)
 
         cart, _ = Cart.objects.get_or_create(user=request.user)
         cart = Cart.objects.select_for_update().get(pk=cart.pk)
         item, created = CartItem.objects.get_or_create(cart=cart, product=product)
         if not created:
-            if item.quantity + qty > product.stock:
-                messages.error(request, f"Không thể thêm. Tồn kho chỉ còn {product.stock} {product.unit}")
+            if item.quantity + qty > available_stock(product):
+                messages.error(request, f"Không thể thêm. Tồn kho chỉ còn {available_stock(product)} {product.unit}")
                 return redirect('cart_orders:cart')
             item.quantity += qty
         else:
@@ -83,8 +84,8 @@ class UpdateCartItemView(LoginRequiredMixin, View):
                 raise ValueError
         except (ValueError, TypeError):
             return HttpResponseBadRequest('Số lượng không hợp lệ.')
-        if qty > item.product.stock:
-            messages.error(request, f"Chỉ còn {item.product.stock} {item.product.unit}")
+        if qty > available_stock(item.product):
+            messages.error(request, f"Chỉ còn {available_stock(item.product)} {item.product.unit}")
             return redirect('cart_orders:cart')
         if qty <= 0:
             item.delete()

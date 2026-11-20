@@ -9,7 +9,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from apps.behavior.models import UserEvent
-from apps.products.models import Product
+from apps.traceability.inventory import available_products
 
 # Trọng số hành vi người dùng
 EVENT_WEIGHTS = {
@@ -52,7 +52,7 @@ def recommend_for_user(user, limit=10):
     top_cats = sorted(scores.items(), key=lambda x: -x[1])[:3]
 
     for cat_id, score in top_cats:
-        products = Product.objects.filter(
+        products = available_products().filter(
             category_id=cat_id,
             is_active=True,
             stock__gt=0
@@ -93,11 +93,11 @@ def _fallback_bestsellers(limit=10):
         .order_by('-total')[:limit]
     )
     ids = [b['product_id'] for b in best]
-    products = list(Product.objects.filter(id__in=ids, is_active=True, stock__gt=0))
+    products = list(available_products().filter(id__in=ids, is_active=True, stock__gt=0))
 
     if len(products) < limit:
         exclude_ids = [p.id for p in products]
-        more = Product.objects.filter(
+        more = available_products().filter(
             is_active=True,
             stock__gt=0
         ).exclude(id__in=exclude_ids).order_by('-created_at')[:(limit - len(products))]

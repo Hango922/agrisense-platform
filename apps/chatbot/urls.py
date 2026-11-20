@@ -3,6 +3,7 @@
 Định tuyến URL cho phân hệ Chatbot AI (apps.chatbot).
 """
 from django.urls import path
+
 from . import views
 
 app_name = 'chatbot'

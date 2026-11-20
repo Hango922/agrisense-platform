@@ -305,6 +305,17 @@
             border-color: #10b981;
         }
     </style>
+    <link rel="stylesheet" href="{% static 'css/market.css' %}">
+    <style>
+        body { flex-direction:row; }
+        :root { --agri-admin-bg:#f7f6ef; --agri-sidebar-bg:#193d2d; --agri-sidebar-border:#345342; --agri-sidebar-hover:#315740; }
+        .sidebar { flex-shrink:0; }
+        .main-content { min-width:0; }
+        .top-navbar { flex-wrap:wrap; gap:16px; }
+        .top-navbar>div { flex-wrap:wrap; min-width:0; }
+        @media(max-width:767px) { .top-navbar { position:static; padding:16px; }.top-navbar h4 { font-size:17px; }.top-navbar .btn-store-link { font-size:11px; padding:8px; }.top-navbar .vr { display:none; } }
+        @media(max-width:767px) { body { flex-direction:column; }.sidebar { width:100%; height:auto; min-height:0; position:relative; }.sidebar-brand { padding:16px; }.sidebar-user-box,.sidebar-nav-header { display:none; }.sidebar .nav { flex-direction:row !important; flex-wrap:wrap; }.sidebar .nav-link { font-size:11px; padding:10px; }.main-content { padding:18px !important; width:100%; min-width:0; } }
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -323,6 +334,8 @@
 
         <!-- Navigation Section -->
         <div class="sidebar-nav-header">Trung Tâm Điều Hành</div>
+        <a class="nav-link mx-3" href="{% url 'dashboard:operations' %}"><i class="bi bi-check2-square" aria-hidden="true"></i> Việc cần xử lý</a>
+        <a class="nav-link mx-3" href="{% url 'dashboard:receive' %}"><i class="bi bi-box-seam" aria-hidden="true"></i> Nhập kho theo lô</a>
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
@@ -399,9 +412,9 @@
 
                 <div class="d-flex align-items-center gap-2">
                     <span class="small text-muted d-none d-md-inline">Xin chào, <strong>{{ request.user.username }}</strong></span>
-                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Đăng xuất">
+                    <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                         <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
-                    </a>
+                    </button></form>
                 </div>
             </div>
         </header>

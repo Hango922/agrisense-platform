@@ -14,7 +14,12 @@ from apps.cart_orders.views import (
 )
 from apps.products.views import HomeView
 
+from .runtime_views import health, public_image
+
 urlpatterns = [
+    path('health/', health, name='health'),
+    path('media/products/<path:filename>', public_image, {'directory': 'products'}, name='product_image'),
+    path('media/qr_codes/<path:filename>', public_image, {'directory': 'qr_codes'}, name='qr_image'),
     path('media/payment_proofs/<path:filename>', PaymentProofView.as_view(), name='payment_proof'),
     path('admin/', admin.site.urls),
     path('', HomeView.as_view(), name='home'),

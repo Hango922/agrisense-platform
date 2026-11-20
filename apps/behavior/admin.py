@@ -3,7 +3,8 @@
 Đăng ký giao diện quản trị Django Admin cho phân hệ Hành vi người dùng & Phân nhóm AI.
 """
 from django.contrib import admin
-from .models import UserEvent, UserSegment, RecommendationLog
+
+from .models import RecommendationLog, UserEvent, UserSegment
 
 
 @admin.register(UserEvent)

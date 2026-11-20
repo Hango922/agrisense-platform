@@ -3,6 +3,7 @@
 Định tuyến URL cho phân hệ Tài khoản người dùng (apps.accounts).
 """
 from django.urls import path
+
 from . import views
 
 app_name = 'accounts'

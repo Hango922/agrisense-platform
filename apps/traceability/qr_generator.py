@@ -3,12 +3,13 @@
 Hàm sinh mã QR tự động cho lô hàng nông sản trỏ về trang truy xuất công khai.
 Tự động phát hiện IP mạng LAN (192.168.x.x) để điện thoại di động quét và mở được trang web khi kết nối cùng mạng Wi-Fi.
 """
-import socket
 import os
-import qrcode
+import socket
 from io import BytesIO
-from django.core.files.base import ContentFile
+
+import qrcode
 from django.conf import settings
+from django.core.files.base import ContentFile
 
 
 def get_local_lan_ip():

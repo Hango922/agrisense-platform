@@ -24,6 +24,7 @@ class ProductBatch(models.Model):
     expiry_date = models.DateField(null=True, blank=True, verbose_name='Hạn sử dụng')
     certification = models.CharField(max_length=200, blank=True, verbose_name='Chứng nhận an toàn')
     quantity = models.CharField(max_length=50, blank=True, verbose_name='Sản lượng lô hàng')
+    remaining_quantity = models.PositiveIntegerField(default=0, editable=False, verbose_name='Tồn kho của lô')
     notes = models.TextField(blank=True, verbose_name='Nhật ký chăm sóc / Ghi chú')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Ngày cập nhật')

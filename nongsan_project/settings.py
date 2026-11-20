@@ -1,6 +1,7 @@
 # File: nongsan_project/settings.py
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -54,6 +55,7 @@ TEMPLATES = [{
             'django.contrib.auth.context_processors.auth',
             'django.contrib.messages.context_processors.messages',
             'apps.cart_orders.context_processors.cart_count',
+            'apps.products.context_processors.demo_context',
         ],
     },
 }]
@@ -106,13 +108,24 @@ LOGOUT_REDIRECT_URL = '/'
 AI_PROVIDER = os.getenv('AI_PROVIDER', 'gemini')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-CHATBOT_TIMEOUT = int(os.getenv('CHATBOT_TIMEOUT', 10))
+CHATBOT_TIMEOUT = int(os.getenv('CHATBOT_TIMEOUT', '10'))
+GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-2.5-flash')
+PLANNER_GEMINI_MODEL = os.getenv('PLANNER_GEMINI_MODEL', 'gemini-3.1-flash-lite')
+PLANNER_AI_TIMEOUT = int(os.getenv('PLANNER_AI_TIMEOUT', '30'))
+GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.1-8b-instant')
+QR_BASE_URL = os.getenv('QR_BASE_URL', 'http://127.0.0.1:8000')
+RATE_LIMIT_ENABLED = False
+OPERATIONAL_MODE = False
 
 # VietQR Payment Config
 VIETQR_BANK_ID = os.getenv('VIETQR_BANK_ID', 'TCB')
 VIETQR_ACCOUNT_NO = os.getenv('VIETQR_ACCOUNT_NO', '7979798950')
 VIETQR_ACCOUNT_NAME = os.getenv('VIETQR_ACCOUNT_NAME', 'NGUYEN HONG HOANG')
 VIETQR_BANK_NAME = os.getenv('VIETQR_BANK_NAME', 'Techcombank')
+
+PAYMENT_WEBHOOK_SECRET = os.getenv('PAYMENT_WEBHOOK_SECRET', '')
+# Only demo_settings enables simulation, against a separate local database.
+DEMO_MODE = False
 
 # Logging
 os.makedirs(BASE_DIR / 'logs', exist_ok=True)

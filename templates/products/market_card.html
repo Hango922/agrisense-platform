@@ -1,0 +1,5 @@
+{% load humanize %}
+<article class="market-product">
+    <a class="market-product-image" href="{% url 'products:detail' product.slug %}" aria-label="Xem {{ product.name }}">{% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="360" height="280">{% else %}<i class="bi bi-flower2" aria-hidden="true"></i>{% endif %}<span>{{ product.category.name }}</span></a>
+    <div class="market-product-body"><small><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ product.origin|default:'Thông tin tại trang sản phẩm' }}</small><h3><a href="{% url 'products:detail' product.slug %}">{{ product.name }}</a></h3><div class="market-product-bottom"><span><strong>{{ product.price|intcomma }}đ</strong> / {{ product.unit }}</span><form method="post" action="{% url 'cart_orders:add' product.pk %}">{% csrf_token %}<button type="submit" aria-label="Thêm {{ product.name }} vào giỏ"><i class="bi bi-plus-lg" aria-hidden="true"></i></button></form></div></div>
+</article>

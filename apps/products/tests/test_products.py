@@ -3,8 +3,10 @@
 Kiểm thử danh mục, nhà cung cấp, sản phẩm và hiển thị giao diện sản phẩm.
 """
 from decimal import Decimal
-from django.test import TestCase, Client
-from apps.products.models import Category, Supplier, Product
+
+from django.test import Client, TestCase
+
+from apps.products.models import Category, Product, Supplier
 
 
 class ProductTests(TestCase):

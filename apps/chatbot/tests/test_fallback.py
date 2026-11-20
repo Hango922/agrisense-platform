@@ -3,6 +3,7 @@
 Kiểm thử bộ luật phản hồi Fallback rule-based của Chatbot AI khi mất kết nối hoặc câu hỏi phổ biến.
 """
 from django.test import TestCase
+
 from apps.chatbot.fallback import get_fallback_response
 
 

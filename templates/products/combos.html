@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% load humanize %}
+{% block title %}Giỏ theo mùa · AgriSense{% endblock %}
+{% block content %}
+<header class="market-heading"><span class="eyebrow">TUYỂN CHỌN THEO MÙA</span><h1>Đi chợ gọn hơn.<br><em>Bữa cơm trọn hơn.</em></h1><p>Những món hợp nhau trong một giỏ. Xem rõ từng sản phẩm và giá trước khi chọn.</p></header>
+<div class="combo-grid">
+{% for entry in entries %}
+<article class="paper-panel combo-card">
+    <div class="combo-image">{% with first=entry.items.0 %}{% if first.product.image %}<img src="{{ first.product.image.url }}" alt="{{ first.product.name }}" loading="lazy">{% else %}<i class="bi bi-basket3" aria-hidden="true"></i>{% endif %}{% endwith %}<span>{{ entry.combo.season_label|default:'Giỏ tuyển chọn' }}</span></div>
+    <h2>{{ entry.combo.name }}</h2><p class="text-muted">{{ entry.combo.description }}</p>
+    <ul class="combo-items">{% for item in entry.items %}<li><a href="{% url 'products:detail' item.product.slug %}">{{ item.product.name }}</a><span>{{ item.quantity }} {{ item.product.unit }}</span></li>{% endfor %}</ul>
+    <div class="combo-price"><strong>{{ entry.total|intcomma }}đ</strong><small>Chưa gồm phí giao hàng · Giá hiện tại</small></div>
+    <form method="post" action="{% url 'products:add_combo' entry.combo.slug %}">{% csrf_token %}<button class="btn btn-agri-primary w-100" {% if not entry.available %}disabled{% endif %}>{% if entry.available %}Chọn giỏ này{% else %}Tạm hết hàng{% endif %}</button></form>
+</article>
+{% empty %}<div class="paper-panel"><h2>Giỏ mùa mới đang được chuẩn bị</h2><p>Bạn có thể tự chọn một giỏ theo ngân sách ngay hôm nay.</p><a href="{% url 'products:planner' %}" class="btn btn-agri-primary">Đi chợ thông minh</a></div>{% endfor %}
+</div>{% endblock %}

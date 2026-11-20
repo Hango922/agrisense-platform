@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="icon" href="{% static 'images/favicon.svg' %}" type="image/svg+xml">
     <title>{% block title %}AgriSense - Nông Sản Sạch Tươi Ngon & AI{% endblock %}</title>
     
     <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
@@ -19,12 +20,15 @@
     
     <!-- AgriSense Custom Stylesheet -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v={% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'css/market.css' %}?v=20261119-footer">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Đến nội dung chính</a>
+    {% if demo_mode %}<div class="demo-ribbon">BẢN DEMO ĐỒ ÁN · Dữ liệu minh họa · Thanh toán mô phỏng, không chuyển tiền thật</div>{% endif %}
     <!-- Top Announcement Bar -->
-    <div class="py-1 px-3 text-center text-white small" style="background: linear-gradient(90deg, #064e3b 0%, #059669 50%, #064e3b 100%); font-size: 12.5px; font-weight: 500;">
-        <span>🌿 Cam kết 100% Nông Sản Chuẩn Sạch VietGAP & GlobalGAP • Miễn phí vận chuyển từ 500.000 đ • Trợ lý AI hỗ trợ 24/7</span>
+    <div class="market-announcement">
+        <span>Nông sản theo mùa · Minh bạch nguồn gốc · Miễn phí giao hàng từ 500.000đ</span>
     </div>
 
     <!-- Main Navigation Bar -->
@@ -49,6 +53,8 @@
             <!-- Nav Content -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto ms-xl-4 gap-1">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'products:planner' %}"><i class="bi bi-stars" aria-hidden="true"></i> Đi chợ thông minh</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'products:combos' %}">Giỏ theo mùa</a></li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
                             <i class="bi bi-house-door"></i> Trang chủ
@@ -69,7 +75,7 @@
                 <!-- Search Input Form -->
                 <form class="nav-search-form me-xl-3 my-2 my-xl-0" action="{% url 'products:search' %}" method="get">
                     <i class="bi bi-search nav-search-icon"></i>
-                    <input class="form-control nav-search-input" type="search" name="q" placeholder="Tìm rau củ, trái cây, bưởi..." value="{{ request.GET.q|default:'' }}" autocomplete="off">
+                    <input class="form-control nav-search-input" type="search" name="q" aria-label="Tìm nông sản" placeholder="Tìm nông sản..." value="{{ request.GET.q|default:'' }}" autocomplete="off">
                 </form>
 
                 <!-- Right Action Icons & User Menu -->
@@ -123,9 +129,9 @@
                                 {% endif %}
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li>
-                                    <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                    <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit" class="dropdown-item text-danger">
                                         <i class="bi bi-box-arrow-right text-danger"></i> Đăng xuất
-                                    </a>
+                                    </button></form>
                                 </li>
                             </ul>
                         </li>
@@ -148,7 +154,7 @@
     </nav>
 
     <!-- Main Content Container -->
-    <main class="container my-4">
+    <main class="container my-4" id="main-content">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
@@ -201,10 +207,10 @@
 
                 <!-- Col 3: Standards & Safety -->
                 <div class="col-lg-3 col-md-6 col-6">
-                    <h5>Tiêu Chuẩn & Cam Kết</h5>
+                    <h5>Mua Sắm Minh Bạch</h5>
                     <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
-                        <li class="text-muted"><i class="bi bi-patch-check-fill text-success me-2"></i>100% Tiêu chuẩn VietGAP</li>
-                        <li class="text-muted"><i class="bi bi-patch-check-fill text-success me-2"></i>Chứng nhận GlobalGAP</li>
+                        <li class="text-muted"><i class="bi bi-patch-check-fill text-success me-2"></i>Xem chứng nhận từng lô</li>
+                        <li class="text-muted"><i class="bi bi-patch-check-fill text-success me-2"></i>Thông tin vùng trồng rõ ràng</li>
                         <li class="text-muted"><i class="bi bi-shield-lock-fill text-success me-2"></i>Mã QR truy xuất độc bản</li>
                         <li class="text-muted"><i class="bi bi-arrow-repeat text-success me-2"></i>Đổi trả trong 24h nếu lỗi</li>
                     </ul>

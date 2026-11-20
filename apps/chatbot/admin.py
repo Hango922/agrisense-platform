@@ -3,7 +3,8 @@
 Đăng ký giao diện quản trị Django Admin cho phân hệ Chatbot AI tư vấn nông sản.
 """
 from django.contrib import admin
-from .models import ChatSession, ChatMessage
+
+from .models import ChatMessage, ChatSession
 
 
 class ChatMessageInline(admin.TabularInline):

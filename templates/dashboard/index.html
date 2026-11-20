@@ -5,6 +5,12 @@
 {% block header_title %}Tổng Quan Hoạt Động Kinh Doanh & AI{% endblock %}
 
 {% block dashboard_content %}
+<div class="row g-3 mb-4" aria-label="Việc cần xử lý">
+    <div class="col-6 col-xl-3"><a class="dashboard-card d-block text-decoration-none" href="{% url 'dashboard:operations' %}#expiring"><span class="small text-muted">Lô sắp hết hạn</span><strong class="d-block fs-2 text-warning">{{ operations.expiring_batches|length }}</strong><small>Xem trong 3 ngày tới →</small></a></div>
+    <div class="col-6 col-xl-3"><a class="dashboard-card d-block text-decoration-none" href="{% url 'dashboard:operations' %}#expired"><span class="small text-muted">Lô quá hạn</span><strong class="d-block fs-2 text-danger">{{ operations.expired_batches|length }}</strong><small>Đã chặn xuất hàng →</small></a></div>
+    <div class="col-6 col-xl-3"><a class="dashboard-card d-block text-decoration-none" href="{% url 'dashboard:operations' %}#low-stock"><span class="small text-muted">Sắp hết hàng</span><strong class="d-block fs-2 text-success">{{ operations.low_products|length }}</strong><small>Kiểm tra và nhập kho →</small></a></div>
+    <div class="col-6 col-xl-3"><a class="dashboard-card d-block text-decoration-none" href="{% url 'dashboard:operations' %}#stale-orders"><span class="small text-muted">Đơn chờ quá 24 giờ</span><strong class="d-block fs-2">{{ operations.stale_orders|length }}</strong><small>Xử lý đơn hàng →</small></a></div>
+</div>
 <!-- Welcome & Action Toolbar -->
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>

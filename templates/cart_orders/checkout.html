@@ -78,33 +78,30 @@
                 </div>
 
                 <!-- Lựa chọn VietQR -->
+                {% if bank_payment_enabled %}
                 <div class="card p-3 mb-4 border border-success border-opacity-50 rounded-3 payment-method-card" style="cursor: pointer; background: #f0fdf4; transition: all 0.2s ease;">
                     <div class="form-check d-flex align-items-center gap-2 mb-0">
                         <input class="form-check-input mt-0" type="radio" name="payment_method" id="payment_vietqr" value="vietqr">
                         <label class="form-check-label fw-bold text-success d-flex align-items-center gap-2 w-100" for="payment_vietqr">
                             <i class="bi bi-qr-code-scan fs-5"></i>
-                            <span>Chuyển khoản qua mã VietQR (Techcombank)</span>
+                            <span>{% if demo_mode %}Thanh toán chuyển khoản mô phỏng{% else %}Chuyển khoản qua mã VietQR{% endif %}</span>
                             <span class="badge bg-success ms-auto">Khuyên dùng</span>
                         </label>
                     </div>
                     <p class="text-muted small mb-0 mt-1 ps-4">
-                        Quét mã QR tự động điền đúng số tiền và nội dung đơn hàng bằng mọi app ngân hàng (Techcombank, MB, VCB, BIDV,...).
+                        {% if demo_mode %}Đơn demo có nút mô phỏng xác nhận thanh toán, không cần chuyển tiền thật.{% else %}Mã QR đúng số tiền và mã đơn sẽ xuất hiện sau khi đặt hàng.{% endif %}
                     </p>
                     
                     <div id="vietqr-preview-box" class="ms-4 p-3 bg-white rounded-3 border mt-3 shadow-sm" style="display: none;">
                         <div class="d-flex align-items-center gap-3">
-                            {% load static %}
-                            <img src="{% static 'images/techcombank_qr.png' %}" alt="Techcombank QR NGUYEN HONG HOANG" class="img-fluid rounded border shadow-sm" style="width: 75px; height: 75px; object-fit: contain;">
                             <div class="small">
-                                <div class="fw-bold text-dark">Ngân hàng Techcombank</div>
-                                <div class="text-muted">STK: <strong class="text-primary font-monospace fs-6">7979 7989 50</strong></div>
-                                <div class="text-muted">Chủ TK: <strong>NGUYEN HONG HOANG</strong></div>
-                                <div class="text-success small mt-1"><i class="bi bi-shield-check me-1"></i>Mã VietQR động chứa mã đơn hàng sẽ hiện ngay sau khi bạn đặt.</div>
+                                <div class="text-success small mt-1">{% if demo_mode %}Đây là chế độ trình diễn, không có giao dịch ngân hàng thật.{% else %}Vui lòng chỉ chuyển khoản theo mã QR trên trang chi tiết đơn sau khi đặt thành công.{% endif %}</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {% endif %}
                 <button type="submit" class="btn btn-agri-primary btn-lg w-100 fw-bold justify-content-center shadow py-3">
                     <i class="bi bi-check2-circle fs-5"></i> Xác Nhận Đặt Hàng Ngay
                 </button>
@@ -187,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updatePreview() {
         const selected = document.querySelector('input[name="payment_method"]:checked');
         if (preview && selected) {
-            preview.style.display = (selected.value === 'vietqr') ? 'block' : 'none';
+            if (preview) preview.style.display = (selected.value === 'vietqr') ? 'block' : 'none';
         }
     }
     radios.forEach(r => r.addEventListener('change', updatePreview));

@@ -3,11 +3,14 @@
 Định tuyến URL cho bảng điều khiển quản trị riêng (apps.dashboard).
 """
 from django.urls import path
-from . import views
+
+from . import operations, views
 
 app_name = 'dashboard'
 
 urlpatterns = [
+    path('operations/', operations.operations, name='operations'),
+    path('inventory/receive/', operations.receive, name='receive'),
     path('', views.DashboardHomeView.as_view(), name='home'),
     path('products/', views.DashboardProductsView.as_view(), name='products'),
     path('orders/', views.DashboardOrdersView.as_view(), name='orders'),

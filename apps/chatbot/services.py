@@ -3,6 +3,7 @@
 Dịch vụ gọi API trí tuệ nhân tạo (Gemini / Groq) và tự động fallback rule-based khi gặp sự cố,
 hỗ trợ trích xuất số lượng token tiêu thụ thực tế (tokens_used) và thời gian phản hồi (response_time_ms).
 """
+import logging
 import time
 
 import requests
@@ -10,6 +11,8 @@ from django.conf import settings
 
 from .fallback import get_fallback_response
 from .prompts import CONTEXT_TEMPLATE, SYSTEM_PROMPT
+
+logger = logging.getLogger(__name__)
 
 
 def build_product_context():
@@ -22,8 +25,8 @@ def build_product_context():
         lines = []
         for p in products:
             sup = p.supplier.name if p.supplier else "Nông trại Việt"
-            cert = p.supplier.certification if (p.supplier and p.supplier.certification) else "VietGAP"
-            lines.append(f"- {p.name}: Giá {int(p.price):,} đ/{p.unit}, Tồn kho: {p.stock} {p.unit}, Xuất xứ: {p.origin or 'Việt Nam'}, Nhà cung cấp: {sup} ({cert})")
+            cert = p.supplier.certification if (p.supplier and p.supplier.certification) else "Chưa có thông tin chứng nhận"
+            lines.append(f"- {p.name}: Giá {int(p.price):,} đ/{p.unit}, Tồn kho: {p.sellable_stock} {p.unit}, Xuất xứ: {p.origin or 'Chưa cập nhật'}, Nhà cung cấp: {sup} ({cert})")
         return "\n".join(lines)
     except Exception:
         return ""
@@ -51,15 +54,16 @@ def call_ai(user_message, product_context="", user=None):
             timeout_sec = getattr(settings, 'CHATBOT_TIMEOUT', 10)
 
             # Danh sách các mô hình Gemini được ưu tiên thử nghiệm tuần tự (fallback theo độ khả dụng)
-            model_candidates = [getattr(settings, 'GEMINI_MODEL', 'gemini-flash-lite-latest')]
+            model_candidates = [settings.GEMINI_MODEL]
             text = None
             tokens_used = 0
 
             for m in model_candidates:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
                 try:
                     resp = requests.post(
                         url,
+                        headers={'x-goog-api-key': api_key},
                         json={'contents': [{'parts': [{'text': prompt}]}]},
                         timeout=timeout_sec
                     )
@@ -83,7 +87,7 @@ def call_ai(user_message, product_context="", user=None):
             client = Groq(api_key=api_key, max_retries=0)
             full_system_prompt = f"{SYSTEM_PROMPT}\n\nDữ liệu sản phẩm thực tế trong cửa hàng:\n{product_context}"
             completion = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model=settings.GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": full_system_prompt},
                     {"role": "user", "content": user_message},
@@ -91,6 +95,8 @@ def call_ai(user_message, product_context="", user=None):
                 timeout=getattr(settings, 'CHATBOT_TIMEOUT', 10),
             )
             text = completion.choices[0].message.content
+            if not text:
+                raise ValueError('Provider returned an empty reply.')
 
             # Trích xuất số token thực tế từ Groq API
             tokens_used = 0
@@ -105,7 +111,9 @@ def call_ai(user_message, product_context="", user=None):
         elapsed = int((time.time() - start) * 1000)
         return text, False, elapsed, tokens_used
 
-    except Exception:
+    except Exception as error:
+        # Never log provider exception text: it can contain keys, URLs or user prompts.
+        logger.warning('AI fallback provider=%s error_type=%s', settings.AI_PROVIDER, type(error).__name__)
         text, _ = get_fallback_response(user_message, user=user)
         elapsed = int((time.time() - start) * 1000)
         tokens_used = max(1, (len(user_message) + len(text)) // 4)

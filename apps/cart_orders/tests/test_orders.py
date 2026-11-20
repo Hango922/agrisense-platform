@@ -87,7 +87,7 @@ class OrderTests(TestCase):
     def test_order_detail_view_includes_vietqr(self):
         order = create_order_from_cart(self.user, self.cart, {
             'full_name': 'Test', 'phone': '0900', 'address': 'HN',
-        })
+        }, payment_method='vietqr')
         self.client.force_login(self.user)
         response = self.client.get(f'/orders/{order.order_code}/')
         self.assertEqual(response.status_code, 200)

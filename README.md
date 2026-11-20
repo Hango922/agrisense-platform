@@ -1,4 +1,8 @@
-# Website Bán Nông Sản Tích Hợp AI (AgriSense Platform)
+# AgriSense — Nền tảng mua sắm nông sản tích hợp AI
+
+> **Cập nhật ngày 20/11/2026:** giao diện mua sắm mới, trợ lý AI đi chợ theo ngân sách, combo mùa vụ, mua lại đơn hàng, quản lý tồn kho theo lô và dashboard vận hành. Xem [kiểm chứng AI planner](docs/AI_PLANNER_VERIFICATION.md) để biết kết quả tích hợp AI và các giới hạn còn lại.
+
+> **Chạy thử:** xem [hướng dẫn demo](docs/UPGRADE_DEMO.md) (SQLite, cổng 8001) hoặc [hướng dẫn vận hành Windows](docs/OPERATIONS.md) (MySQL, Waitress). Thanh toán demo là mô phỏng; dự án chưa đạt nghiệm thu triển khai production. Các vấn đề vận hành được ghi tại [báo cáo kiểm chứng](docs/OPERATIONAL_VERIFICATION.md).
 
 > **Dự án Bài tập lớn Hệ thống Thông tin / Công nghệ Phần mềm**  
 > **Sinh viên thực hiện**: Nguyễn Hồng Hoàng  
@@ -11,13 +15,21 @@
 
 ## 🌾 Giới thiệu dự án
 
-**AgriSense** là nền tảng thương mại điện tử chuyên biệt dành cho nông sản sạch, nông sản hữu cơ và đặc sản vùng miền Việt Nam. Hệ thống kết hợp kiến trúc web hướng dịch vụ hiện đại với trí tuệ nhân tạo (AI) và công nghệ thanh toán số nhằm cá nhân hóa trải nghiệm mua sắm, tự động hóa bán hàng và nâng cao tính minh bạch chuỗi cung ứng:
-1. **Chatbot AI & Lên đơn hàng đàm thoại (Conversational Commerce)**: Tư vấn nông sản (Gemini 1.5 Flash / Groq LLM + Fallback regex) kết hợp tính năng **lên đơn hàng trực tiếp bằng ngôn ngữ tự nhiên** (1-shot hoặc multi-turn), tự động kiểm tra và giảm trừ tồn kho an toàn.
-2. **Cổng thanh toán tự động VietQR Napas 247**: Tự động sinh mã VietQR động chứa số tiền chính xác và nội dung chuyển khoản là mã đơn hàng, hiển thị trực quan trên trang đơn hàng và ngay trong khung chat của Chatbot AI.
-3. **Phân nhóm hành vi khách hàng tự động**: Tự động phân loại khách hàng theo mô hình RFM rules (`new`, `interested`, `loyal`, `at_risk`, `normal`).
-4. **Gợi ý sản phẩm cá nhân hóa**: Đề xuất nông sản phù hợp dựa trên lịch sử tương tác và sở thích danh mục với cơ chế fallback sản phẩm thịnh hành.
-5. **Truy xuất nguồn gốc bằng mã QR**: Sinh mã QR chuẩn xác cho từng lô hàng thu hoạch trỏ về trang thông tin công khai không cần đăng nhập.
-6. **Dashboard quản trị kinh doanh & Biểu đồ tương tác Chart.js**: Cung cấp bức tranh toàn cảnh về KPI doanh thu, biểu đồ đường xu hướng 30 ngày, biểu đồ tròn cơ cấu nhóm khách hàng AI, biểu đồ cột Top nông sản bán chạy và **tính năng xuất file Excel báo cáo đơn hàng (.xlsx)** chuẩn chỉnh.
+**AgriSense** là ứng dụng web bán nông sản Việt Nam, kết nối trải nghiệm mua sắm của khách hàng với hoạt động quản lý đơn hàng, tồn kho và nguồn gốc sản phẩm của cửa hàng. Dự án được xây dựng bằng **Python, Django và MySQL**, phục vụ bài tập lớn Hệ thống Thông tin / Công nghệ Phần mềm.
+
+Với khách hàng, AgriSense hỗ trợ tìm kiếm nông sản, xem thông tin vùng trồng, lựa chọn combo theo mùa, đặt hàng và theo dõi đơn. Điểm nhấn là **trợ lý đi chợ theo ngân sách**: người dùng nhập nhu cầu, số người và số ngày để nhận danh sách sản phẩm cùng gợi ý món ăn. AI đề xuất từ danh mục hiện có; máy chủ kiểm tra lại giá, tồn kho và tổng tiền gồm phí giao hàng trước khi người dùng thêm vào giỏ. Chatbot hỗ trợ tư vấn, tra cứu đơn của người dùng và đặt hàng qua hội thoại.
+
+Với cửa hàng, hệ thống quản lý tồn kho theo từng lô, ưu tiên xuất lô gần hết hạn (**FEFO**) và liên kết mã QR truy xuất với lô thực tế đã giao. Dashboard tập hợp đơn chờ xử lý, hàng tồn thấp, lô sắp hết hạn, thống kê bán hàng và báo cáo Excel. Dữ liệu tương tác còn được dùng để phân nhóm khách hàng theo quy tắc và gợi ý sản phẩm phù hợp.
+
+Các năng lực nổi bật:
+
+- **Mua sắm trọn luồng:** tài khoản, địa chỉ nhận hàng, danh mục, giỏ hàng, combo mùa vụ, đặt hàng và mua lại đơn cũ.
+- **AI hỗ trợ lựa chọn:** tích hợp Gemini hoặc Groq cho planner và chatbot; có phương án trả lời theo quy tắc khi dịch vụ AI không khả dụng.
+- **Kho và nguồn gốc:** nhập kho theo lô, kiểm tra hạn sử dụng, phân bổ tồn khi đặt hàng và hoàn kho khi hủy đơn hợp lệ.
+- **Thanh toán:** COD, mã VietQR theo đơn, thanh toán mô phỏng trong bản demo và webhook có chữ ký HMAC để phục vụ tích hợp.
+- **Quản trị và phân tích:** dashboard vận hành, biểu đồ bán hàng, phân nhóm hành vi và xuất báo cáo `.xlsx`.
+
+**Phạm vi hiện tại:** ứng dụng phục vụ học tập và trình diễn trên môi trường local. AI hỗ trợ gợi ý mua sắm, chưa được kiểm chứng như công cụ tư vấn dinh dưỡng. VietQR tạo thông tin chuyển khoản; webhook chưa kết nối nhà cung cấp ngân hàng thực tế, nên không đồng nghĩa hệ thống đã tự động đối soát tiền nhận.
 
 ---
 
@@ -30,6 +42,7 @@
 - **Giỏ hàng & Đặt hàng COD / Chuyển khoản**: Thêm sản phẩm, cập nhật số lượng, kiểm tra tồn kho thời gian thực, tính phí giao hàng thông minh (30.000đ, miễn phí từ 500.000đ), trừ kho an toàn bằng `@transaction.atomic`.
 - **Thanh toán nhanh VietQR (Napas 247)**: Sinh QR theo tài khoản nhận tiền cấu hình trong `VIETQR_*`, số tiền và mã đơn hàng (`ORDxxxxxxxx`). Nhân viên đối soát và xác nhận thủ công; hệ thống chưa tự xác minh giao dịch ngân hàng.
 - **Quản lý đơn hàng**: Theo dõi lịch sử đơn hàng, xem chi tiết tiến độ giao hàng và hỗ trợ hủy đơn hàng khi đang chờ xác nhận (tự động hoàn kho).
+- **Combo mùa vụ & Mua lại đơn**: Thêm nhóm sản phẩm vào giỏ theo giá và tồn kho hiện tại; kiểm tra toàn bộ trước khi thêm. Combo chưa có cơ chế chiết khấu riêng.
 
 ### 2. Phân hệ Trí tuệ Nhân tạo & Chatbot (AI & Conversational Ordering)
 - **Ghi nhận hành vi (Behavior Tracking)**: Middleware và services tự động lưu nhật ký sự kiện `UserEvent` (`view`, `search`, `add_to_cart`, `purchase`, `review`, `chat`).
@@ -42,18 +55,27 @@
   - Command định kỳ: `python manage.py update_segments`.
 - **Gợi ý sản phẩm (Recommendation Engine)**: Thuật toán lọc nội dung (Content-based filtering) tính điểm trọng số theo danh mục ưa thích, loại bỏ sản phẩm đã mua và tự động chuyển sang sản phẩm bán chạy/bán chạy nhất khi thiếu dữ liệu.
 - **Chatbot AI & Lên đơn hàng đàm thoại**:
-  - Hỗ trợ gọi mô hình Gemini 1.5 Flash hoặc Groq Cloud API.
+  - Hỗ trợ Gemini hoặc Groq Cloud API; chọn nhà cung cấp và mô hình qua biến môi trường. Planner có cấu hình `PLANNER_GEMINI_MODEL` riêng với chatbot (`GEMINI_MODEL`).
   - Bộ luật Fallback Regex thông minh nhận diện từ khóa tiếng Việt (giá cả, xuất xứ, bảo quản, tra cứu đơn hàng).
   - **Trợ lý lên đơn hàng tự động**: Khách nhắn câu lệnh tự nhiên (ví dụ: *"Tôi muốn mua 2kg cà chua bi, giao về số 15 Hai Bà Trưng Hà Nội, sđt 0987654321"*), Chatbot tự động phân tích sản phẩm, trừ tồn kho, tạo đơn hàng và gửi ảnh mã VietQR thanh toán tức thời ngay trong khung chat.
 
-### 3. Phân hệ Truy xuất nguồn gốc (QR Traceability)
+### 3. Đi chợ theo ngân sách (AI Planner)
+- Nhập nhu cầu bằng tiếng Việt, ngân sách, số người, số ngày và nhóm thực phẩm ưu tiên tại `/products/planner/`.
+- AI đề xuất sản phẩm từ danh mục đang bán, giải thích lựa chọn và gợi ý món ăn; khi lỗi hoặc thiếu khóa API, giao diện thông báo rõ việc dùng gợi ý theo quy tắc.
+- Máy chủ kiểm tra mã sản phẩm, số lượng, giá, tồn kho và ngân sách gồm phí giao hàng. Giỏ chỉ được thêm sau thao tác của người dùng; đề xuất có thời hạn và cơ chế ngăn thêm lặp.
+- Kết quả tích hợp, kiểm thử và giới hạn: [AI_PLANNER_VERIFICATION.md](docs/AI_PLANNER_VERIFICATION.md).
+
+### 4. Quản lý lô hàng & Truy xuất nguồn gốc (FEFO / QR)
+- Nhập kho theo lô, theo dõi lượng còn lại và ưu tiên xuất lô gần hết hạn; lô quá hạn không được tính vào lượng có thể bán.
+- Đơn hàng lưu phân bổ lô thực tế; hủy đơn hợp lệ hoàn lại đúng lô, tránh hoàn kho nhiều lần.
 - Tự động sinh mã QR định dạng PNG chuẩn ISO cho từng lô hàng nông sản (`ProductBatch`).
 - Mã QR trỏ đến `<QR_BASE_URL>/trace/<batch_code>/`; cấu hình URL trước khi tạo lô hàng.
 - Cung cấp đầy đủ thông tin: Tên sản phẩm, nông trại / vùng trồng, ngày thu hoạch, ngày đóng gói, chứng nhận an toàn (VietGAP, GlobalGAP, Organic), sản lượng và nhật ký kiểm định.
 
-### 4. Phân hệ Quản trị Dashboard (Admin Dashboard & Analytics)
+### 5. Phân hệ Quản trị Dashboard (Admin Dashboard & Analytics)
 - URL: `http://127.0.0.1:8000/dashboard/`
 - Phân quyền nghiêm ngặt bằng `@method_decorator(staff_member_required, name='dispatch')`.
+- **Việc cần xử lý**: Theo dõi đơn chờ lâu, hàng tồn thấp, lô cận hạn/quá hạn và truy cập chức năng nhập kho theo lô.
 - **Biểu đồ trực quan tương tác Chart.js**:
   - Biểu đồ đường (Line Chart): Xu hướng biến động doanh số theo từng ngày trong 30 ngày qua.
   - Biểu đồ tròn (Doughnut Chart): Tỉ lệ phân bổ các nhóm khách hàng AI.
@@ -77,7 +99,7 @@
 | **Báo cáo Excel** | openpyxl 3.1.5 | Xuất file báo cáo đơn hàng định dạng `.xlsx` |
 | **Xử lý dữ liệu** | Pandas, Scikit-learn, NumPy | Hỗ trợ phân tích hành vi và phân cụm |
 | **Mã QR & Hình ảnh**| qrcode 8.2, Pillow 12.2.0 | Sinh mã QR PNG tự động |
-| **Cổng thanh toán** | VietQR Napas 247 | Sinh mã QR ngân hàng thanh toán tự động |
+| **Thanh toán** | COD, VietQR, webhook HMAC | Sinh QR theo đơn; chưa tích hợp đối soát ngân hàng thực tế |
 | **Chatbot AI** | Google Gemini API / Groq API | Tích hợp fallback regex thông minh |
 
 ---
@@ -170,6 +192,8 @@ Truy cập ứng dụng tại: **http://127.0.0.1:8000/**
 
 - **Trang chủ nông sản**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 - **Danh sách sản phẩm**: [http://127.0.0.1:8000/products/](http://127.0.0.1:8000/products/)
+- **Đi chợ theo ngân sách**: [http://127.0.0.1:8000/products/planner/](http://127.0.0.1:8000/products/planner/)
+- **Combo mùa vụ**: [http://127.0.0.1:8000/products/combos/](http://127.0.0.1:8000/products/combos/)
 - **Giỏ hàng**: [http://127.0.0.1:8000/cart/](http://127.0.0.1:8000/cart/)
 - **Lịch sử đơn hàng**: [http://127.0.0.1:8000/orders/](http://127.0.0.1:8000/orders/)
 - **Truy xuất nguồn gốc mẫu**: [http://127.0.0.1:8000/trace/BATCH2026001/](http://127.0.0.1:8000/trace/BATCH2026001/)
@@ -204,7 +228,7 @@ Bộ test sau giai đoạn 1 gồm 60 test có sẵn và 5 test bootstrap/cô l�
 
 ## Checklist hoàn thiện
 
-Phạm vi hiện tại: ổn định các luồng đã có, chưa mở rộng tính năng. Cập nhật ngày 18/11/2026.
+Checklist dưới đây ghi lại đợt ổn định luồng ngày 18/11/2026. Các nâng cấp sau đó được mô tả ở phần tính năng và báo cáo kiểm chứng riêng.
 
 - [x] **Giai đoạn 1 — Cài/chạy tái lập được:** khóa dependency, đồng bộ cấu hình/tài liệu, bổ sung test cô lập. Đã cài trên virtualenv thứ hai sạch, migrate database test, seed, cập nhật phân nhóm; 65/65 test đạt và `runserver` trả HTTP 200.
 - [x] **Giai đoạn 2 — Quyền và đầu vào:** sửa quyền tra đơn chatbot, CSRF, validation và file bill. Hoàn thành khi request sai không gây HTTP 500, không lưu dữ liệu sai và không lộ đơn tài khoản khác.
@@ -214,7 +238,9 @@ Phạm vi hiện tại: ổn định các luồng đã có, chưa mở rộng t�
 
 Báo cáo hiện tại và checklist nghiệm thu chi tiết: [ổn định luồng hiện có](docs/STABILIZATION.md). Giai đoạn 5 còn type check toàn dự án, E2E trình duyệt có đăng nhập và nghiệm thu môi trường triển khai.
 
-Kết quả hiện tại: **99/99 test PASS; coverage 82,89%**, tính cả nhánh và loại test/migration, vượt mốc 80% của ECC. Coverage lịch sử sau giai đoạn 1 là 74,49%. Chưa kiểm chứng AI/ngân hàng thật hoặc triển khai production.
+Kết quả đợt ổn định: **99/99 test PASS; coverage 82,89%**. Báo cáo nâng cấp AI ngày 19/11/2026 ghi nhận **162/162 test PASS; coverage 82,22%**, tính cả nhánh và loại test/migration. Gemini đã được kiểm chứng với planner local; chatbot, Groq, lint/type check toàn dự án và nghiệm thu vận hành còn các vấn đề được ghi trong [báo cáo AI planner](docs/AI_PLANNER_VERIFICATION.md). Chưa kiểm chứng giao dịch ngân hàng thật hoặc triển khai production.
+
+Kiểm tra lại ngày **20/11/2026** trước khi cập nhật GitHub: **162/162 test đạt** trên database MySQL test riêng; `manage.py check`, `makemigrations --check --dry-run` và `pip check` đều đạt. Lần kiểm tra này không đo lại coverage hoặc gọi dịch vụ AI/ngân hàng thực tế.
 
 ---
 

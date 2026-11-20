@@ -3,6 +3,7 @@
 Đăng ký giao diện quản trị Django Admin cho phân hệ Truy xuất nguồn gốc & Mã QR.
 """
 from django.contrib import admin
+
 from .models import ProductBatch, TraceabilityRecord
 
 
@@ -21,6 +22,15 @@ class ProductBatchAdmin(admin.ModelAdmin):
     list_filter = ('certification', 'harvest_date', 'created_at')
     search_fields = ('batch_code', 'product__name', 'planting_location', 'certification')
     inlines = [TraceabilityRecordInline]
+    readonly_fields = ('remaining_quantity',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.product.track_batches:
+            return ('remaining_quantity', 'product', 'batch_code')
+        return self.readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(TraceabilityRecord)

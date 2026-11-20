@@ -1,15 +1,18 @@
 """Exercise stock locks using independent MySQL connections."""
 
 from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
 from threading import Barrier
 
 from django.db import close_old_connections, connections
 from django.test import TransactionTestCase
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.cart_orders.models import Order
 from apps.cart_orders.services import cancel_order, create_direct_order
 from apps.products.models import Category, Product, Supplier
+from apps.traceability.inventory import receive_batch
 
 
 class ConcurrentOrderTests(TransactionTestCase):
@@ -58,3 +61,25 @@ class ConcurrentOrderTests(TransactionTestCase):
         self.assertEqual(self.product.stock, 5)
         order.refresh_from_db()
         self.assertEqual(order.status, 'cancelled')
+
+
+class ConcurrentBatchTests(ConcurrentOrderTests):
+    def setUp(self):
+        super().setUp()
+        today = timezone.localdate()
+        self.batch = receive_batch(
+            self.product, quantity=5, existing_stock=True, batch_code='CONCURRENT-LOT',
+            harvest_date=today, packaging_date=today, expiry_date=today + timedelta(days=3),
+            planting_location='Test farm',
+        )
+
+    def test_simultaneous_purchases_cannot_oversell(self):
+        super().test_simultaneous_purchases_cannot_oversell()
+        self.batch.refresh_from_db()
+        self.assertEqual(self.batch.remaining_quantity, 1)
+        self.assertEqual(Order.objects.get().items.get().allocations.get().quantity, 4)
+
+    def test_simultaneous_cancellations_refund_once(self):
+        super().test_simultaneous_cancellations_refund_once()
+        self.batch.refresh_from_db()
+        self.assertEqual(self.batch.remaining_quantity, 5)

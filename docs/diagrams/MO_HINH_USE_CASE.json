@@ -1,0 +1,1806 @@
+{
+  "version": "2.0",
+  "date": "2026-11-13",
+  "scope": "Mô hình nghiệp vụ đề xuất có đối chiếu mã nguồn; không khẳng định mọi ràng buộc đã được triển khai.",
+  "actors": {
+    "V": "Người truy cập (vai trò tổng quát)",
+    "G": "Khách vãng lai",
+    "U": "Người đã đăng nhập (vai trò tổng quát)",
+    "C": "Khách hàng",
+    "S": "Nhân viên được cấp quyền",
+    "A": "Quản trị viên",
+    "O": "Người vận hành có quyền CLI",
+    "L": "Dịch vụ AI Gemini/Groq",
+    "Q": "Dịch vụ ảnh VietQR"
+  },
+  "domains": [
+    {
+      "id": "F1",
+      "name": "Tài khoản và quyền"
+    },
+    {
+      "id": "F2",
+      "name": "Thông tin nông sản"
+    },
+    {
+      "id": "F3",
+      "name": "Giỏ và đơn hàng"
+    },
+    {
+      "id": "F4",
+      "name": "Thanh toán và đối soát"
+    },
+    {
+      "id": "F5",
+      "name": "Truy xuất nguồn gốc"
+    },
+    {
+      "id": "F6",
+      "name": "Cá nhân hóa và phân nhóm"
+    },
+    {
+      "id": "F7",
+      "name": "Tư vấn và hội thoại"
+    },
+    {
+      "id": "F8",
+      "name": "Giám sát và báo cáo"
+    }
+  ],
+  "branches": [
+    {
+      "id": "1.1",
+      "name": "Xác thực tài khoản",
+      "cases": [
+        "A01",
+        "A02",
+        "A03"
+      ]
+    },
+    {
+      "id": "1.2",
+      "name": "Xem hồ sơ cá nhân",
+      "cases": [
+        "A04"
+      ]
+    },
+    {
+      "id": "1.3",
+      "name": "Quản trị người dùng",
+      "cases": [
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09"
+      ]
+    },
+    {
+      "id": "1.4",
+      "name": "Quản trị địa chỉ và quyền",
+      "cases": [
+        "A10",
+        "A11"
+      ]
+    },
+    {
+      "id": "2.1",
+      "name": "Khám phá và đánh giá",
+      "cases": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P16"
+      ]
+    },
+    {
+      "id": "2.2",
+      "name": "Quản trị sản phẩm, tồn kho",
+      "cases": [
+        "P06",
+        "P07",
+        "P08",
+        "P09"
+      ]
+    },
+    {
+      "id": "2.3",
+      "name": "Quản trị danh mục",
+      "cases": [
+        "P10",
+        "P11",
+        "P12"
+      ]
+    },
+    {
+      "id": "2.4",
+      "name": "Quản trị nhà cung cấp",
+      "cases": [
+        "P13",
+        "P14",
+        "P15"
+      ]
+    },
+    {
+      "id": "3.1",
+      "name": "Quản lý giỏ cá nhân",
+      "cases": [
+        "C01",
+        "C02",
+        "C03",
+        "C04"
+      ]
+    },
+    {
+      "id": "3.2",
+      "name": "Tiếp nhận đơn từ web/chat",
+      "cases": [
+        "O01",
+        "O02"
+      ]
+    },
+    {
+      "id": "3.3",
+      "name": "Theo dõi đơn cá nhân",
+      "cases": [
+        "O03",
+        "O04",
+        "O06"
+      ]
+    },
+    {
+      "id": "3.4",
+      "name": "Xử lý và hủy đơn",
+      "cases": [
+        "O05",
+        "O07",
+        "O08",
+        "O09",
+        "O10",
+        "O11",
+        "O12",
+        "S01"
+      ]
+    },
+    {
+      "id": "4.1",
+      "name": "Cung cấp thông tin VietQR",
+      "cases": [
+        "Q01"
+      ]
+    },
+    {
+      "id": "4.2",
+      "name": "Tiếp nhận chứng từ",
+      "cases": [
+        "Q02",
+        "Q05"
+      ]
+    },
+    {
+      "id": "4.3",
+      "name": "Xem chứng từ thanh toán",
+      "cases": [
+        "Q03"
+      ]
+    },
+    {
+      "id": "4.4",
+      "name": "Ghi nhận đối soát",
+      "cases": [
+        "Q04"
+      ]
+    },
+    {
+      "id": "5.1",
+      "name": "Tra cứu nguồn gốc công khai",
+      "cases": [
+        "T01",
+        "T02"
+      ]
+    },
+    {
+      "id": "5.2",
+      "name": "Quản trị thông tin lô",
+      "cases": [
+        "T03",
+        "T04",
+        "T05",
+        "T06"
+      ]
+    },
+    {
+      "id": "5.3",
+      "name": "Cung cấp QR truy xuất",
+      "cases": [],
+      "stepsOf": [
+        "T02",
+        "T04",
+        "T05"
+      ],
+      "note": "QR là kết quả/kênh truy cập bên trong T02, T04, T05; không phải mục tiêu độc lập."
+    },
+    {
+      "id": "5.4",
+      "name": "Quản trị nhật ký lô",
+      "cases": [
+        "T07",
+        "T08"
+      ]
+    },
+    {
+      "id": "6.1",
+      "name": "Gợi ý nông sản",
+      "cases": [
+        "R01"
+      ]
+    },
+    {
+      "id": "6.2",
+      "name": "Tra cứu phân nhóm khách",
+      "cases": [
+        "R02"
+      ]
+    },
+    {
+      "id": "6.3",
+      "name": "Cập nhật phân nhóm",
+      "cases": [
+        "R03"
+      ]
+    },
+    {
+      "id": "6.4",
+      "name": "Tra cứu lịch sử và gợi ý",
+      "cases": [
+        "R04",
+        "R05"
+      ]
+    },
+    {
+      "id": "7.1",
+      "name": "Tư vấn nông sản",
+      "cases": [
+        "H01"
+      ]
+    },
+    {
+      "id": "7.2",
+      "name": "Xem lịch sử hội thoại",
+      "cases": [
+        "H02",
+        "H03"
+      ]
+    },
+    {
+      "id": "7.3",
+      "name": "Bắt đầu hội thoại mới",
+      "cases": [
+        "H04"
+      ]
+    },
+    {
+      "id": "7.4",
+      "name": "Tra cứu hội thoại quản trị",
+      "cases": [
+        "H05"
+      ]
+    },
+    {
+      "id": "8.1",
+      "name": "Theo dõi chỉ số kinh doanh",
+      "cases": [
+        "D01"
+      ]
+    },
+    {
+      "id": "8.2",
+      "name": "Phân tích hành vi",
+      "cases": [
+        "D03"
+      ]
+    },
+    {
+      "id": "8.3",
+      "name": "Xuất báo cáo đơn hàng",
+      "cases": [
+        "D02"
+      ]
+    },
+    {
+      "id": "8.4",
+      "name": "Bảo trì dữ liệu quản trị",
+      "cases": [
+        "D04"
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "id": "SG01",
+      "name": "Sử dụng tài khoản",
+      "cases": [
+        "A01",
+        "A02",
+        "A03",
+        "A04"
+      ]
+    },
+    {
+      "id": "SG02",
+      "name": "Khám phá và đánh giá nông sản",
+      "cases": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05"
+      ]
+    },
+    {
+      "id": "SG03",
+      "name": "Mua sắm và đặt hàng",
+      "cases": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "O01",
+        "O02"
+      ]
+    },
+    {
+      "id": "SG04",
+      "name": "Theo dõi / hủy đơn cá nhân",
+      "cases": [
+        "O03",
+        "O04",
+        "O05",
+        "O06"
+      ]
+    },
+    {
+      "id": "SG05",
+      "name": "Thanh toán và gửi chứng từ",
+      "cases": [
+        "Q01",
+        "Q02",
+        "Q03"
+      ]
+    },
+    {
+      "id": "SG06",
+      "name": "Tra cứu nguồn gốc",
+      "cases": [
+        "T01",
+        "T02"
+      ]
+    },
+    {
+      "id": "SG07",
+      "name": "Nhận gợi ý nông sản",
+      "cases": [
+        "R01"
+      ]
+    },
+    {
+      "id": "SG08",
+      "name": "Tư vấn và quản lý hội thoại",
+      "cases": [
+        "H01",
+        "H02",
+        "H03",
+        "H04"
+      ]
+    },
+    {
+      "id": "SG09",
+      "name": "Quản trị tài khoản và quyền",
+      "cases": [
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09",
+        "A10",
+        "A11"
+      ]
+    },
+    {
+      "id": "SG10",
+      "name": "Quản trị nông sản và dữ liệu gốc",
+      "cases": [
+        "P06",
+        "P07",
+        "P08",
+        "P09",
+        "P10",
+        "P11",
+        "P12",
+        "P13",
+        "P14",
+        "P15",
+        "P16"
+      ]
+    },
+    {
+      "id": "SG11",
+      "name": "Xử lý đơn hàng",
+      "cases": [
+        "O07",
+        "O08",
+        "O09",
+        "O10",
+        "O11",
+        "O12"
+      ]
+    },
+    {
+      "id": "SG12",
+      "name": "Đối soát thanh toán",
+      "cases": [
+        "Q04",
+        "Q05"
+      ]
+    },
+    {
+      "id": "SG13",
+      "name": "Quản trị lô và nhật ký nguồn gốc",
+      "cases": [
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08"
+      ]
+    },
+    {
+      "id": "SG14",
+      "name": "Tra cứu phân nhóm và gợi ý",
+      "cases": [
+        "R02",
+        "R04",
+        "R05"
+      ]
+    },
+    {
+      "id": "SG15",
+      "name": "Giám sát, báo cáo và bảo trì",
+      "cases": [
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "H05"
+      ]
+    },
+    {
+      "id": "SG16",
+      "name": "Cập nhật phân nhóm khách hàng",
+      "cases": [
+        "R03"
+      ]
+    }
+  ],
+  "useCases": [
+    {
+      "id": "A01",
+      "name": "Đăng ký tài khoản",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "G"
+      ],
+      "pages": [
+        "04 · Tài khoản cá nhân"
+      ],
+      "branch": "1.1",
+      "summary": "SG01",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Chưa có tài khoản mang tên đăng nhập đó",
+      "post": "Tài khoản hợp lệ được tạo, đăng nhập tự động"
+    },
+    {
+      "id": "A02",
+      "name": "Đăng nhập",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "04 · Tài khoản cá nhân"
+      ],
+      "branch": "1.1",
+      "summary": "SG01",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Có tài khoản đang hoạt động; có thông tin xác thực",
+      "post": "Phiên được xác thực và điều hướng theo vai trò"
+    },
+    {
+      "id": "A03",
+      "name": "Đăng xuất",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "04 · Tài khoản cá nhân"
+      ],
+      "branch": "1.1",
+      "summary": "SG01",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Có phiên đăng nhập",
+      "post": "Phiên xác thực kết thúc"
+    },
+    {
+      "id": "A04",
+      "name": "Xem hồ sơ và sổ địa chỉ",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "04 · Tài khoản cá nhân"
+      ],
+      "branch": "1.2",
+      "summary": "SG01",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Đã đăng nhập",
+      "post": "Hiển thị hồ sơ, phân nhóm và địa chỉ của chính mình"
+    },
+    {
+      "id": "A05",
+      "name": "Thêm tài khoản người dùng",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "05 · Quản trị người dùng"
+      ],
+      "branch": "1.3",
+      "summary": "SG09",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Quyền thêm User",
+      "post": "Tạo tài khoản hợp lệ"
+    },
+    {
+      "id": "A06",
+      "name": "Sửa thông tin người dùng",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "05 · Quản trị người dùng"
+      ],
+      "branch": "1.3",
+      "summary": "SG09",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Quyền sửa User; tài khoản tồn tại",
+      "post": "Lưu thông tin đã kiểm tra"
+    },
+    {
+      "id": "A07",
+      "name": "Khóa / mở khóa tài khoản",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "05 · Quản trị người dùng"
+      ],
+      "branch": "1.3",
+      "summary": "SG09",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Quyền sửa User; tài khoản tồn tại",
+      "post": "Đổi is_active theo yêu cầu"
+    },
+    {
+      "id": "A08",
+      "name": "Đặt lại mật khẩu người dùng",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "05 · Quản trị người dùng"
+      ],
+      "branch": "1.3",
+      "summary": "SG09",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Quyền quản trị mật khẩu của User mục tiêu",
+      "post": "Lưu mật khẩu mới dạng băm"
+    },
+    {
+      "id": "A09",
+      "name": "Xóa tài khoản người dùng",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "05 · Quản trị người dùng"
+      ],
+      "branch": "1.3",
+      "summary": "SG09",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Quyền xóa User; đã kiểm tra liên kết dữ liệu",
+      "post": "Xóa theo ràng buộc quan hệ hoặc từ chối rõ lý do"
+    },
+    {
+      "id": "A10",
+      "name": "Phân nhóm và cấp quyền truy cập",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "A"
+      ],
+      "pages": [
+        "06 · Phân quyền và địa chỉ"
+      ],
+      "branch": "1.4",
+      "summary": "SG09",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Quản trị viên; đã xác định vai trò cần cấp",
+      "post": "Lưu nhóm và quyền truy cập đã chọn"
+    },
+    {
+      "id": "A11",
+      "name": "Cập nhật sổ địa chỉ của khách",
+      "domain": "F1",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "06 · Phân quyền và địa chỉ"
+      ],
+      "branch": "1.4",
+      "summary": "SG09",
+      "source": "apps/accounts/views.py; apps/accounts/forms.py; apps/accounts/admin.py",
+      "pre": "Quyền UserAddress theo thao tác; khách tồn tại",
+      "post": "Sổ địa chỉ của đúng khách được cập nhật"
+    },
+    {
+      "id": "P01",
+      "name": "Duyệt nông sản đang bán",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "07 · Khám phá và đánh giá nông sản"
+      ],
+      "branch": "2.1",
+      "summary": "SG02",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Không cần đăng nhập",
+      "post": "Hiển thị nông sản đang bán và còn hàng"
+    },
+    {
+      "id": "P02",
+      "name": "Lọc nông sản",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "07 · Khám phá và đánh giá nông sản"
+      ],
+      "branch": "2.1",
+      "summary": "SG02",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Đang duyệt P01; người xem yêu cầu lọc",
+      "post": "Danh sách đáp ứng bộ lọc hoặc rỗng"
+    },
+    {
+      "id": "P03",
+      "name": "Tìm kiếm nông sản",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "07 · Khám phá và đánh giá nông sản"
+      ],
+      "branch": "2.1",
+      "summary": "SG02",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Có truy vấn tìm kiếm",
+      "post": "Trả kết quả theo tên, mô tả hoặc xuất xứ"
+    },
+    {
+      "id": "P04",
+      "name": "Xem chi tiết nông sản",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "07 · Khám phá và đánh giá nông sản"
+      ],
+      "branch": "2.1",
+      "summary": "SG02",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Sản phẩm có thể truy cập theo chính sách công khai",
+      "post": "Hiển thị thông tin, đánh giá; ghi sự kiện xem"
+    },
+    {
+      "id": "P05",
+      "name": "Gửi / cập nhật đánh giá của mình",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "07 · Khám phá và đánh giá nông sản"
+      ],
+      "branch": "2.1",
+      "summary": "SG02",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; sản phẩm tồn tại; nội dung hợp lệ",
+      "post": "Tạo/cập nhật một đánh giá của mình cho sản phẩm"
+    },
+    {
+      "id": "P06",
+      "name": "Tra cứu sản phẩm và tồn kho",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "08 · Sản phẩm, tồn kho và đánh giá"
+      ],
+      "branch": "2.2",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xem dữ liệu sản phẩm quản trị",
+      "post": "Hiển thị kết quả tra cứu và tồn kho"
+    },
+    {
+      "id": "P07",
+      "name": "Thêm nông sản",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "08 · Sản phẩm, tồn kho và đánh giá"
+      ],
+      "branch": "2.2",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền thêm Product; danh mục/nhà cung cấp phù hợp",
+      "post": "Sản phẩm mới được lưu"
+    },
+    {
+      "id": "P08",
+      "name": "Cập nhật nông sản và tồn kho",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "08 · Sản phẩm, tồn kho và đánh giá"
+      ],
+      "branch": "2.2",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền sửa Product; sản phẩm tồn tại",
+      "post": "Lưu thông tin, giá, ảnh, tồn kho hoặc trạng thái bán"
+    },
+    {
+      "id": "P09",
+      "name": "Xóa nông sản",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "08 · Sản phẩm, tồn kho và đánh giá"
+      ],
+      "branch": "2.2",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xóa Product; xem trước ảnh hưởng liên kết",
+      "post": "Xóa hợp lệ hoặc báo quan hệ ngăn xóa"
+    },
+    {
+      "id": "P10",
+      "name": "Thêm danh mục",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "09 · Danh mục và nhà cung cấp"
+      ],
+      "branch": "2.3",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền thêm Category",
+      "post": "Danh mục mới được lưu"
+    },
+    {
+      "id": "P11",
+      "name": "Sửa danh mục",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "09 · Danh mục và nhà cung cấp"
+      ],
+      "branch": "2.3",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền sửa Category; danh mục tồn tại",
+      "post": "Thông tin danh mục được cập nhật"
+    },
+    {
+      "id": "P12",
+      "name": "Xóa danh mục",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "09 · Danh mục và nhà cung cấp"
+      ],
+      "branch": "2.3",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xóa Category; kiểm tra quan hệ sản phẩm",
+      "post": "Xóa hợp lệ hoặc từ chối có lý do"
+    },
+    {
+      "id": "P13",
+      "name": "Thêm nhà cung cấp",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "09 · Danh mục và nhà cung cấp"
+      ],
+      "branch": "2.4",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền thêm Supplier",
+      "post": "Nhà cung cấp mới được lưu"
+    },
+    {
+      "id": "P14",
+      "name": "Sửa nhà cung cấp",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "09 · Danh mục và nhà cung cấp"
+      ],
+      "branch": "2.4",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền sửa Supplier; bản ghi tồn tại",
+      "post": "Thông tin nhà cung cấp được cập nhật"
+    },
+    {
+      "id": "P15",
+      "name": "Xóa nhà cung cấp",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "09 · Danh mục và nhà cung cấp"
+      ],
+      "branch": "2.4",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xóa Supplier; kiểm tra quan hệ liên quan",
+      "post": "Xóa hợp lệ hoặc từ chối có lý do"
+    },
+    {
+      "id": "P16",
+      "name": "Tra cứu và hiệu chỉnh đánh giá",
+      "domain": "F2",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "08 · Sản phẩm, tồn kho và đánh giá"
+      ],
+      "branch": "2.1",
+      "summary": "SG10",
+      "source": "apps/products/views.py; apps/products/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xem/sửa/xóa ProductReview tương ứng",
+      "post": "Hiển thị hoặc hiệu chỉnh đúng đánh giá"
+    },
+    {
+      "id": "C01",
+      "name": "Xem giỏ hàng",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "10 · Giỏ hàng cá nhân"
+      ],
+      "branch": "3.1",
+      "summary": "SG03",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập",
+      "post": "Hiển thị giỏ của mình và tổng tiền dự kiến"
+    },
+    {
+      "id": "C02",
+      "name": "Thêm nông sản vào giỏ",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "10 · Giỏ hàng cá nhân"
+      ],
+      "branch": "3.1",
+      "summary": "SG03",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; sản phẩm đang bán; số lượng nguyên dương",
+      "post": "Giỏ tăng số lượng, không trừ tồn kho"
+    },
+    {
+      "id": "C03",
+      "name": "Thay đổi số lượng trong giỏ",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "10 · Giỏ hàng cá nhân"
+      ],
+      "branch": "3.1",
+      "summary": "SG03",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Mặt hàng thuộc giỏ của mình; đầu vào số lượng hợp lệ",
+      "post": "Số lượng cập nhật hoặc mặt hàng bị bỏ nếu không dương"
+    },
+    {
+      "id": "C04",
+      "name": "Xóa mặt hàng khỏi giỏ",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "10 · Giỏ hàng cá nhân"
+      ],
+      "branch": "3.1",
+      "summary": "SG03",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Mặt hàng thuộc giỏ của mình",
+      "post": "Mặt hàng được bỏ khỏi giỏ"
+    },
+    {
+      "id": "O01",
+      "name": "Đặt hàng từ giỏ",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "11 · Đặt hàng qua web và hội thoại"
+      ],
+      "branch": "3.2",
+      "summary": "SG03",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; giỏ không rỗng; thông tin nhận hàng hợp lệ",
+      "post": "Tạo đơn pending, chụp giá, trừ kho và làm rỗng giỏ"
+    },
+    {
+      "id": "O02",
+      "name": "Đặt hàng qua hội thoại",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "11 · Đặt hàng qua web và hội thoại"
+      ],
+      "branch": "3.2",
+      "summary": "SG03",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; có yêu cầu đặt hàng",
+      "post": "Tạo đơn trực tiếp pending khi đủ dữ liệu; kết thúc bản nháp"
+    },
+    {
+      "id": "O03",
+      "name": "Xem lịch sử đơn của mình",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "12 · Đơn hàng của khách"
+      ],
+      "branch": "3.3",
+      "summary": "SG04",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập",
+      "post": "Chỉ hiển thị lịch sử đơn của mình"
+    },
+    {
+      "id": "O04",
+      "name": "Xem chi tiết đơn của mình",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "12 · Đơn hàng của khách"
+      ],
+      "branch": "3.3",
+      "summary": "SG04",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; đơn thuộc mình",
+      "post": "Hiển thị chi tiết đúng đơn"
+    },
+    {
+      "id": "O05",
+      "name": "Hủy đơn của mình",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "12 · Đơn hàng của khách"
+      ],
+      "branch": "3.4",
+      "summary": "SG04",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; đơn của mình đang pending",
+      "post": "Đơn cancelled và S01 hoàn tồn kho đúng một lần"
+    },
+    {
+      "id": "O06",
+      "name": "Tra đơn của mình qua chat",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "12 · Đơn hàng của khách"
+      ],
+      "branch": "3.3",
+      "summary": "SG04",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; mã đơn hoặc yêu cầu đơn gần nhất thuộc mình",
+      "post": "Trả dữ liệu đơn được phép xem, không lộ đơn người khác"
+    },
+    {
+      "id": "O07",
+      "name": "Tra cứu đơn toàn hệ thống",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "13 · Thực hiện và hủy đơn hàng"
+      ],
+      "branch": "3.4",
+      "summary": "SG11",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Nhân viên có quyền xem đơn",
+      "post": "Hiển thị kết quả tra cứu đơn toàn hệ thống"
+    },
+    {
+      "id": "O08",
+      "name": "Xác nhận đơn hàng",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "13 · Thực hiện và hủy đơn hàng"
+      ],
+      "branch": "3.4",
+      "summary": "SG11",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Quyền xử lý đơn; đơn pending; VietQR đã đối soát nếu áp dụng",
+      "post": "Đơn chuyển confirmed"
+    },
+    {
+      "id": "O09",
+      "name": "Ghi nhận bắt đầu giao hàng",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "13 · Thực hiện và hủy đơn hàng"
+      ],
+      "branch": "3.4",
+      "summary": "SG11",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Quyền xử lý đơn; đơn confirmed",
+      "post": "Đơn chuyển shipping"
+    },
+    {
+      "id": "O10",
+      "name": "Ghi nhận giao hàng thành công",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "13 · Thực hiện và hủy đơn hàng"
+      ],
+      "branch": "3.4",
+      "summary": "SG11",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Quyền xử lý đơn; đơn shipping; có thông tin giao thành công",
+      "post": "Đơn chuyển delivered"
+    },
+    {
+      "id": "O11",
+      "name": "Hủy đơn chờ xác nhận của khách",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "13 · Thực hiện và hủy đơn hàng"
+      ],
+      "branch": "3.4",
+      "summary": "SG11",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Quyền hủy đơn; đơn pending",
+      "post": "Đơn cancelled và hoàn tồn kho đúng một lần"
+    },
+    {
+      "id": "O12",
+      "name": "Xác nhận nhiều đơn đã chọn",
+      "domain": "F3",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "13 · Thực hiện và hủy đơn hàng"
+      ],
+      "branch": "3.4",
+      "summary": "SG11",
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "Quyền xác nhận đơn; đã chọn danh sách",
+      "post": "Chỉ đơn đủ điều kiện được xác nhận; có kết quả từng đơn"
+    },
+    {
+      "id": "S01",
+      "name": "Hoàn tồn kho của đơn hủy",
+      "domain": "F3",
+      "kind": "supporting",
+      "actors": [],
+      "pages": [
+        "12 · Đơn hàng của khách",
+        "13 · Thực hiện và hủy đơn hàng"
+      ],
+      "branch": "3.4",
+      "summary": null,
+      "source": "apps/cart_orders/views.py; apps/cart_orders/services.py; apps/cart_orders/admin.py; apps/chatbot/order_assistant.py; apps/chatbot/fallback.py; apps/dashboard/views.py",
+      "pre": "O05/O11 đã kiểm tra đơn pending; đang trong giao dịch hủy",
+      "post": "Hoàn đúng số lượng đã trừ, đồng bộ trạng thái cancelled"
+    },
+    {
+      "id": "Q01",
+      "name": "Xem thông tin thanh toán VietQR",
+      "domain": "F4",
+      "kind": "goal",
+      "actors": [
+        "U",
+        "Q"
+      ],
+      "pages": [
+        "14 · Thanh toán của khách hàng"
+      ],
+      "branch": "4.1",
+      "summary": "SG05",
+      "source": "apps/cart_orders/vietqr.py; apps/cart_orders/views.py; apps/cart_orders/admin.py; apps/dashboard/views.py",
+      "pre": "Đã đăng nhập; đơn VietQR thuộc mình",
+      "post": "Hiển thị ngân hàng, tài khoản, số tiền, nội dung và ảnh QR khi có"
+    },
+    {
+      "id": "Q02",
+      "name": "Nộp / thay chứng từ chuyển khoản",
+      "domain": "F4",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "14 · Thanh toán của khách hàng"
+      ],
+      "branch": "4.2",
+      "summary": "SG05",
+      "source": "apps/cart_orders/vietqr.py; apps/cart_orders/views.py; apps/cart_orders/admin.py; apps/dashboard/views.py",
+      "pre": "Đơn VietQR của mình đang pending; chứng từ hợp lệ",
+      "post": "Lưu/thay chứng từ và thời điểm; không tự xác nhận đã nhận tiền"
+    },
+    {
+      "id": "Q03",
+      "name": "Xem chứng từ thanh toán",
+      "domain": "F4",
+      "kind": "goal",
+      "actors": [
+        "U",
+        "S"
+      ],
+      "pages": [
+        "14 · Thanh toán của khách hàng",
+        "15 · Đối soát và chứng từ"
+      ],
+      "branch": "4.3",
+      "summary": "SG05",
+      "source": "apps/cart_orders/vietqr.py; apps/cart_orders/views.py; apps/cart_orders/admin.py; apps/dashboard/views.py",
+      "pre": "Là chủ đơn hoặc nhân viên có quyền xem chứng từ",
+      "post": "Hiển thị chứng từ được phép hoặc trạng thái chưa có"
+    },
+    {
+      "id": "Q04",
+      "name": "Ghi nhận kết quả đối soát",
+      "domain": "F4",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "15 · Đối soát và chứng từ"
+      ],
+      "branch": "4.4",
+      "summary": "SG12",
+      "source": "apps/cart_orders/vietqr.py; apps/cart_orders/views.py; apps/cart_orders/admin.py; apps/dashboard/views.py",
+      "pre": "Nhân viên có quyền đối soát; đơn VietQR; kiểm tra ngân hàng thực tế",
+      "post": "Ghi nhận kết quả đối soát để quyết định xác nhận đơn"
+    },
+    {
+      "id": "Q05",
+      "name": "Nộp chứng từ thay khách",
+      "domain": "F4",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "15 · Đối soát và chứng từ"
+      ],
+      "branch": "4.2",
+      "summary": "SG12",
+      "source": "apps/cart_orders/vietqr.py; apps/cart_orders/views.py; apps/cart_orders/admin.py; apps/dashboard/views.py",
+      "pre": "Nhân viên có quyền; đơn VietQR pending; chứng từ hợp lệ",
+      "post": "Lưu chứng từ thay khách; chưa mặc nhiên xác nhận tiền"
+    },
+    {
+      "id": "T01",
+      "name": "Duyệt / tìm kiếm lô hàng",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "16 · Tra cứu nguồn gốc công khai"
+      ],
+      "branch": "5.1",
+      "summary": "SG06",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Không cần đăng nhập",
+      "post": "Hiển thị các lô phù hợp điều kiện tra cứu"
+    },
+    {
+      "id": "T02",
+      "name": "Xem nguồn gốc một lô",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "16 · Tra cứu nguồn gốc công khai"
+      ],
+      "branch": "5.1",
+      "summary": "SG06",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Có mã lô hợp lệ hoặc URL từ QR",
+      "post": "Hiển thị nguồn gốc và lịch sử đã ghi nhận của lô"
+    },
+    {
+      "id": "T03",
+      "name": "Tra cứu lô hàng để quản trị",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "17 · Quản trị lô và lịch sử nguồn gốc"
+      ],
+      "branch": "5.2",
+      "summary": "SG13",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Quyền xem ProductBatch",
+      "post": "Hiển thị các lô trong phạm vi quản trị"
+    },
+    {
+      "id": "T04",
+      "name": "Tạo lô nông sản",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "17 · Quản trị lô và lịch sử nguồn gốc"
+      ],
+      "branch": "5.2",
+      "summary": "SG13",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Quyền thêm ProductBatch; sản phẩm tồn tại; mã lô duy nhất",
+      "post": "Tạo lô với dữ liệu hợp lệ và QR truy xuất"
+    },
+    {
+      "id": "T05",
+      "name": "Cập nhật thông tin lô",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "17 · Quản trị lô và lịch sử nguồn gốc"
+      ],
+      "branch": "5.2",
+      "summary": "SG13",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Quyền sửa ProductBatch; lô tồn tại",
+      "post": "Lưu thông tin lô và bảo đảm QR trỏ đúng mã hiện hành"
+    },
+    {
+      "id": "T06",
+      "name": "Xóa lô nông sản",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "17 · Quản trị lô và lịch sử nguồn gốc"
+      ],
+      "branch": "5.2",
+      "summary": "SG13",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Quyền xóa ProductBatch; kiểm tra lịch sử liên quan",
+      "post": "Xóa lô theo ràng buộc hoặc từ chối"
+    },
+    {
+      "id": "T07",
+      "name": "Xem nhật ký nguồn gốc",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "17 · Quản trị lô và lịch sử nguồn gốc"
+      ],
+      "branch": "5.4",
+      "summary": "SG13",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Quyền xem TraceabilityRecord",
+      "post": "Hiển thị nhật ký hiện có; không suy diễn lịch sử chưa ghi"
+    },
+    {
+      "id": "T08",
+      "name": "Hiệu chỉnh nhật ký nguồn gốc",
+      "domain": "F5",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "17 · Quản trị lô và lịch sử nguồn gốc"
+      ],
+      "branch": "5.4",
+      "summary": "SG13",
+      "source": "apps/traceability/views.py; apps/traceability/models.py; apps/traceability/admin.py; apps/traceability/qr_generator.py",
+      "pre": "Quyền thêm/sửa/xóa TraceabilityRecord tương ứng",
+      "post": "Bản ghi nhật ký được hiệu chỉnh theo thao tác"
+    },
+    {
+      "id": "R01",
+      "name": "Xem gợi ý nông sản",
+      "domain": "F6",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "07 · Khám phá và đánh giá nông sản",
+        "18 · Gợi ý và phân nhóm khách hàng"
+      ],
+      "branch": "6.1",
+      "summary": "SG07",
+      "source": "apps/recommendation/engine.py; apps/behavior/segmentation.py; apps/behavior/admin.py; apps/dashboard/views.py",
+      "pre": "Truy cập khu vực gợi ý",
+      "post": "Trả nông sản còn hàng theo cá nhân hóa hoặc phương án dự phòng"
+    },
+    {
+      "id": "R02",
+      "name": "Tra cứu khách theo nhóm hành vi",
+      "domain": "F6",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "18 · Gợi ý và phân nhóm khách hàng"
+      ],
+      "branch": "6.2",
+      "summary": "SG14",
+      "source": "apps/recommendation/engine.py; apps/behavior/segmentation.py; apps/behavior/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xem khách và phân nhóm",
+      "post": "Hiển thị khách phù hợp nhóm/từ khóa"
+    },
+    {
+      "id": "R03",
+      "name": "Chạy cập nhật phân nhóm",
+      "domain": "F6",
+      "kind": "goal",
+      "actors": [
+        "O"
+      ],
+      "pages": [
+        "18 · Gợi ý và phân nhóm khách hàng"
+      ],
+      "branch": "6.3",
+      "summary": "SG16",
+      "source": "apps/recommendation/engine.py; apps/behavior/segmentation.py; apps/behavior/admin.py; apps/dashboard/views.py",
+      "pre": "Có quyền vận hành CLI và truy cập CSDL",
+      "post": "Phân loại người dùng active; ghi lịch sử khi nhóm thay đổi"
+    },
+    {
+      "id": "R04",
+      "name": "Tra cứu lịch sử phân nhóm",
+      "domain": "F6",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "18 · Gợi ý và phân nhóm khách hàng"
+      ],
+      "branch": "6.4",
+      "summary": "SG14",
+      "source": "apps/recommendation/engine.py; apps/behavior/segmentation.py; apps/behavior/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xem UserSegment",
+      "post": "Hiển thị lịch sử phân nhóm hiện có"
+    },
+    {
+      "id": "R05",
+      "name": "Tra cứu nhật ký gợi ý",
+      "domain": "F6",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "18 · Gợi ý và phân nhóm khách hàng"
+      ],
+      "branch": "6.4",
+      "summary": "SG14",
+      "source": "apps/recommendation/engine.py; apps/behavior/segmentation.py; apps/behavior/admin.py; apps/dashboard/views.py",
+      "pre": "Quyền xem RecommendationLog",
+      "post": "Hiển thị nhật ký gợi ý đã có"
+    },
+    {
+      "id": "H01",
+      "name": "Nhận tư vấn nông sản",
+      "domain": "F7",
+      "kind": "goal",
+      "actors": [
+        "V",
+        "L"
+      ],
+      "pages": [
+        "19 · Tư vấn và hội thoại cá nhân"
+      ],
+      "branch": "7.1",
+      "summary": "SG08",
+      "source": "apps/chatbot/views.py; apps/chatbot/services.py; apps/chatbot/fallback.py; apps/chatbot/admin.py",
+      "pre": "Có phiên trình duyệt và câu hỏi hợp lệ",
+      "post": "Trả lời tư vấn; lưu hội thoại theo phạm vi phiên"
+    },
+    {
+      "id": "H02",
+      "name": "Xem tin nhắn phiên hiện tại",
+      "domain": "F7",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "19 · Tư vấn và hội thoại cá nhân"
+      ],
+      "branch": "7.2",
+      "summary": "SG08",
+      "source": "apps/chatbot/views.py; apps/chatbot/services.py; apps/chatbot/fallback.py; apps/chatbot/admin.py",
+      "pre": "Có phiên hiện tại",
+      "post": "Hiển thị tin nhắn đúng phiên"
+    },
+    {
+      "id": "H03",
+      "name": "Xem lịch sử chat của mình",
+      "domain": "F7",
+      "kind": "goal",
+      "actors": [
+        "U"
+      ],
+      "pages": [
+        "19 · Tư vấn và hội thoại cá nhân"
+      ],
+      "branch": "7.2",
+      "summary": "SG08",
+      "source": "apps/chatbot/views.py; apps/chatbot/services.py; apps/chatbot/fallback.py; apps/chatbot/admin.py",
+      "pre": "Đã đăng nhập",
+      "post": "Hiển thị các hội thoại thuộc tài khoản"
+    },
+    {
+      "id": "H04",
+      "name": "Xóa hội thoại để bắt đầu lại",
+      "domain": "F7",
+      "kind": "goal",
+      "actors": [
+        "V"
+      ],
+      "pages": [
+        "19 · Tư vấn và hội thoại cá nhân"
+      ],
+      "branch": "7.3",
+      "summary": "SG08",
+      "source": "apps/chatbot/views.py; apps/chatbot/services.py; apps/chatbot/fallback.py; apps/chatbot/admin.py",
+      "pre": "Có phiên hội thoại hiện tại",
+      "post": "Xóa hội thoại và bản nháp đặt hàng tương ứng"
+    },
+    {
+      "id": "H05",
+      "name": "Tra cứu phiên và tin nhắn chat",
+      "domain": "F7",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "20 · Giám sát, báo cáo và bảo trì"
+      ],
+      "branch": "7.4",
+      "summary": "SG15",
+      "source": "apps/chatbot/views.py; apps/chatbot/services.py; apps/chatbot/fallback.py; apps/chatbot/admin.py",
+      "pre": "Quyền xem ChatSession/ChatMessage",
+      "post": "Trả các phiên/tin nhắn theo bộ lọc quản trị"
+    },
+    {
+      "id": "D01",
+      "name": "Xem báo cáo điều hành",
+      "domain": "F8",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "20 · Giám sát, báo cáo và bảo trì"
+      ],
+      "branch": "8.1",
+      "summary": "SG15",
+      "source": "apps/dashboard/views.py; apps/behavior/admin.py; apps/cart_orders/admin.py; apps/chatbot/admin.py",
+      "pre": "Quyền xem báo cáo điều hành",
+      "post": "Hiển thị KPI với đúng định nghĩa và kỳ tính"
+    },
+    {
+      "id": "D02",
+      "name": "Xuất báo cáo đơn hàng Excel",
+      "domain": "F8",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "20 · Giám sát, báo cáo và bảo trì"
+      ],
+      "branch": "8.3",
+      "summary": "SG15",
+      "source": "apps/dashboard/views.py; apps/behavior/admin.py; apps/cart_orders/admin.py; apps/chatbot/admin.py",
+      "pre": "Quyền xuất báo cáo đơn hàng",
+      "post": "Trả tệp Excel toàn bộ đơn, không ngầm dùng bộ lọc màn hình"
+    },
+    {
+      "id": "D03",
+      "name": "Phân tích và tra cứu hành vi",
+      "domain": "F8",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "20 · Giám sát, báo cáo và bảo trì"
+      ],
+      "branch": "8.2",
+      "summary": "SG15",
+      "source": "apps/dashboard/views.py; apps/behavior/admin.py; apps/cart_orders/admin.py; apps/chatbot/admin.py",
+      "pre": "Quyền xem UserEvent/báo cáo hành vi",
+      "post": "Trả tổng hợp và bản ghi hành vi có sẵn"
+    },
+    {
+      "id": "D04",
+      "name": "Hiệu chỉnh dữ liệu quản trị",
+      "domain": "F8",
+      "kind": "goal",
+      "actors": [
+        "S"
+      ],
+      "pages": [
+        "20 · Giám sát, báo cáo và bảo trì"
+      ],
+      "branch": "8.4",
+      "summary": "SG15",
+      "source": "apps/dashboard/views.py; apps/behavior/admin.py; apps/cart_orders/admin.py; apps/chatbot/admin.py",
+      "pre": "Quyền model và thao tác cụ thể; theo bảng phạm vi bảo trì",
+      "post": "Chỉ hiệu chỉnh dữ liệu phụ trợ được phép; giữ ràng buộc nghiệp vụ"
+    }
+  ],
+  "relations": [
+    {
+      "from": "P02",
+      "to": "P01",
+      "type": "extend",
+      "condition": "Người xem yêu cầu lọc",
+      "extensionPoint": "EP-P01: điều chỉnh tập kết quả"
+    },
+    {
+      "from": "O05",
+      "to": "S01",
+      "type": "include"
+    },
+    {
+      "from": "O11",
+      "to": "S01",
+      "type": "include"
+    }
+  ],
+  "pages": [
+    {
+      "id": "functional-hierarchy",
+      "name": "01 · PHÂN RÃ PHÂN CẤP CHỨC NĂNG"
+    },
+    {
+      "id": "fxx1734e-x7tf",
+      "name": "02 · USE CASE TỔNG QUÁT TOÀN HỆ THỐNG"
+    },
+    {
+      "id": "actors",
+      "name": "03 · Tác nhân và quan hệ kế thừa"
+    },
+    {
+      "id": "account",
+      "name": "04 · Tài khoản cá nhân"
+    },
+    {
+      "id": "users",
+      "name": "05 · Quản trị người dùng"
+    },
+    {
+      "id": "rights",
+      "name": "06 · Phân quyền và địa chỉ"
+    },
+    {
+      "id": "discover",
+      "name": "07 · Khám phá và đánh giá nông sản"
+    },
+    {
+      "id": "inventory",
+      "name": "08 · Sản phẩm, tồn kho và đánh giá"
+    },
+    {
+      "id": "reference",
+      "name": "09 · Danh mục và nhà cung cấp"
+    },
+    {
+      "id": "cart",
+      "name": "10 · Giỏ hàng cá nhân"
+    },
+    {
+      "id": "place",
+      "name": "11 · Đặt hàng qua web và hội thoại"
+    },
+    {
+      "id": "ownorders",
+      "name": "12 · Đơn hàng của khách"
+    },
+    {
+      "id": "fulfillment",
+      "name": "13 · Thực hiện và hủy đơn hàng"
+    },
+    {
+      "id": "payment",
+      "name": "14 · Thanh toán của khách hàng"
+    },
+    {
+      "id": "reconcile",
+      "name": "15 · Đối soát và chứng từ"
+    },
+    {
+      "id": "trace-public",
+      "name": "16 · Tra cứu nguồn gốc công khai"
+    },
+    {
+      "id": "trace-admin",
+      "name": "17 · Quản trị lô và lịch sử nguồn gốc"
+    },
+    {
+      "id": "personalization",
+      "name": "18 · Gợi ý và phân nhóm khách hàng"
+    },
+    {
+      "id": "conversation",
+      "name": "19 · Tư vấn và hội thoại cá nhân"
+    },
+    {
+      "id": "analytics",
+      "name": "20 · Giám sát, báo cáo và bảo trì"
+    },
+    {
+      "id": "legend",
+      "name": "21 · Quy ước UML và phạm vi"
+    }
+  ]
+}

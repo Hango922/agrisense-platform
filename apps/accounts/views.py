@@ -8,7 +8,7 @@ from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, TemplateView, View
 
 from .forms import RegisterForm
 
@@ -43,14 +43,10 @@ class LoginView(DjangoLoginView):
         return reverse_lazy('home')
 
 
-class LogoutView(TemplateView):
+class LogoutView(View):
     """
     Xử lý đăng xuất tài khoản và chuyển hướng về trang chủ.
     """
-    def get(self, request):
-        logout(request)
-        return redirect('home')
-
     def post(self, request):
         logout(request)
         return redirect('home')

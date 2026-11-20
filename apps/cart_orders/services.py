@@ -1,10 +1,13 @@
 """Transactional order services shared by storefront, chatbot and staff."""
+from django.conf import settings
 from django.db import transaction
 from django.db.models import F
 from django.utils.crypto import get_random_string
 
 from apps.behavior.models import UserEvent
 from apps.products.models import Product
+from apps.traceability.inventory import allocate_batches
+from apps.traceability.models import ProductBatch
 
 from .forms import CheckoutForm
 from .models import Cart, Order, OrderItem
@@ -66,11 +69,12 @@ def create_direct_order(user, items_data, address_data, note='Đặt hàng qua C
     order = Order.objects.create(user=user, order_code='ORD' + get_random_string(12, '0123456789'),
         full_name=data['full_name'], phone=data['phone'], address=data['address'],
         total_amount=total, shipping_fee=shipping, final_amount=total + shipping,
-        note=data['note'], payment_method=payment_method, status='pending')
+        note=data['note'], payment_method=payment_method, status='pending', is_demo=settings.DEMO_MODE)
     for product in products:
         quantity = quantities[product.pk]
-        OrderItem.objects.create(order=order, product=product, product_name=product.name,
+        item = OrderItem.objects.create(order=order, product=product, product_name=product.name,
             price=product.price, quantity=quantity, subtotal=product.price * quantity)
+        allocate_batches(item, product, quantity)
         Product.objects.filter(pk=product.pk).update(stock=F('stock') - quantity)
         UserEvent.objects.create(user=user, event_type='purchase', product=product, category=product.category)
     return order
@@ -81,8 +85,13 @@ def cancel_order(order):
     locked = Order.objects.select_for_update().get(pk=order.pk)
     if locked.status != 'pending':
         raise ValueError('Chỉ có thể hủy đơn đang chờ xác nhận.')
+    if locked.has_verified_payment:
+        raise ValueError('Đơn đã thanh toán cần nhân viên xử lý hoàn tiền trước khi hủy.')
     for item in locked.items.order_by('product_id'):
         Product.objects.filter(pk=item.product_id).update(stock=F('stock') + item.quantity)
+        for allocation in item.allocations.select_related('batch').order_by('batch_id'):
+            ProductBatch.objects.filter(pk=allocation.batch_id).update(
+                remaining_quantity=F('remaining_quantity') + allocation.quantity)
     locked.status = 'cancelled'
     locked.save(update_fields=['status', 'updated_at'])
     order.status = locked.status
@@ -107,7 +116,7 @@ def transition_order(order, target, proof=None, admin_verified=False, actor=None
         locked.payment_proof_uploaded_at = timezone.now()
         username = actor.username if actor else 'Admin'
         locked.note += f'\n[{username} đã tải lên bill đối soát: {timezone.now().isoformat()}]'
-    if locked.payment_method == 'vietqr' and not locked.payment_proof:
+    if locked.payment_method == 'vietqr' and not locked.payment_proof and not locked.has_verified_payment:
         if not admin_verified:
             raise ValueError('KHÔNG THỂ XÁC NHẬN: Cần bill hoặc xác nhận đối soát ngân hàng.')
         username = actor.username if actor else 'Admin'

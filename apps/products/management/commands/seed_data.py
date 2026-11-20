@@ -11,15 +11,18 @@ Lệnh seed_data tạo dữ liệu mẫu hoàn chỉnh cho hệ sinh thái AgriS
 8. Tài khoản quản trị và khách hàng demo
 """
 import random
-from datetime import timedelta, date
+from datetime import date, timedelta
 from decimal import Decimal
-from django.core.management.base import BaseCommand
+
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.utils.text import slugify
+
 from apps.accounts.models import User
-from apps.products.models import Category, Supplier, Product
 from apps.behavior.models import UserEvent
 from apps.cart_orders.models import Order, OrderItem
+from apps.products.models import Category, Product, Supplier
 from apps.traceability.models import ProductBatch
 from apps.traceability.qr_generator import generate_qr_code
 
@@ -28,6 +31,8 @@ class Command(BaseCommand):
     help = 'Tạo dữ liệu mẫu cho hệ thống AgriSense'
 
     def handle(self, *args, **kwargs):
+        if settings.OPERATIONAL_MODE:
+            raise CommandError('Seed data is disabled in operational/production settings.')
         self.stdout.write('🌱 Bắt đầu seed data...')
 
         # 1. Categories

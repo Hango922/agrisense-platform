@@ -12,6 +12,7 @@ from django.views.generic import DetailView, ListView, TemplateView, View
 
 from apps.behavior.models import UserEvent
 from apps.recommendation.engine import recommend_for_user
+from apps.traceability.inventory import available_products, sellable_batches
 
 from .models import Category, Product, ProductReview
 
@@ -24,7 +25,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['featured_products'] = Product.objects.filter(is_active=True, stock__gt=0).order_by('-created_at')[:8]
+        ctx['featured_products'] = available_products().order_by('-created_at')[:8]
         ctx['categories'] = Category.objects.all()
         if self.request.user.is_authenticated:
             ctx['recommendations'] = recommend_for_user(self.request.user, limit=6)
@@ -55,7 +56,7 @@ class ProductListView(ListView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = Product.objects.filter(is_active=True, stock__gt=0)
+        qs = available_products()
         cat_slug = self.request.GET.get('category')
         if cat_slug:
             qs = qs.filter(category__slug=cat_slug)
@@ -65,7 +66,11 @@ class ProductListView(ListView):
             qs = qs.filter(price__gte=min_price)
         if max_price:
             qs = qs.filter(price__lte=max_price)
-        return qs
+        query = self.request.GET.get('q', '').strip()
+        if query:
+            qs = qs.filter(Q(name__icontains=query) | Q(origin__icontains=query))
+        sort = self.request.GET.get('sort', '')
+        return qs.order_by(sort if sort in ('price', '-price', 'name') else '-created_at', 'pk')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -86,7 +91,7 @@ class SearchView(ListView):
     def get_queryset(self):
         q = self.request.GET.get('q', '').strip()
         if q:
-            return Product.objects.filter(
+            return available_products().filter(
                 Q(name__icontains=q) | Q(description__icontains=q) | Q(origin__icontains=q),
                 is_active=True
             )
@@ -124,7 +129,7 @@ class ProductDetailView(DetailView):
         ctx['related_products'] = Product.objects.filter(
             category=self.object.category, is_active=True
         ).exclude(id=self.object.id)[:4]
-        ctx['latest_batch'] = self.object.batches.order_by('-created_at').first()
+        ctx['latest_batch'] = sellable_batches(self.object).first() if self.object.track_batches else self.object.batches.order_by('-created_at').first()
         return ctx
 
 

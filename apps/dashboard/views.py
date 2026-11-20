@@ -38,6 +38,8 @@ class DashboardHomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        from .operations import operational_context
+        ctx['operations'] = operational_context()
         d30 = timezone.now() - timedelta(days=30)
         orders_30d = Order.objects.filter(created_at__gte=d30).exclude(status='cancelled')
         ctx['total_revenue'] = orders_30d.aggregate(s=Sum('final_amount'))['s'] or 0
@@ -62,7 +64,7 @@ class DashboardHomeView(TemplateView):
             if dt_local in daily_revenue_map:
                 daily_revenue_map[dt_local] += float(ord_val['final_amount'] or 0)
 
-        chart_revenue_labels = [d.strftime('%d/%m') for d in daily_revenue_map.keys()]
+        chart_revenue_labels = [d.strftime('%d/%m') for d in daily_revenue_map]
         chart_revenue_data = list(daily_revenue_map.values())
 
         # 2. Phân nhóm khách hàng AI cho biểu đồ tròn (Doughnut Chart)

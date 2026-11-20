@@ -7,10 +7,12 @@ Kiểm thử tính năng lên đơn hàng tự động qua Chatbot AI (Conversat
 """
 import json
 from decimal import Decimal
-from django.test import TestCase, Client
+
+from django.test import Client, TestCase
+
 from apps.accounts.models import User, UserAddress
-from apps.products.models import Category, Supplier, Product
 from apps.cart_orders.models import Order
+from apps.products.models import Category, Product, Supplier
 
 
 class ChatbotOrderingTests(TestCase):

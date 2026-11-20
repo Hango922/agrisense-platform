@@ -75,8 +75,14 @@ class ChatbotAPIView(View):
         ChatMessage.objects.create(session=session, role='user', content=message, tokens_used=user_tokens)
 
         # 1. Kiểm tra xử lý ý định LÊN ĐƠN HÀNG TRỰC TIẾP qua Chatbot AI
+        from apps.products.discovery import budget_chat_reply
+
         from .order_assistant import handle_order_conversation
-        order_handled, order_reply = handle_order_conversation(message, user=user, session_dict=request.session)
+        budget_reply = budget_chat_reply(message)
+        if budget_reply:
+            order_handled, order_reply = True, budget_reply
+        else:
+            order_handled, order_reply = handle_order_conversation(message, user=user, session_dict=request.session)
 
         if order_handled:
             request.session.modified = True

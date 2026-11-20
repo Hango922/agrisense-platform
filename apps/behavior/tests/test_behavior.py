@@ -4,13 +4,15 @@ Kiểm thử phân loại hành vi người dùng AI (RFM-like rules) và lệnh
 """
 from datetime import timedelta
 from decimal import Decimal
+
 from django.test import TestCase
 from django.utils import timezone
+
 from apps.accounts.models import User
-from apps.products.models import Category, Supplier, Product
 from apps.behavior.models import UserEvent, UserSegment
 from apps.behavior.segmentation import classify_user, update_all_segments
-from apps.cart_orders.models import Order, OrderItem
+from apps.cart_orders.models import Order
+from apps.products.models import Category, Product, Supplier
 
 
 class BehaviorSegmentationTests(TestCase):

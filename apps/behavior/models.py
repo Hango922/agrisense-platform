@@ -2,8 +2,8 @@
 """
 Ghi nhận hành vi người dùng, lịch sử phân nhóm khách hàng và log gợi ý nông sản AI.
 """
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class UserEvent(models.Model):

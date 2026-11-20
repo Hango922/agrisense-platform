@@ -9,12 +9,14 @@ Phân hệ Trợ lý Đặt hàng Thông minh (Conversational Ordering Assistant
 - Tạo đơn hàng chuẩn hóa và giảm trừ tồn kho an toàn trong cơ sở dữ liệu.
 """
 import re
-from decimal import Decimal
-from apps.products.models import Product
-from apps.cart_orders.services import create_direct_order
-from apps.cart_orders.vietqr import get_vietqr_url, get_vietqr_info
-from apps.chatbot.fallback import find_matching_products, format_currency, remove_accents
 
+from apps.cart_orders.services import create_direct_order
+from apps.cart_orders.vietqr import get_vietqr_info, get_vietqr_url
+from apps.chatbot.fallback import (
+    find_matching_products,
+    format_currency,
+)
+from apps.products.models import Product
 
 ORDER_TRIGGERS = [
     r'\b(mua|đặt|dat|lên đơn|len don|tạo đơn|tao don|order|mua hàng|mua hang|đặt hàng|dat hang|ship cho|gửi cho|gui cho|lấy cho|lay cho|giao cho)\b'
@@ -246,7 +248,12 @@ def format_order_success_message(order, product, qty, extra_note=None):
         f"• Địa chỉ: {order.address}{note_line}\n\n"
     )
 
-    if order.payment_method == 'vietqr':
+    if order.is_demo:
+        payment_section = (
+            '**ĐƠN DEMO — KHÔNG CHUYỂN TIỀN THẬT**\n\n'
+            f'[Xem đơn và mô phỏng thanh toán](/orders/{order.order_code}/)'
+        )
+    elif order.payment_method == 'vietqr':
         qr_url = get_vietqr_url(order)
         qr_info = get_vietqr_info(order)
         payment_section = (
@@ -326,7 +333,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
                     session_dict.pop('chatbot_order_draft', None)
                     return True, format_order_success_message(order, product, qty)
                 except Exception as e:
-                    return True, f"⚠️ Rất tiếc, có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
+                    return True, f"⚠️ Rất tiếc, có lỗi xảy ra khi tạo đơn hàng: {e!s}. Bạn vui lòng thử lại nhé!"
 
             # Khách có thể gửi SĐT hoặc Địa chỉ mới để đổi nơi nhận
             new_phone = extract_phone(msg)
@@ -358,10 +365,10 @@ def handle_order_conversation(message, user=None, session_dict=None):
 
             # Nhắc nhở người dùng chọn phương thức thanh toán
             return True, (
-                f"🌾 Bạn vui lòng chọn hình thức thanh toán để tôi hoàn tất đơn ngay nhé:\n\n"
-                f"[choice:Thanh toán khi nhận hàng (COD)|Trả tiền mặt cho shipper khi nhận hàng|💵](COD)\n"
-                f"[choice:Chuyển khoản VietQR|Quét mã QR Napas 247 qua app ngân hàng|💳](Chuyển khoản VietQR)\n\n"
-                f"*(Hoặc nhắn 'Hủy' nếu bạn muốn đổi ý không mua nữa)*"
+                "🌾 Bạn vui lòng chọn hình thức thanh toán để tôi hoàn tất đơn ngay nhé:\n\n"
+                "[choice:Thanh toán khi nhận hàng (COD)|Trả tiền mặt cho shipper khi nhận hàng|💵](COD)\n"
+                "[choice:Chuyển khoản VietQR|Quét mã QR Napas 247 qua app ngân hàng|💳](Chuyển khoản VietQR)\n\n"
+                "*(Hoặc nhắn 'Hủy' nếu bạn muốn đổi ý không mua nữa)*"
             )
 
         # B. Đang chờ BỔ SUNG thông tin người nhận (SĐT & Địa chỉ)
@@ -396,7 +403,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
                         session_dict.pop('chatbot_order_draft', None)
                         return True, format_order_success_message(order, product, qty)
                     except Exception as e:
-                        return True, f"⚠️ Có lỗi khi tạo đơn: {str(e)}. Bạn vui lòng thử lại!"
+                        return True, f"⚠️ Có lỗi khi tạo đơn: {e!s}. Bạn vui lòng thử lại!"
                 else:
                     # Đã có đủ phone & address, CHUYỂN BƯỚC HỎI HÌNH THỨC THANH TOÁN
                     draft['step'] = 'awaiting_payment_method'
@@ -470,7 +477,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
             )
             return True, format_order_success_message(order, product, qty)
         except Exception as e:
-            return True, f"⚠️ Có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
+            return True, f"⚠️ Có lỗi xảy ra khi tạo đơn hàng: {e!s}. Bạn vui lòng thử lại nhé!"
 
     # Trường hợp B: Khách cung cấp đủ SĐT và Địa chỉ, nhưng CHƯA chọn phương thức thanh toán
     if phone and addr and not pm:
@@ -508,7 +515,7 @@ def handle_order_conversation(message, user=None, session_dict=None):
                 )
                 return True, format_order_success_message(order, product, qty)
             except Exception as e:
-                return True, f"⚠️ Có lỗi xảy ra khi tạo đơn hàng: {str(e)}. Bạn vui lòng thử lại nhé!"
+                return True, f"⚠️ Có lỗi xảy ra khi tạo đơn hàng: {e!s}. Bạn vui lòng thử lại nhé!"
 
         # Có địa chỉ mặc định nhưng CHƯA chọn phương thức thanh toán -> HỎI PHƯƠNG THỨC THANH TOÁN
         session_dict['chatbot_order_draft'] = {

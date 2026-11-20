@@ -4,9 +4,10 @@ Views hiển thị trang truy xuất nguồn gốc công khai cho người tiêu
 - Tra cứu danh sách lô hàng hoặc tìm theo mã lô tại /trace/
 - Xem chi tiết Hộ Chiếu Nông Sản Số của từng lô tại /trace/<batch_code>/
 """
-from django.views.generic import DetailView, ListView
-from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+from django.views.generic import DetailView, ListView
+
 from .models import ProductBatch
 
 

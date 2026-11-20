@@ -4,9 +4,11 @@ Kiểm thử tạo lô hàng, sinh mã QR tự động và xem trang truy xuất
 """
 from datetime import date
 from decimal import Decimal
-from django.test import TestCase, Client
-from apps.products.models import Category, Supplier, Product
-from apps.traceability.models import ProductBatch, TraceabilityRecord
+
+from django.test import Client, TestCase
+
+from apps.products.models import Category, Product, Supplier
+from apps.traceability.models import ProductBatch
 from apps.traceability.qr_generator import generate_qr_code
 
 

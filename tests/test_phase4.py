@@ -8,16 +8,18 @@ Kiểm thử toàn diện các tính năng AI Phase 4:
 """
 import json
 from datetime import date, timedelta
-from django.test import TestCase, Client
+
+from django.test import Client, TestCase
 from django.utils import timezone
+
 from apps.accounts.models import User
-from apps.products.models import Category, Supplier, Product
-from apps.behavior.models import UserEvent, UserSegment
-from apps.behavior.segmentation import update_all_segments, classify_user
+from apps.behavior.models import UserEvent
+from apps.behavior.segmentation import classify_user, update_all_segments
 from apps.chatbot.fallback import get_fallback_response
+from apps.products.models import Category, Product, Supplier
+from apps.recommendation.engine import recommend_for_user
 from apps.traceability.models import ProductBatch
 from apps.traceability.qr_generator import generate_qr_code
-from apps.recommendation.engine import recommend_for_user
 
 
 class Phase4ComprehensiveTests(TestCase):

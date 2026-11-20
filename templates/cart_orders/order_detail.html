@@ -4,6 +4,10 @@
 {% block title %}Chi tiết đơn hàng {{ order.order_code }} - AgriSense{% endblock %}
 
 {% block content %}
+{% if order.is_demo %}<div class="alert alert-warning">ĐƠN DEMO · Không phải giao dịch thật. {{ order.get_payment_status_display }}.</div>{% elif order.has_verified_payment %}<div class="alert alert-success">Đã xác nhận nhận tiền · {{ order.paid_at|date:'d/m/Y H:i' }}</div>{% endif %}
+{% if order.status != 'cancelled' %}<ol class="order-progress" aria-label="Tiến độ đơn hàng"><li class="complete">01 · Đã đặt hàng</li><li {% if order.status != 'pending' %}class="complete"{% endif %}>02 · Đã xác nhận</li><li {% if order.status == 'shipping' or order.status == 'delivered' %}class="complete"{% endif %}>03 · Đang giao</li><li {% if order.status == 'delivered' %}class="complete"{% endif %}>04 · Đã nhận</li></ol>{% endif %}
+<form method="post" action="{% url 'cart_orders:reorder' order.order_code %}" class="mb-4">{% csrf_token %}<button class="btn btn-agri-primary">Mua lại đơn này</button><span class="small text-muted ms-2">Kiểm tra tồn kho và áp dụng giá hiện tại.</span></form>
+{% if demo_mode and order.is_demo and order.payment_method == 'vietqr' and order.status == 'pending' %}<form method="post" action="{% url 'cart_orders:demo_payment' order.order_code %}" class="paper-panel mb-4">{% csrf_token %}<h2 class="h5">Trình diễn xác nhận thanh toán</h2><p>Nhấn để mô phỏng thông báo nhận đủ tiền. Đơn sẽ chuyển sang đã xác nhận.</p><button class="btn btn-warning">Mô phỏng thanh toán thành công</button></form>{% endif %}
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb small">
@@ -77,13 +81,9 @@
                                     <h6 class="mb-1 fw-bold text-dark">{{ item.product_name }}</h6>
                                     <div class="d-flex align-items-center gap-2 mt-1">
                                         <small class="text-muted">Đơn vị: {{ item.product.unit }}</small>
-                                        {% with batch=item.product.batches.first %}
-                                            {% if batch %}
-                                                <a href="{% url 'traceability:public_trace' batch_code=batch.batch_code %}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none" target="_blank" title="Xem Hộ Chiếu Nông Sản Số của sản phẩm này">
-                                                    <i class="bi bi-shield-check me-1"></i>Hộ chiếu lô #{{ batch.batch_code }}
-                                                </a>
-                                            {% endif %}
-                                        {% endwith %}
+                                        {% for allocation in item.allocations.all %}
+                                        <a href="{% url 'traceability:public_trace' batch_code=allocation.batch.batch_code %}" class="badge bg-success-subtle text-success text-decoration-none">Lô {{ allocation.batch.batch_code }} · {{ allocation.quantity }} {{ item.product.unit }}</a>
+                                        {% empty %}<small class="text-muted">Chưa gắn lô xuất kho</small>{% endfor %}
                                     </div>
                                 </td>
                                 <td class="py-3 text-muted">{{ item.price|floatformat:0 }} đ</td>
@@ -113,7 +113,7 @@
         </div>
 
         <!-- Khối Tải Lên Bill Chuyển Khoản -->
-        {% if order.payment_method == 'vietqr' or order.payment_proof %}
+        {% if not order.is_demo and not order.has_verified_payment and order.payment_method == 'vietqr' %}
         <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-4 {% if order.payment_proof %}border-success{% else %}border-warning{% endif %}">
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                 <div>
@@ -227,13 +227,13 @@
         </div>
 
         <!-- Khối VietQR Chuyển Khoản Tự Động -->
-        {% if order.status != 'cancelled' %}
+        {% if order.status == 'pending' and order.payment_method == 'vietqr' and not order.is_demo and not order.has_verified_payment and vietqr.qr_image_url %}
         <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-top border-4 border-success">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h5 class="fw-bold mb-0 text-success d-flex align-items-center gap-2">
                     <i class="bi bi-qr-code-scan"></i> Thanh Toán Nhanh VietQR
                 </h5>
-                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">Techcombank</span>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">{{ vietqr.bank_name }}</span>
             </div>
             <p class="text-muted small mb-3">Quét mã bằng app ngân hàng để tự điền số tiền và nội dung chuyển khoản chuẩn xác.</p>
             
@@ -243,27 +243,13 @@
                         <img src="{{ vietqr.qr_image_url }}" alt="Mã VietQR Thanh Toán" class="img-fluid rounded-3 border shadow-sm p-1 bg-white" style="max-height: 230px;">
                         <div class="small text-muted mt-1" style="font-size: 11px;">Mã QR động chứa số tiền & mã đơn</div>
                     </div>
-                    <div class="tab-pane fade" id="qr-personal" role="tabpanel">
-                        {% load static %}
-                        <img src="{% static 'images/techcombank_qr.png' %}" alt="Thẻ QR Techcombank NGUYEN HONG HOANG" class="img-fluid rounded-3 border shadow-sm p-1 bg-white" style="max-height: 230px;">
-                        <div class="small text-muted mt-1" style="font-size: 11px;">Thẻ QR cá nhân NGUYEN HONG HOANG</div>
-                    </div>
-                </div>
-                
-                <div class="btn-group btn-group-sm mt-2" role="group">
-                    <button type="button" class="btn btn-outline-success active rounded-start-pill" data-bs-toggle="tab" data-bs-target="#qr-dynamic">
-                        <i class="bi bi-lightning-charge-fill me-1"></i>QR Tự Động
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary rounded-end-pill" data-bs-toggle="tab" data-bs-target="#qr-personal">
-                        <i class="bi bi-person-badge-fill me-1"></i>QR Cố Định
-                    </button>
                 </div>
             </div>
 
             <div class="bg-light p-3 rounded-3 small border">
                 <div class="d-flex justify-content-between mb-1 pb-1 border-bottom">
                     <span class="text-muted">Ngân hàng:</span>
-                    <strong>{{ vietqr.bank_name }} (TCB)</strong>
+                    <strong>{{ vietqr.bank_name }}</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-1 pb-1 border-bottom">
                     <span class="text-muted">Số tài khoản:</span>

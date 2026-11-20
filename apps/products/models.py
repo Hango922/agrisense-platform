@@ -2,9 +2,11 @@
 """
 Quản lý danh mục, nhà cung cấp, sản phẩm nông sản và đánh giá chất lượng.
 """
+from typing import TYPE_CHECKING, ClassVar
+
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.text import slugify
-from django.core.validators import FileExtensionValidator
 
 
 class Category(models.Model):
@@ -62,6 +64,10 @@ class Product(models.Model):
     """
     Bảng products_product: Thông tin chi tiết sản phẩm nông sản sạch.
     """
+    if TYPE_CHECKING:
+        category_id: int
+        available_quantity: int
+
     UNIT_CHOICES = [
         ('kg', 'Kilogram'),
         ('g', 'Gram'),
@@ -86,6 +92,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=0, verbose_name='Giá bán (VNĐ)')
     unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default='kg', verbose_name='Đơn vị tính')
     stock = models.IntegerField(default=0, verbose_name='Số lượng tồn kho')
+    track_batches = models.BooleanField(default=False, editable=False, verbose_name='Quản lý kho theo lô')
     image = models.ImageField(
         upload_to='products/',
         blank=True,
@@ -119,6 +126,41 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+    @property
+    def sellable_stock(self):
+        from apps.traceability.inventory import available_stock
+        return available_stock(self)
+
+
+class SeasonalCombo(models.Model):
+    if TYPE_CHECKING:
+        items: models.QuerySet['ComboItem']
+
+    name = models.CharField(max_length=120)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True)
+    season_label = models.CharField(max_length=80, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class ComboItem(models.Model):
+    if TYPE_CHECKING:
+        product_id: int
+
+    combo = models.ForeignKey(SeasonalCombo, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        constraints: ClassVar[list] = [
+            models.UniqueConstraint(fields=['combo', 'product'], name='unique_combo_product'),
+            models.CheckConstraint(condition=models.Q(quantity__gt=0), name='combo_positive_quantity'),
+        ]
 
 
 class ProductReview(models.Model):

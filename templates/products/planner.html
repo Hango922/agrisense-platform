@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Đi chợ thông minh · AgriSense{% endblock %}
+{% block content %}
+<header class="market-heading"><span class="eyebrow">AGRISENSE / ĐI CHỢ THÔNG MINH</span><h1>Một giỏ tươi ngon.<br><em>Vừa vặn ngân sách.</em></h1><p>Nói điều bạn cần. AgriSense chọn từ nông sản đang có, tính cả phí giao hàng và để bạn quyết định.</p></header>
+<div class="planner-layout">
+    <section class="paper-panel">
+        <span class="step-label">01 / NHU CẦU CỦA BẠN</span>
+        <form method="post" class="market-form" id="planner-request">{% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-agri-primary w-100" type="submit"><i class="bi bi-stars" aria-hidden="true"></i> Gợi ý giỏ của tôi</button>
+        </form>
+        <p class="small text-muted mt-3">AI gợi ý món ăn và lượng mua từ sản phẩm còn hàng. Bạn có thể ghi số bữa, món muốn nấu và thực phẩm cần tránh. Hệ thống kiểm tra lại giá, tồn kho và ngân sách; gợi ý không thay thế tư vấn dinh dưỡng.</p>
+    </section>
+    <section class="paper-panel" aria-live="polite">
+        <span class="step-label">02 / GIỎ DÀNH CHO BẠN</span>
+        {% if plan %}
+        <div class="alert {% if plan.is_ai %}alert-success{% else %}alert-warning{% endif %}">
+            <strong>{% if plan.is_ai %}Gợi ý từ AI · {{ plan.provider }}{% else %}Đang dùng gợi ý cơ bản{% endif %}</strong>
+            <p class="mb-0 mt-2">{{ plan.ai_note }}</p>
+        </div>
+        {% if plan.meals %}<h3 class="h6">Món ăn tham khảo</h3><ul class="small">{% for meal in plan.meals %}<li class="mb-2">{{ meal }}</li>{% endfor %}</ul>{% endif %}
+        {% endif %}
+        {% if plan.rows %}
+        <h2 class="h3">Tươi ngon trong {{ plan.budget|intcomma }}đ</h2>
+        <p class="text-muted">Nhu cầu: {{ plan.people }} người · {{ plan.days }} ngày. Giá và lượng mua đã được kiểm tra theo danh mục hiện tại.</p>
+        <form method="post" action="{% url 'products:add_plan' %}" id="plan-selection" data-budget="{{ plan.budget }}">{% csrf_token %}
+            <input type="hidden" name="basket_token" value="{{ basket_token }}">
+            {% for row in plan.rows %}
+            <div class="basket-row">
+                <div><a href="{% url 'products:detail' row.product.slug %}">{{ row.product.name }}</a><small>{{ row.product.price|intcomma }}đ / {{ row.product.unit }} · {{ row.product.origin }}</small>{% if row.reason %}<small>{{ row.reason }}</small>{% endif %}</div>
+                <div><label class="visually-hidden" for="qty-{{ row.product.pk }}">Số lượng {{ row.product.name }}</label><input id="qty-{{ row.product.pk }}" name="quantity_{{ row.product.pk }}" type="number" min="0" max="1000" value="{{ row.quantity }}" data-price="{{ row.product.price }}" class="form-control"></div>
+            </div>
+            {% endfor %}
+            <div class="basket-totals"><span>Tiền hàng <b id="plan-subtotal">{{ plan.total|intcomma }}đ</b></span><span>Giao hàng <b id="plan-shipping">{{ plan.shipping|intcomma }}đ</b></span><span class="grand-total">Tổng dự kiến <b id="plan-total">{{ plan.grand_total|intcomma }}đ</b></span><span id="plan-remaining">Còn {{ plan.remaining|intcomma }}đ trong ngân sách</span></div>
+            <p class="small text-muted">Đặt số lượng bằng 0 để bỏ món. Giỏ hiện có được giữ lại; tổng tại bước thanh toán có thể khác nếu giỏ đã có hàng.</p>
+            <button type="submit" class="btn btn-agri-primary w-100" id="plan-add">Thêm lựa chọn vào giỏ <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+            {% if not user.is_authenticated %}<p class="small mt-2">Vui lòng <a href="{% url 'accounts:login' %}?next={% url 'products:planner' %}">đăng nhập</a> rồi tạo lại gợi ý để thêm vào giỏ.</p>{% endif %}
+        </form>
+        {% elif plan %}<div class="planner-empty"><i class="bi bi-basket3" aria-hidden="true"></i><h2>Chưa tìm được giỏ phù hợp</h2><p>Thử tăng ngân sách hoặc chọn ưu tiên “Đa dạng”. Phí giao hàng là 30.000đ cho đơn dưới 500.000đ.</p></div>
+        {% else %}<div class="planner-empty"><i class="bi bi-basket3" aria-hidden="true"></i><h2>Bữa ngon bắt đầu<br>từ một lựa chọn nhỏ.</h2><p>Thử: “300k mua rau củ cho 2 người trong 3 ngày”.<br>Bạn luôn được xem và chỉnh giỏ trước khi mua.</p><div class="planner-points"><span>Giá hiện tại</span><span>Trong ngân sách</span><span>Còn hàng</span></div></div>{% endif %}
+    </section>
+</div>
+{% endblock %}
+{% block extra_js %}{% load static %}<script src="{% static 'js/planner.js' %}?v=ai-planner-1"></script>{% endblock %}

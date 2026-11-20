@@ -4,6 +4,7 @@ Lệnh quản trị (Management Command) cập nhật phân nhóm khách hàng t
 Chạy bằng: python manage.py update_segments
 """
 from django.core.management.base import BaseCommand
+
 from apps.behavior.segmentation import update_all_segments
 
 

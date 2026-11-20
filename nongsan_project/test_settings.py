@@ -3,10 +3,10 @@
 from copy import deepcopy
 from uuid import uuid4
 
-from .settings import *  # noqa: F403
+from .settings import *
 
 # Preserve configured MySQL credentials while isolating each test invocation.
-DATABASES = deepcopy(DATABASES)  # noqa: F405
+DATABASES = deepcopy(DATABASES)
 DATABASES['default']['TEST'] = {'NAME': 'test_agrisense_' + uuid4().hex[:12]}
 
 AI_PROVIDER = 'gemini'

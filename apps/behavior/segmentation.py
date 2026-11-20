@@ -8,8 +8,10 @@ Thuật toán phân loại và cập nhật phân nhóm khách hàng dựa trên
 - normal: Khách hàng mua sắm bình thường.
 """
 from datetime import timedelta
-from django.utils import timezone
+
 from django.db.models import Max
+from django.utils import timezone
+
 from apps.accounts.models import User
 from apps.behavior.models import UserEvent, UserSegment
 

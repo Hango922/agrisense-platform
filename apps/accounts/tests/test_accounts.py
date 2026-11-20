@@ -3,6 +3,7 @@
 Kiểm thử mô hình User tùy chỉnh và sổ địa chỉ giao hàng UserAddress.
 """
 from django.test import TestCase
+
 from apps.accounts.models import User, UserAddress
 
 

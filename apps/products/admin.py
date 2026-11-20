@@ -3,7 +3,8 @@
 Đăng ký giao diện quản trị Django Admin cho phân hệ Sản phẩm & Danh mục.
 """
 from django.contrib import admin
-from .models import Category, Supplier, Product, ProductReview
+
+from .models import Category, ComboItem, Product, ProductReview, SeasonalCombo, Supplier
 
 
 @admin.register(Category)
@@ -25,6 +26,21 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'is_active', 'season')
     search_fields = ('name', 'origin', 'description')
     prepopulated_fields = {'slug': ('name',)}
+
+    def get_readonly_fields(self, request, obj=None):
+        return ('stock',) if obj and obj.track_batches else ()
+
+
+class ComboItemInline(admin.TabularInline):
+    model = ComboItem
+    extra = 1
+
+
+@admin.register(SeasonalCombo)
+class SeasonalComboAdmin(admin.ModelAdmin):
+    list_display = ('name', 'season_label', 'is_active')
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = (ComboItemInline,)
 
 
 @admin.register(ProductReview)

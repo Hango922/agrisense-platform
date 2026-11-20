@@ -1,4 +1,7 @@
+from typing import cast
+
 from django import forms
+from django.conf import settings
 
 
 class CheckoutForm(forms.Form):
@@ -7,6 +10,12 @@ class CheckoutForm(forms.Form):
     address = forms.CharField(max_length=2000)
     payment_method = forms.ChoiceField(choices=[('cod', 'COD'), ('vietqr', 'VietQR')])
     note = forms.CharField(required=False, max_length=2000)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if settings.OPERATIONAL_MODE and not all((settings.VIETQR_BANK_ID,
+                settings.VIETQR_ACCOUNT_NO, settings.VIETQR_ACCOUNT_NAME)):
+            cast(forms.ChoiceField, self.fields['payment_method']).choices = [('cod', 'COD')]
 
 
 class PaymentProofForm(forms.Form):
