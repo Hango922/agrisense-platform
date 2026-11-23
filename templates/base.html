@@ -54,6 +54,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto ms-xl-4 gap-1">
                     <li class="nav-item"><a class="nav-link" href="{% url 'products:planner' %}"><i class="bi bi-stars" aria-hidden="true"></i> Đi chợ thông minh</a></li>
+                    <li class="nav-item"><a class="nav-link {% if '/products/inspect/' in request.path %}active{% endif %}" href="{% url 'products:inspect' %}"><i class="bi bi-camera text-success" aria-hidden="true"></i> Giám định AI</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'products:combos' %}">Giỏ theo mùa</a></li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">

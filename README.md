@@ -65,14 +65,26 @@ Các năng lực nổi bật:
 - Máy chủ kiểm tra mã sản phẩm, số lượng, giá, tồn kho và ngân sách gồm phí giao hàng. Giỏ chỉ được thêm sau thao tác của người dùng; đề xuất có thời hạn và cơ chế ngăn thêm lặp.
 - Kết quả tích hợp, kiểm thử và giới hạn: [AI_PLANNER_VERIFICATION.md](docs/AI_PLANNER_VERIFICATION.md).
 
-### 4. Quản lý lô hàng & Truy xuất nguồn gốc (FEFO / QR)
+### 4. Thẩm định Nông sản & Độ tươi thông minh (Gemini Multimodal Vision Inspector)
+- URL: `http://127.0.0.1:8000/products/inspect/`
+- Tải ảnh hoặc chụp trực tiếp rau, củ, quả (hỗ trợ JPG, PNG, WEBP tối đa 10MB và camera di động).
+- Sử dụng mô hình Gemini Multimodal Vision (`gemini-3.1-flash-lite` thông qua SDK `google-genai` mới) để:
+  - **Nhận diện chính xác** tên nông sản và phân loại nhóm thực phẩm (Rau lá, Củ quả, Trái cây, Nấm...).
+  - **Đánh giá thang điểm độ tươi mới** (0 - 100%) và xếp loại phẩm cấp (Loại 1, Loại 2, Cần dùng sớm, Hỏng).
+  - **Phân tích cảm quan & khuyết tật**: kiểm tra độ căng bóng, màu sắc, tai cuống và phát hiện sớm dấu hiệu thâm dập, sâu bệnh hoặc nấm mốc.
+  - **Hướng dẫn bảo quản chuẩn khoa học**: nhiệt độ, độ ẩm tối ưu và ước tính thời gian sử dụng an toàn còn lại.
+  - **Gợi ý món ăn ngon**: đề xuất 2-3 món ăn chuẩn vị Việt Nam phù hợp với tình trạng nông sản.
+  - **Liên kết kho hàng AgriSense**: tự động gợi ý và hiển thị các sản phẩm sạch tương ứng đang có sẵn trong kho hàng kèm giá và tồn kho thời gian thực.
+- Hỗ trợ ảnh mẫu thử nghiệm 1-click và chế độ dự phòng ngoại tuyến (offline fallback) an toàn khi chưa cấu hình API key hoặc mất kết nối mạng.
+
+### 5. Quản lý lô hàng & Truy xuất nguồn gốc (FEFO / QR)
 - Nhập kho theo lô, theo dõi lượng còn lại và ưu tiên xuất lô gần hết hạn; lô quá hạn không được tính vào lượng có thể bán.
 - Đơn hàng lưu phân bổ lô thực tế; hủy đơn hợp lệ hoàn lại đúng lô, tránh hoàn kho nhiều lần.
 - Tự động sinh mã QR định dạng PNG chuẩn ISO cho từng lô hàng nông sản (`ProductBatch`).
 - Mã QR trỏ đến `<QR_BASE_URL>/trace/<batch_code>/`; cấu hình URL trước khi tạo lô hàng.
 - Cung cấp đầy đủ thông tin: Tên sản phẩm, nông trại / vùng trồng, ngày thu hoạch, ngày đóng gói, chứng nhận an toàn (VietGAP, GlobalGAP, Organic), sản lượng và nhật ký kiểm định.
 
-### 5. Phân hệ Quản trị Dashboard (Admin Dashboard & Analytics)
+### 6. Phân hệ Quản trị Dashboard (Admin Dashboard & Analytics)
 - URL: `http://127.0.0.1:8000/dashboard/`
 - Phân quyền nghiêm ngặt bằng `@method_decorator(staff_member_required, name='dispatch')`.
 - **Việc cần xử lý**: Theo dõi đơn chờ lâu, hàng tồn thấp, lô cận hạn/quá hạn và truy cập chức năng nhập kho theo lô.

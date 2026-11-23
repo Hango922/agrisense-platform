@@ -13,6 +13,7 @@ urlpatterns = [
     path('planner/add/', discovery_views.add_plan, name='add_plan'),
     path('combos/', discovery_views.combos, name='combos'),
     path('combos/<slug:slug>/add/', discovery_views.add_combo, name='add_combo'),
+    path('inspect/', views.inspect_produce_view, name='inspect'),
     path('', views.ProductListView.as_view(), name='list'),
     path('search/', views.SearchView.as_view(), name='search'),
     path('<slug:slug>/', views.ProductDetailView.as_view(), name='detail'),

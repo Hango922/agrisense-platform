@@ -2,12 +2,15 @@
 """
 Views xử lý trang chủ, danh sách sản phẩm, bộ lọc, tìm kiếm và đánh giá chất lượng.
 """
+import base64
+import os
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Avg, Q
-from django.http import HttpResponseBadRequest
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import DetailView, ListView, TemplateView, View
 
 from apps.behavior.models import UserEvent
@@ -15,6 +18,7 @@ from apps.recommendation.engine import recommend_for_user
 from apps.traceability.inventory import available_products, sellable_batches
 
 from .models import Category, Product, ProductReview
+from .visual_inspector import inspect_produce_image
 
 
 class HomeView(TemplateView):
@@ -155,3 +159,100 @@ class AddReviewView(LoginRequiredMixin, View):
             product=product, category=product.category,
         )
         return redirect('products:detail', slug=slug)
+
+
+def inspect_produce_view(request):
+    """
+    Trang thẩm định chất lượng & độ tươi nông sản qua ảnh bằng Gemini Multimodal Vision.
+    Hỗ trợ cả tải ảnh trực tiếp, chụp ảnh trên di động và thử nghiệm nhanh với ảnh mẫu.
+    """
+    preset_samples = [
+        {
+            'name': 'Cà chua bi',
+            'filename': 'ca_chua_bi.jpg',
+            'image_url': f"{settings.MEDIA_URL}products/ca_chua_bi.jpg",
+            'desc': 'Cà chua đỏ căng mọng, cuống xanh tươi',
+        },
+        {
+            'name': 'Cải thìa hữu cơ',
+            'filename': 'cai_thia_huu_co.jpg',
+            'image_url': f"{settings.MEDIA_URL}products/cai_thia_huu_co.jpg",
+            'desc': 'Rau cải xanh giòn bẹ, canh tác VietGAP',
+        },
+        {
+            'name': 'Cà rốt Đà Lạt',
+            'filename': 'ca_rot_da_lat.jpg',
+            'image_url': f"{settings.MEDIA_URL}products/ca_rot_da_lat.jpg",
+            'desc': 'Củ cam tươi ngon, ngọt bùi tự nhiên',
+        },
+        {
+            'name': 'Dưa lưới Huỳnh Long',
+            'filename': 'dua_luoi_huynh_long.jpg',
+            'image_url': f"{settings.MEDIA_URL}products/dua_luoi_huynh_long.jpg",
+            'desc': 'Vân lưới đều, hương thơm dịu mát',
+        },
+    ]
+
+    sample_param = request.GET.get('sample')
+    result = None
+    image_preview = None
+    error_message = None
+
+    if request.method == 'GET' and sample_param:
+        sample_filename = os.path.basename(sample_param)
+        sample_path = os.path.join(settings.MEDIA_ROOT, 'products', sample_filename)
+        if os.path.exists(sample_path):
+            try:
+                with open(sample_path, 'rb') as f:
+                    img_bytes = f.read()
+                mime = 'image/jpeg' if sample_filename.lower().endswith(('.jpg', '.jpeg')) else 'image/png'
+                result = inspect_produce_image(img_bytes, mime, sample_filename)
+                image_preview = f"{settings.MEDIA_URL}products/{sample_filename}"
+            except Exception as e:  # noqa: BLE001
+                error_message = str(e)
+
+    elif request.method == 'POST':
+        img_bytes = None
+        mime = 'image/jpeg'
+        filename = ''
+
+        sample_name = request.POST.get('sample_image')
+        if sample_name:
+            sample_filename = os.path.basename(sample_name)
+            sample_path = os.path.join(settings.MEDIA_ROOT, 'products', sample_filename)
+            if os.path.exists(sample_path):
+                with open(sample_path, 'rb') as f:
+                    img_bytes = f.read()
+                mime = 'image/jpeg' if sample_filename.lower().endswith(('.jpg', '.jpeg')) else 'image/png'
+                filename = sample_filename
+                image_preview = f"{settings.MEDIA_URL}products/{sample_filename}"
+
+        elif 'image' in request.FILES:
+            uploaded_file = request.FILES['image']
+            img_bytes = uploaded_file.read()
+            mime = uploaded_file.content_type or 'image/jpeg'
+            filename = uploaded_file.name
+            b64_str = base64.b64encode(img_bytes).decode('utf-8')
+            image_preview = f"data:{mime};base64,{b64_str}"
+
+        if img_bytes:
+            try:
+                result = inspect_produce_image(img_bytes, mime, filename)
+            except Exception as e:  # noqa: BLE001
+                error_message = str(e)
+        else:
+            error_message = 'Vui lòng chọn hoặc tải lên một hình ảnh nông sản.'
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+            if error_message:
+                return JsonResponse({'success': False, 'error': error_message}, status=400)
+            return JsonResponse({'success': True, 'data': result, 'image_preview': image_preview})
+
+    context = {
+        'preset_samples': preset_samples,
+        'result': result,
+        'image_preview': image_preview,
+        'error_message': error_message,
+    }
+    return render(request, 'products/inspect.html', context)
+
